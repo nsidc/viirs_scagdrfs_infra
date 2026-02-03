@@ -1,0 +1,6 @@
+pathdef.m
+*.sw?
+.nfs*
+slurm*
+scag/
+__pycache__/

@@ -1,0 +1,39 @@
+"""Constants package for VIIRS SCAGDRFS."""
+
+from .paths import (
+    TOPDIR,
+    PETALIB_DIR,
+    PETALIB_STAGING_DIR,
+    VJ109GA_NRT_DIR,
+    WORK_DIR,
+    V0_DIR,
+    V0_USERNAME,
+    V0_SSH_KEY,
+)
+from .products import (
+    PRODUCT_SHORT_NAME,
+    PRODUCT_CONCEPT_ID,
+    LOCK_TIMEOUT,
+    MAX_RETRIES,
+    TARGET_GROUP_ID,
+    FILE_PERMISSIONS,
+    DIR_PERMISSIONS,
+)
+
+__all__ = [
+    "TOPDIR",
+    "PETALIB_DIR",
+    "PETALIB_STAGING_DIR",
+    "VJ109GA_NRT_DIR",
+    "WORK_DIR",
+    "V0_DIR",
+    "V0_USERNAME",
+    "V0_SSH_KEY",
+    "PRODUCT_SHORT_NAME",
+    "PRODUCT_CONCEPT_ID",
+    "LOCK_TIMEOUT",
+    "MAX_RETRIES",
+    "TARGET_GROUP_ID",
+    "FILE_PERMISSIONS",
+    "DIR_PERMISSIONS",
+]
