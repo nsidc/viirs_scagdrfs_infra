@@ -12,14 +12,12 @@ dependencies:
   - black~=22.6.0
   - flake8~=5.0.4
   - mamba~=0.24.0
-  - pip
-  - jupyterlab
-  - notebook
+  - numpy
 
   # runtime dependencies
   - dask~=2023.11.0
   - dask-jobqueue~=0.8.5
-  - earthaccess~=0.9.0
+  - earthaccess>=0.9.0
   - xarray~=2022.9.0
   - netcdf4~=1.6.0
   - rioxarray~=0.11.2
@@ -29,5 +27,6 @@ dependencies:
   - imagecodecs
   - earthdata~=0.4.0
 
+  - pip
   - pip:
       - git+https://github.com/nsidc/landsatxplore.git
