@@ -42,7 +42,7 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
         logging.warning(f"Skipping non-date folder: {dated_output_dir}")
         return
 
-    for f in dated_output_dir.glob("*.hdf"):
+    for f in list(dated_output_dir.glob("*.h5")) + list(dated_output_dir.glob("*.hdf")):
         parts = f.name.split(".")
         if len(parts) < 3:
             continue  # skip malformed filenames
