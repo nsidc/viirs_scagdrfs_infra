@@ -83,7 +83,12 @@ def get_data(date, concept_id, dated_output_dir):
                 f"Filtered to {len(filtered_results)} granules matching our tiles to download."
             )
             print("Downloading data to ", dated_output_dir)
-            files = earthaccess.download(filtered_results, dated_output_dir)
+            try:
+                files = earthaccess.download(filtered_results, dated_output_dir)
+            except Exception as e:
+                print(f"WARNING: some downloads failed with error: {type(e).__name__}")
+                files = list(dated_output_dir.glob("*.h5"))
+
             print("Downloaded ", len(files), " files to ", dated_output_dir)
 
             return files
