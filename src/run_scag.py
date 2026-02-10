@@ -7,10 +7,9 @@ from dask import compute, delayed
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-from scagdrfs_infra.error import ScagDrfsFileError
-from scagdrfs_infra.mask_scag import mask_scag
-from scagdrfs_infra.netcdf import create_netcdf
-from scagdrfs_infra.util import get_date_from_filename, get_info_from_bip_file
+from src.mask_scag import mask_scag
+# from scagdrfs_infra.netcdf import create_netcdf
+from src.util import get_date_from_filename, get_info_from_bip_file
 
 
 # TODO: This function is not used:  setup_scag_cluster()
@@ -46,9 +45,9 @@ def setup_scag_cluster():
 )
 @click.option(
     "-h",
-    "--hdf-file",
+    "--h5-file",
     type=click.Path(file_okay=True, dir_okay=False, exists=True, path_type=Path),
-    help="HDF file to process.",
+    help="H5 file to process.",
 )
 @click.option(
     "-w",
@@ -68,11 +67,6 @@ def run_scag(bip_file, hdf_file, working_dir):
     scag_client = Client(scag_cluster)
 
     control_files = list(working_dir.glob("**/*.control"))
-    if len(control_files) < 1:
-        raise ScagDrfsFileError(
-            "Cannot run scag. Found zero control files in"
-            " working directory: {}. ".format(working_dir)
-        )
 
     # $PM/scag/bin/scag MOD09GA.A2023244.h08v05.061.NRT.bip 7 2400 2400 $fil
     # scag/bin/scag BIP-file num-bands num-samples num-lines control-file
@@ -102,11 +96,9 @@ def run_scag(bip_file, hdf_file, working_dir):
         print("SCAG command result: ", result, "\n")
 
     pic_files = list(working_dir.glob("**/*.pic"))
-    if len(pic_files) < 1:
-        raise ScagDrfsFileError("Found zero pic files. Cannot run SCAG sort.")
 
     user = os.environ.get("USER")
-    cmd_sort = f"cd {working_dir}; /projects/{user}/scagdrfs_infra/scag/bin/scag_sort 2eminput 3eminput modprty2 modprty3 {str(hdf_file).replace('.hdf', '.')} {bip_info['num_samples']} {bip_info['num_lines']}"
+    cmd_sort = f"cd {working_dir}; /projects/{user}/scagdrfs_infra/scag/bin/scag_sort 2eminput 3eminput modprty2 modprty3 {str(h5_file).replace('.h5', '.')} {bip_info['num_samples']} {bip_info['num_lines']}"
     result_sort = subprocess.run(
         cmd_sort, shell=True, capture_output=True, text=True, executable="/usr/bin/bash"
     )
@@ -115,17 +107,17 @@ def run_scag(bip_file, hdf_file, working_dir):
 
     # mask scag and create geotifs
     mask_scag(
-        date=get_date_from_filename(hdf_file),
+        date=get_date_from_filename(h5_file),
         working_dir=working_dir,
         tile=bip_info["tile_id"],
     )
 
-    # create netcdf files
-    create_netcdf(
-        day=get_date_from_filename(hdf_file),
-        tif_dir=working_dir,
-        tile_id=bip_info["tile_id"],
-    )
+    # # create netcdf files
+    # create_netcdf(
+    #     day=get_date_from_filename(hdf_file),
+    #     tif_dir=working_dir,
+    #     tile_id=bip_info["tile_id"],
+    # )
 
 
 if __name__ == "__main__":
