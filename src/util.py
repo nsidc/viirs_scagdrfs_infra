@@ -81,7 +81,8 @@ def check_expected_tif_files_with_glob(tif_dir, tile):
 
     for file_type in file_types:
         # Pattern to match both masked and unmasked versions
-        pattern = f"MODSCGDRF_NRT_{file_type}_{tile}_MOD09GANRT061_*_V*.tif"
+        # TODO: update to VNP or VJ1
+        pattern = f"MODSCGDRF_NRT_{file_type}_{tile}_VNP09GANRT061_*_V*.tif"
         search_pattern = os.path.join(tif_dir, pattern)
         matches = glob.glob(search_pattern)
         found_by_type[file_type] = len(matches)
@@ -96,7 +97,7 @@ def check_expected_tif_files_with_glob(tif_dir, tile):
 def get_field_name(filename):
     """Return the scientific field name from a data file name
     This assumes a filename (type Path) with a .stem of the form:
-    MODSCGDRF_NRT_GS_h08v04_MOD09GANRT061_20250331_V01.1.bin.mask
+    MODSCGDRF_NRT_GS_h08v04_VNP09GANRT061_20250331_V01.1.bin.mask
     ...or similar
     """
     if isinstance(filename, Path):

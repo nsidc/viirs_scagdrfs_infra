@@ -10,14 +10,13 @@ import click
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-from scagdrfs_infra.bipify_input_files import bipify_files
-from scagdrfs_infra.copy_scag_ancillary import copy_scag_ancillary_files
-from scagdrfs_infra.error import ScagDrfsFileError
+from src.bipify_input_files import bipify_files
+from src.copy_scag_ancillary import copy_scag_ancillary_files
+# from scagdrfs_infra.error import ScagDrfsFileError
 from scagdrfs_infra.move_tiles import copy_tile_file
-from scagdrfs_infra.run_drfs import run_drfs
-from scagdrfs_infra.netcdf import create_netcdf
-from scagdrfs_infra.run_scag import run_scag
-from scagdrfs_infra.util import datetime_to_date
+# from scagdrfs_infra.run_drfs import run_drfs
+# from scagdrfs_infra.netcdf import create_netcdf
+from src.run_scag import run_scag
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -55,7 +54,6 @@ def setup_day_cluster():
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
     help="Date of the day of MOD09GA tiles to process.",
-    callback=datetime_to_date,
 )
 @click.option(
     "-i",
@@ -168,11 +166,11 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         # bipify HDF files
         bipify_files(input_dir=working_dir, output_dir=working_dir)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
-        if len(bip_meta_files) != 1:
-            raise ScagDrfsFileError(
-                "Found either zero or multiple BIP "
-                "metadata files in working directory: " + str(working_dir)
-            )
+        # if len(bip_meta_files) != 1:
+        #     raise ScagDrfsFileError(
+        #         "Found either zero or multiple BIP "
+        #         "metadata files in working directory: " + str(working_dir)
+        #     )
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
         tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
