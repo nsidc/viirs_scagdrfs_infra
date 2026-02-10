@@ -13,9 +13,8 @@ from scagdrfs_infra.error import ScagDrfsDateRangeError
 from scagdrfs_infra.output_to_peta import copy_output_to_peta
 from scagdrfs_infra.output_to_v0 import copy_output_to_v0
 from scagdrfs_infra.run_a_day import run_a_day
-from scagdrfs_infra.util import (
+from src.util import (
     date_range,
-    datetime_to_date,
     get_list_of_defined_regions,
     get_region_tile_ids,
     check_expected_tif_files_with_glob,

@@ -18,6 +18,12 @@ from .products import (
     DIR_PERMISSIONS,
 )
 
+from .field_info import (
+    VALID_FIELD_NAMES,
+    FIELD_BITDEPTHS,
+    DTYPE_FOR_BITDEPTH,
+)
+
 __all__ = [
     "TOPDIR",
     "PETALIB_DIR",
@@ -33,4 +39,7 @@ __all__ = [
     "TARGET_GROUP_ID",
     "FILE_PERMISSIONS",
     "DIR_PERMISSIONS",
+    "VALID_FIELD_NAMES",
+    "FIELD_BITDEPTHS",
+    "DTYPE_FOR_BITDEPTH",
 ]
