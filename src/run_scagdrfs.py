@@ -54,7 +54,7 @@ def setup_scagdrfs_cluster():
     type=click.DateTime(formats=["%Y%m%d", "%Y-%m-%d"]),
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
-    help="Start date of MOD09GA tiles to process.",
+    help="Start date of tiles to process.",
     callback=datetime_to_date,
 )
 @click.option(
@@ -63,7 +63,7 @@ def setup_scagdrfs_cluster():
     type=click.DateTime(formats=["%Y%m%d", "%Y-%m-%d"]),
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
-    help="End date of MOD09GA tiles to process.",
+    help="End date of tiles to process.",
     callback=datetime_to_date,
 )
 @click.option(
@@ -88,9 +88,9 @@ def setup_scagdrfs_cluster():
     "-i",
     "--input-dir",
     type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    envvar="MOD09GA_NRT_DIR",
+    envvar="VNP01GA_NRT_DIR",
     show_default=True,
-    help="Absolute directory to existing MOD09GA granule files set by MOD09GA_NRT_DIR"
+    help="Absolute directory to existing granule files set by {product}_NRT_DIR"
     " environment variable. Date and tile ID subdirectories will be added"
     " (e.g. 2023.10.03/h08v04).",
 )
@@ -161,7 +161,7 @@ def run_scagdrfs(
     for day in date_range(start_date=start_date, end_date=end_date):
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
-            if input_dir == os.environ.get("MOD09GA_NRT_DIR"):
+            if input_dir == os.environ.get("VNP01GA_NRT_DIR"):
                 input_dir = orig_input_dir / day.strftime("%Y.%m.%d")
             tif_dir = os.path.join(working_dir, day.strftime("%Y.%m.%d"), tile)
             tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)

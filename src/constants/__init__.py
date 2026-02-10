@@ -4,6 +4,7 @@ from .paths import (
     PETALIB_DIR,
     PETALIB_STAGING_DIR,
     VJ109GA_NRT_DIR,
+    VNP09GA_NRT_DIR,
     WORK_DIR,
 )
 from .products import (
@@ -29,6 +30,7 @@ __all__ = [
     "PETALIB_DIR",
     "PETALIB_STAGING_DIR",
     "VJ109GA_NRT_DIR",
+    "VNP09GA_NRT_DIR",
     "WORK_DIR",
     "LANCE_CONCEPT_ID_VJ1",
     "LANCE_CONCEPT_ID_VNP",
