@@ -124,3 +124,59 @@ def get_field_name(filename):
         )
 
     return field_name
+
+
+def get_filename_stem(filename):
+    """Return the base file name"""
+    if isinstance(filename, str):
+        base_filename = os.path.basename(os.path.splitext(filename)[0])
+    elif isinstance(filename, Path):
+        base_filename = filename.stem
+    else:
+        raise RuntimeError(f"Could not determine basename of: {filename}")
+
+    return base_filename
+
+
+def get_info_from_bip_file(meta_path):
+    meta_content = None
+    with meta_path.open() as meta_file:
+        meta_content = meta_file.read()
+    if meta_content is None:
+        raise Exception(
+            "Cannot read BIP metadata file: {bip_file}".format(bip_file=meta_path)
+        )
+    bip_meta_file = {}
+    match = re.search("SOURCE_FILE=(.+)", meta_content)
+    source_file = match.group(1)
+    bip_meta_file["source_file"] = source_file
+    match = re.search("NLINES=(\d+)", meta_content)
+    nl = match.group(1)
+    bip_meta_file["num_lines"] = nl
+    ns = match.group(1)
+    bip_meta_file["num_samples"] = ns
+    match = re.search("NBANDS=(\d+)", meta_content)
+    nb = match.group(1)
+    bip_meta_file["num_bands"] = nb
+    match = re.search("PROJ_STRING=(.+)", meta_content)
+    proj_string = match.group(1)
+    bip_meta_file["proj_string"] = proj_string
+    match = re.search("ZONE_NUMBER=h(\d+)v(\d+)", meta_content)
+    horizontal = match.group(1)
+    bip_meta_file["horizontal"] = horizontal
+    vertical = match.group(2)
+    bip_meta_file["vertical"] = vertical
+    bip_meta_file["tile_id"] = "h" + horizontal + "v" + vertical
+    match = re.search("CORNER_UL_PROJECTION_X_PRODUCT=(.+)", meta_content)
+    x_ul = match.group(1)
+    bip_meta_file["ul_corner_x"] = x_ul
+    match = re.search("CORNER_UL_PROJECTION_Y_PRODUCT=(.+)", meta_content)
+    y_ul = match.group(1)
+    bip_meta_file["ul_corner_y"] = y_ul
+    match = re.search("CORNER_LR_PROJECTION_X_PRODUCT=(.+)", meta_content)
+    x_lr = match.group(1)
+    bip_meta_file["lr_corner_x"] = x_lr
+    match = re.search("CORNER_LR_PROJECTION_Y_PRODUCT=(.+)", meta_content)
+    y_lr = match.group(1)
+    bip_meta_file["lr_corner_y"] = y_lr
+    return bip_meta_file

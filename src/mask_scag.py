@@ -7,20 +7,20 @@ from pathlib import Path
 
 import numpy as np
 
-from scagdrfs_infra.make_tif import make_tif
-from scagdrfs_infra.mask_drfs import (
+from src.make_tif import make_tif
+from src.mask_drfs import (
     cw_mask16,
     get_bip_full_mask,
     get_file_info_config,
     get_water_mask,
 )
-from scagdrfs_infra.masking import cw_mask
-from scagdrfs_infra.scagdrfs_config import (
+from src.masking import cw_mask
+from src.constants.field_info import (
     DTYPE_FOR_BITDEPTH,
     FIELD_BITDEPTHS,
     VALID_FIELD_NAMES,
 )
-from scagdrfs_infra.util import get_bitdepth_for_field_name, get_field_name
+from src.util import get_bitdepth_for_field_name, get_field_name
 
 
 def get_data(filename):
@@ -42,6 +42,7 @@ def get_data(filename):
 def write_data(
     output_dir: str, var: str, tile: str, date_str: str, mask_status: str, actual_var
 ):
+    # TODO: update this
     filename = (
         "MODSCGDRF_NRT_{var}_{tile}_MOD09GANRT061_{date_str}_V01.1.bin."
         "{mask_status}".format(
