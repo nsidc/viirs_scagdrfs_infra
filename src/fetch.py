@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Fetch VIIRS NRT data for SCAGDRFS regions."""
 
 import os
 from pathlib import Path
@@ -12,50 +13,50 @@ from src.util import (
     get_tile_id_from_filename,
 )
 from src.constants import (
-    PRODUCT_SHORT_NAME,
-    PRODUCT_CONCEPT_ID,
     LOCK_TIMEOUT,
     TARGET_GROUP_ID,
     FILE_PERMISSIONS,
-    DIR_PERMISSIONS,
 )
-
 
 ALL_REGIONS = get_list_of_defined_regions()
 TILES = get_region_tile_ids(ALL_REGIONS)
-TILES_SET = set(TILES)  # Convert to set for faster lookup
+TILES_SET = set(TILES)
 
 
-def get_data(date, concept_id, dated_output_dir):
+def get_data(date, concept_id, dated_output_dir, short_name):
     """
-    Download VIIRS VJ109GA data for specified date and region tiles.
+    Download VIIRS data for specified date and region tiles.
 
     Args:
         date: datetime object for the date to download
-        concept_id: NASA Earthdata concept ID for VJ109GA dataset
+        concept_id: NASA Earthdata concept ID for dataset
         dated_output_dir: Path object or string for output directory
+        short_name: Product short name (e.g. VJ109GA_NRT or VNP09GA_NRT)
 
     Returns:
         list: Downloaded file paths, or empty list on failure
     """
-    lockfile_path = Path(dated_output_dir / "file.lock")
+    dated_output_dir = Path(dated_output_dir)
+    dated_output_dir.mkdir(parents=True, exist_ok=True)
+
+    lockfile_path = dated_output_dir / "file.lock"
     try:
-        lockfile = SoftFileLock(str(lockfile_path), timeout=10)
+        lockfile = SoftFileLock(str(lockfile_path), timeout=LOCK_TIMEOUT)
         with lockfile:
             print("logging into earthdata...")
             earthaccess.login()
 
-            print(f"Searching for {PRODUCT_SHORT_NAME} data...")
+            print(f"Searching for {short_name} data...")
             results = earthaccess.search_data(
-                short_name=PRODUCT_SHORT_NAME,
                 concept_id=concept_id,
                 temporal=(date.strftime("%Y-%m-%d"), date.strftime("%Y-%m-%d")),
             )
 
-            print("Found ", len(results), " granules.")
+            print(f"Found {len(results)} granules.")
             filtered_results = []
             skipped_no_links = 0
             skipped_no_match = 0
+
             for result in results:
                 data_link = result.data_links()
                 if not data_link:
@@ -72,54 +73,63 @@ def get_data(date, concept_id, dated_output_dir):
 
             print(f"Skipped (no data links): {skipped_no_links}")
             print(f"Skipped (tile not in set): {skipped_no_match}")
-            print(
-                f"Filtered to {len(filtered_results)} granules matching region tiles."
-            )
+            print(f"Filtered to {len(filtered_results)} granules matching region tiles.")
+
             if not filtered_results:
                 print("No matching granules found for download.")
                 return []
 
-            print(
-                f"Filtered to {len(filtered_results)} granules matching our tiles to download."
-            )
-            print("Downloading data to ", dated_output_dir)
+            print(f"Downloading data to {dated_output_dir}")
             try:
                 files = earthaccess.download(filtered_results, dated_output_dir)
             except Exception as e:
                 print(f"WARNING: some downloads failed with error: {type(e).__name__}")
-                files = list(dated_output_dir.glob("*.h5"))
+                files = list(dated_output_dir.glob("*.h5")) + list(
+                    dated_output_dir.glob("*.hdf")
+                )
 
-            print("Downloaded ", len(files), " files to ", dated_output_dir)
-
+            print(f"Downloaded {len(files)} files to {dated_output_dir}")
             return files
 
     except Timeout:
         print(
-            "Was not able to get file lock", str(lockfile_path), "within timeout limit."
+            f"ERROR: Could not acquire lock on {lockfile_path} within {LOCK_TIMEOUT} seconds."
         )
         print("If the directory is free, please remove the lock file and try again.")
+        return []
 
 
 def chmod_data(dated_output_dir):
+    """Set permissions to 775 for directory and all contents."""
+    dated_output_dir = Path(dated_output_dir)
+
+    if not dated_output_dir.exists():
+        print(f"WARNING: Directory {dated_output_dir} does not exist.")
+        return
+
     try:
         dated_output_dir.chmod(FILE_PERMISSIONS)
-        for file in dated_output_dir.rglob("*"):
-            file.chmod(FILE_PERMISSIONS)
-    except PermissionError:
+        for file_path in dated_output_dir.rglob("*"):
+            file_path.chmod(FILE_PERMISSIONS)
+    except PermissionError as e:
         print(
-            "The directory and/or files in the directory ",
-            dated_output_dir,
-            " are not owned and permissions cannot be defined.",
+            f"WARNING: Permission denied when setting permissions on {dated_output_dir}: {e}"
         )
 
 
 def chown_data(dated_output_dir):
-    """Change group to dscottgrp so everyone has access."""
+    """Change group ownership to dscottgrp for shared access."""
+    dated_output_dir = Path(dated_output_dir)
+
+    if not dated_output_dir.exists():
+        print(f"WARNING: Directory {dated_output_dir} does not exist.")
+        return
+
     try:
         os.chown(dated_output_dir, -1, TARGET_GROUP_ID)
-        for file in dated_output_dir.rglob("*"):
-            os.chown(file, -1, TARGET_GROUP_ID)
+        for file_path in dated_output_dir.rglob("*"):
+            os.chown(file_path, -1, TARGET_GROUP_ID)
     except (PermissionError, OSError) as e:
         print(
-            f"Could not change group ownership on {dated_output_dir}: {e}",
+            f"WARNING: Could not change group ownership on {dated_output_dir}: {e}"
         )

@@ -2,12 +2,16 @@
 
 import os
 
-# VIIRS product information
-PRODUCT_SHORT_NAME = "VJ109GA_NRT"
-PRODUCT_CONCEPT_ID = os.getenv("VJ109GA_CONCEPT_ID", "C2565894243-LAADS")
+# Concept IDs for different VIIRS products
+LANCE_CONCEPT_ID_VJ1 = "C2781246545-LANCEMODIS"  # VJ109GA (NOAA-20) NRT
+LANCE_CONCEPT_ID_VNP = "C2780105555-LANCEMODIS"  # VNP09GA (NPP) NRT
+
+# Product short names
+PRODUCT_SHORT_NAME_VJ1 = "VJ109GA_NRT"
+PRODUCT_SHORT_NAME_VNP = "VNP09GA_NRT"
 
 # File patterns
-VIIRS_FILENAME_PATTERN = r"VJ109GA\.A\d{7}\.h\d{2}v\d{2}\.\d{3}\.\d+\.hdf"
+VIIRS_FILENAME_PATTERN = r"V[JN]P?09GA.*\.A\d{7}\.h\d{2}v\d{2}\.\d{3}\.\d+\.(hdf|h5)"
 
 # Processing configuration
 LOCK_TIMEOUT = int(os.getenv("DOWNLOAD_LOCK_TIMEOUT", "300"))

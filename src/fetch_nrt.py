@@ -1,20 +1,22 @@
 #!/usr/bin/env python
-"""Fetch VIIRS VJ109GA Near Real-Time (NRT) data from NASA LANCE."""
+"""Fetch VIIRS Near Real-Time (NRT) data from NASA LANCE."""
 
 import datetime as dt
 from pathlib import Path
 import logging
-import stat
 
 import click
 
 from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
-from src.constants import VJ109GA_NRT_DIR, FILE_PERMISSIONS
-
-# LANCE MODIS concept ID for VJ109GA NRT
-# Source: https://search.earthdata.nasa.gov/search/granules?p=C2781246545-LANCEMODIS
-LANCE_CONCEPT_ID = "C2781246545-LANCEMODIS"
+from src.constants import (
+    VJ109GA_NRT_DIR,
+    FILE_PERMISSIONS,
+    LANCE_CONCEPT_ID_VJ1,
+    LANCE_CONCEPT_ID_VNP,
+    PRODUCT_SHORT_NAME_VJ1,
+    PRODUCT_SHORT_NAME_VNP,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -39,61 +41,68 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
             "%Y%j"
         )
     except ValueError:
-        logging.warning(f"Skipping non-date folder: {dated_output_dir}")
+        logger.warning(f"Skipping non-date folder: {dated_output_dir}")
         return
 
-    for f in list(dated_output_dir.glob("*.h5")) + list(dated_output_dir.glob("*.hdf")):
+    moved_count = 0
+    skipped_count = 0
+
+    # Check both .h5 and .hdf files
+    for f in list(dated_output_dir.glob("*.h5")) + list(
+        dated_output_dir.glob("*.hdf")
+    ):
         parts = f.name.split(".")
         if len(parts) < 3:
-            continue  # skip malformed filenames
+            logger.warning(f"Skipping malformed filename: {f.name}")
+            continue
 
-        # Extract DOY from filename
-        file_doy = parts[1][1:]  # e.g., 'A2024142' -> '2024142'
+        # Extract DOY from filename (e.g., A2024142 -> 2024142)
+        file_doy = parts[1][1:]
 
-        if file_doy != folder_doy:
-            # Move to the correct folder
-            try:
-                correct_date = dt.datetime.strptime(file_doy, "%Y%j").strftime(
-                    "%Y.%m.%d"
-                )
-            except ValueError:
-                logging.warning(
-                    f"Warning: could not parse DOY from filename '{f.name}'"
-                )
-                continue  # skip this file, it's not a valid MODIS filename
+        if file_doy == folder_doy:
+            continue
 
-            correct_folder = base_output_dir / correct_date
-            correct_folder.mkdir(parents=True, exist_ok=True)
-            dest = correct_folder / f.name
+        # Move to the correct folder
+        try:
+            correct_date = dt.datetime.strptime(file_doy, "%Y%j").strftime("%Y.%m.%d")
+        except ValueError:
+            logger.warning(f"Could not parse DOY from filename '{f.name}'")
+            continue
 
-            if dest.exists():
-                new_size = f.stat().st_size
-                existing_size = dest.stat().st_size
+        correct_folder = base_output_dir / correct_date
+        correct_folder.mkdir(parents=True, exist_ok=True)
+        dest = correct_folder / f.name
 
-                # skip zero-byte files
-                if new_size == 0 and existing_size != 0:  # Fixed: changed & to and
-                    logger.info(f"Warning skipping 0-byte file: {f.name}")
-                    f.unlink()
-                    continue
+        if dest.exists():
+            new_size = f.stat().st_size
+            existing_size = dest.stat().st_size
 
-                # replace if newer
-                if f.stat().st_mtime > dest.stat().st_mtime:
-                    logger.info(
-                        f"Replacing outdated file in {correct_folder}: {dest.name}"
-                    )
-                    dest.unlink()
-                    f.rename(dest)
-                    dest.chmod(
-                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH
-                    )
-                else:
-                    logger.info(f"File already exists and is up to date: {dest.name}")
-                    f.unlink()
-            else:
-                # move to correct folder
-                logger.info(f"Moving {f.name} -> {correct_folder}")
+            # Skip zero-byte files
+            if new_size == 0 and existing_size != 0:
+                logger.warning(f"Skipping 0-byte file: {f.name}")
+                f.unlink()
+                skipped_count += 1
+                continue
+
+            # Replace if newer
+            if f.stat().st_mtime > dest.stat().st_mtime:
+                logger.info(f"Replacing outdated file: {dest.name}")
+                dest.unlink()
                 f.rename(dest)
-                dest.chmod(stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                dest.chmod(FILE_PERMISSIONS)
+                moved_count += 1
+            else:
+                logger.info(f"File already exists and is up to date: {dest.name}")
+                f.unlink()
+                skipped_count += 1
+        else:
+            logger.info(f"Moving {f.name} -> {correct_folder}")
+            f.rename(dest)
+            dest.chmod(FILE_PERMISSIONS)
+            moved_count += 1
+
+    if moved_count > 0 or skipped_count > 0:
+        logger.info(f"Moved {moved_count} files, skipped {skipped_count} files")
 
 
 @click.command()
@@ -101,48 +110,67 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
     "-s",
     "--start-date",
     type=click.DateTime(formats=["%Y%m%d", "%Y-%m-%d"]),
-    default=str(dt.datetime.today().date() - dt.timedelta(days=2)),
+    default=str((dt.datetime.today() - dt.timedelta(days=2)).date()),
     show_default=True,
-    help="Start date of VJ109GA NRT data to download.",
+    help="Start date for VIIRS NRT data download.",
 )
 @click.option(
     "-e",
     "--end-date",
     type=click.DateTime(formats=["%Y%m%d", "%Y-%m-%d"]),
-    default=str(dt.datetime.today().date() - dt.timedelta(days=1)),
+    default=str((dt.datetime.today() - dt.timedelta(days=1)).date()),
     show_default=True,
-    help="End date of VJ109GA NRT data to download.",
+    help="End date for VIIRS NRT data download (inclusive).",
 )
 @click.option(
     "-o",
     "--output-dir",
-    type=click.Path(
-        file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
-    ),
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
     default=VJ109GA_NRT_DIR,
     envvar="VJ109GA_NRT_DIR",
     show_default=True,
-    help="Absolute directory to store VJ109GA granule files set by VJ109GA_NRT_DIR"
-    " environment variable. Date subdirectories will be added (e.g. 2023.10.03).",
+    help="Base directory for VIIRS granule files. Date subdirectories will be "
+    "created (e.g., 2023.10.03). Can be set via VJ109GA_NRT_DIR env var.",
 )
-def get_nrt_data(start_date, end_date, output_dir):
+@click.option(
+    "-p",
+    "--product",
+    type=click.Choice(["VJ1", "VNP", "both"], case_sensitive=False),
+    default="both",
+    show_default=True,
+    help="Which VIIRS product to download: VJ1 (NOAA-20), VNP (NPP), or both.",
+)
+def get_nrt_data(start_date, end_date, output_dir, product):
     """
-    Download VIIRS VJ109GA Near Real-Time data for a date range.
+    Download VIIRS Near Real-Time data for a date range.
 
     Downloads data from NASA LANCE for each date in the range, organizing
     files into date-based subdirectories and setting appropriate permissions
     for shared PetaLibrary access.
+
+    Supports both VJ109GA (NOAA-20/JPSS-1) and VNP09GA (NPP/Suomi) products.
     """
-    for date in date_range(start_date=start_date, end_date=end_date):
-        print(f"fetching for {date}")
-        dated_output_dir = output_dir / date.strftime("%Y.%m.%d")
-        dated_output_dir.mkdir(parents=True, exist_ok=True)
-        get_data(date, LANCE_CONCEPT_ID, dated_output_dir)
-        move_granules_to_date_dirs(dated_output_dir, output_dir)
-        chmod_data(dated_output_dir)
-        chown_data(dated_output_dir)
+    logger.info(f"Starting NRT download from {start_date.date()} to {end_date.date()}")
+    logger.info(f"Output directory: {output_dir}")
 
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-if __name__ == "__main__":
-    """Executed from the command line"""
-    get_nrt_data()
+    # Determine which products to fetch
+    products_to_fetch = []
+    if product.upper() in ["VJ1", "BOTH"]:
+        products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1))
+    if product.upper() in ["VNP", "BOTH"]:
+        products_to_fetch.append((PRODUCT_SHORT_NAME_VNP, LANCE_CONCEPT_ID_VNP))
+
+    total_files = 0
+
+    for short_name, concept_id in products_to_fetch:
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Downloading {short_name} (Concept ID: {concept_id})")
+        logger.info(f"{'='*60}")
+
+        product_files = 0
+
+        for date in date_range(start_date=start_date, end_date=end_date):
+            logger.info(f"Processing {short_name} for {date.strftime('%Y-%m-%d')
