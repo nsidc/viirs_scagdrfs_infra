@@ -5,7 +5,7 @@ cd ${TOPDIR}
 
 if { conda env list | grep 'scag'; } >/dev/null 2>&1; then
     echo "Activating scag conda environment."
-    source activate viirs 
+    conda activate viirs 
 else
     echo "Creating conda environment."
     conda create -y -n viirs 
