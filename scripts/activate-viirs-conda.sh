@@ -3,8 +3,9 @@
 source ${PWD}/config/env.sh
 cd ${TOPDIR}
 
-if { conda env list | grep 'scag'; } >/dev/null 2>&1; then
-    echo "Activating scag conda environment."
+if { conda env list | grep 'viirs'; } >/dev/null 2>&1; then
+    echo "Activating viirs conda environment."
+    conda init
     conda activate viirs 
 else
     echo "Creating conda environment."
