@@ -88,7 +88,7 @@ def setup_scagdrfs_cluster():
     "-i",
     "--input-dir",
     type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    envvar="VNP01GA_NRT_DIR",
+    envvar="VNP09GA_NRT_DIR",
     show_default=True,
     help="Absolute directory to existing granule files set by {product}_NRT_DIR"
     " environment variable. Date and tile ID subdirectories will be added"
@@ -112,7 +112,9 @@ def setup_scagdrfs_cluster():
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    envvar="PETALIB_TRANSFER_DIR",
+    #envvar="PETALIB_TRANSFER_DIR",
+    # TODO: Don't use work_dir for transfer_dir (!)
+    envvar="WORK_DIR",
     show_default=True,
     help="Path to data transfer directory where output files are stored before "
     "being transferred to the final V0 directory. Defaults to environment "
@@ -158,10 +160,13 @@ def run_scagdrfs(
         scagdrfs_cluster = setup_scagdrfs_cluster()
         scagdrfs_client = Client(scagdrfs_cluster)
         day_futures = []
+
     for day in date_range(start_date=start_date, end_date=end_date):
+        print(f'run_scagdrfs: loop day: {day}')
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
-            if input_dir == os.environ.get("VNP01GA_NRT_DIR"):
+            print(f'    run_scagdrfs: tile: {tile}')
+            if input_dir == os.environ.get("VNP09GA_NRT_DIR"):
                 input_dir = orig_input_dir / day.strftime("%Y.%m.%d")
             tif_dir = os.path.join(working_dir, day.strftime("%Y.%m.%d"), tile)
             tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)
@@ -170,8 +175,9 @@ def run_scagdrfs(
                     f"You have all expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
                 )
             else:
-                print(f"Running SCAGDRFS for day: {day}\n")
+                print(f"Running VIIRS - SCAGDRFS for day: {day}\n")
                 if no_queue:
+                    print('    in no_queue...')
                     ctx.invoke(
                         run_a_day,
                         day=day,
@@ -183,6 +189,7 @@ def run_scagdrfs(
                         no_queue=no_queue,
                     )
                 else:
+                    print('    NOT in no_queue...')
                     cmd = (
                         ". {}/tasks/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
                             os.environ.get("TOPDIR"),
