@@ -12,5 +12,6 @@ else
     conda create -y -n viirs 
     conda env update -f ${TOPDIR}/environment.yml
     echo "Activating viirs conda environment."
+    conda init
     conda activate viirs
 fi

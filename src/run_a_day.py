@@ -101,7 +101,7 @@ def setup_day_cluster():
     "-k",
     "--skip",
     is_flag=True,
-    help="Skip moving HDF files from peta library to working directory.",
+    help="Skip moving H5 files from peta library to working directory.",
 )
 @click.option(
     "-n", "--no-queue", is_flag=True, help="Do not run tasks in the SLURM queue."
@@ -155,12 +155,13 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
             f"Found either zero or multiple files in working directory: {working_dir}\n"
         )
         print(f"This will not run until there is 1 file in {working_dir}\n")
-        print("An empty netcdf will be created.\n")
-        create_netcdf(
-            day=day,
-            tif_dir=working_dir,
-            tile_id=tile,
-        )
+        print('SKIPPING create_netcdf()')
+        # print("An empty netcdf will be created.\n")
+        # create_netcdf(
+        #     day=day,
+        #     tif_dir=working_dir,
+        #     tile_id=tile,
+        # )
 
     else:
         h5_file = h5_files[0]
@@ -175,7 +176,8 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         #     )
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
-        tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
+        print('SKIPPING DRFS_COMPONENT_DIR -> component_dir')
+        #tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
@@ -193,6 +195,7 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
             # Run DRFS and SCAG on the command line not in the supercomputer
             if no_queue:
                 # NOTE: COMMENTING OUT DRFS FOR TESTING
+                # TODO: re-DO assign "component_dir"
                 # TODO: Uncomment later
                 # skip drfs if there are 6 tifs present (masked and unmasked drfs)
                 # if tifCounter0 != 6:
@@ -215,37 +218,37 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
 
             # Run DRFS and SCAG in the supercomputer queue
             else:  # this is the "not no_queue" condition; i.e. run on supercomputer with dask
-                if tifCounter0 != 6:
-                    print(
-                        "Submitting DRFS run to queue for ",
-                        tile_params["h5_file"],
-                        "...\n",
-                    )
-                    cmd_drfs = ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
-                        os.environ.get("TOPDIR"),
-                        tile_params["h5_file"],
-                        tile_params["working_dir"],
-                        tile_params["staging_dir"],
-                        tile_params["component_dir"],
-                    )
-                    print(f"DRFS command to run: {cmd_drfs} \n")
-                    drfs_results = []
-                    try:
-                        cmd_drfs_output = subprocess.run(
-                            cmd_drfs,
-                            shell=True,
-                            capture_output=True,
-                            text=True,
-                            executable="/usr/bin/bash",
-                        )
-                        cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}"
-                        drfs_results.append(cmd_drfs_string)
-                    except Exception as e:
-                        cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}\n  WITH EXCEPTION: {str(e)}"
-                        drfs_results.append(cmd_drfs_string)
+                # if tifCounter0 != 6:
+                #     print(
+                #         "Submitting DRFS run to queue for ",
+                #         tile_params["h5_file"],
+                #         "...\n",
+                #     )
+                #     cmd_drfs = ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
+                #         os.environ.get("TOPDIR"),
+                #         tile_params["h5_file"],
+                #         tile_params["working_dir"],
+                #         tile_params["staging_dir"],
+                #         tile_params["component_dir"],
+                #     )
+                #     print(f"DRFS command to run: {cmd_drfs} \n")
+                #     drfs_results = []
+                #     try:
+                #         cmd_drfs_output = subprocess.run(
+                #             cmd_drfs,
+                #             shell=True,
+                #             capture_output=True,
+                #             text=True,
+                #             executable="/usr/bin/bash",
+                #         )
+                #         cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}"
+                #         drfs_results.append(cmd_drfs_string)
+                #     except Exception as e:
+                #         cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}\n  WITH EXCEPTION: {str(e)}"
+                #         drfs_results.append(cmd_drfs_string)
 
-                    for drfs_result in drfs_results:
-                        print("DRFS process result: ", drfs_result, "\n")
+                #     for drfs_result in drfs_results:
+                #         print("DRFS process result: ", drfs_result, "\n")
 
                 # Always run SCAG
                 print(
@@ -253,7 +256,8 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                     tile_params["h5_file"],
                     "...\n",
                 )
-                cmd_scag = ". {}/tasks/run-scag.sh -b {} -h {} -w {}".format(
+                #cmd_scag = ". {}/tasks/run-scag.sh -b {} -h {} -w {}".format(
+                cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {}".format(
                     os.environ.get("TOPDIR"),
                     tile_params["bip_meta_file"].with_suffix(""),
                     tile_params["h5_file"],
