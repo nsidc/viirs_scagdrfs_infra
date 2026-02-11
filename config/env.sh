@@ -6,12 +6,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export TOPDIR="$(dirname "${SCRIPT_DIR}")"
 
 # PetaLibrary paths
+# Where the NRT files are grabbed from
 export PETALIB_DIR=/pl/active/daac-production
-# TODO:  Do we want the same staging directory for MOD and VIIRS?
-#        If not, maybe this should be .../viirs_scagdrfs/staging
-export PETALIB_STAGING_DIR=/pl/active/daac-production/scagdrfs/staging
+# This is the one that is used for MODIS - commenting until we figure out what we want
+# export PETALIB_STAGING_DIR=/pl/active/daac-production/scagdrfs/staging
+# NOTE: This is temporary for while we are in development phase
+export PETALIB_STAGING_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/staging
 
 # VIIRS data paths
+export VNP09GA_NRT_DIR=${PETALIB_DIR}/VNP09GA/NRT
 export VJ109GA_NRT_DIR=${PETALIB_DIR}/VJ109GA/NRT
 
 # Working directories

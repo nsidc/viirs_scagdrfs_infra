@@ -3,8 +3,8 @@
 import os
 
 # Concept IDs for different VIIRS products
-# FIXME: Switche the order: both alphabetical and chronological
 # TODO: Is there also a non-NRT concept-id for each of these?
+# RM NOTE: The concept-id is definitely different for not NRT. 
 LANCE_CONCEPT_ID_VNP = "C2780105555-LANCEMODIS"  # VNP09GA (NPP) NRT
 LANCE_CONCEPT_ID_VJ1 = "C2781246545-LANCEMODIS"  # VJ109GA (NOAA-20) NRT
 
@@ -16,7 +16,6 @@ PRODUCT_SHORT_NAME_VJ1 = "VJ109GA_NRT"
 # FIXME: Above, we distinguish between VJ1 and VNP.  Perhaps we should do the same here?
 # This would be a generic pattern for viirs:
 #   NOTE: Keep entire VIIRS identifier as one set (VNP|VJ1|<future>)
-#   NOTE: VIIRS are .h5, not hdf
 VIIRS_FILENAME_PATTERN = r"(VNP|VJ1)09GA.*\.A\d{7}\.h\d{2}v\d{2}\.\d{3}\.\d+\.h5"
 # This would be a distinct pattern for the two currently-defined VIIRS files
 #   NOTE: Also changing the varname pattern to "rhyme with" the ones above
