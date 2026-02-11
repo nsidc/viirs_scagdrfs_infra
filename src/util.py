@@ -11,7 +11,7 @@ from typing import Iterator
 
 import pandas as pd
 
-from src.contants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
 
 CONSTANTS_DIR = Path(__file__).parent / "constants"
 TILES_CONFIG_PATH = CONSTANTS_DIR / "tiles.ini"

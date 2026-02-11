@@ -10,6 +10,7 @@ import click
 from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
 from src.constants import (
+    VNP09GA_NRT_DIR,
     VJ109GA_NRT_DIR,
     FILE_PERMISSIONS,
     LANCE_CONCEPT_ID_VJ1,
@@ -123,16 +124,6 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
     help="End date for VIIRS NRT data download (inclusive).",
 )
 @click.option(
-    "-o",
-    "--output-dir",
-    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
-    default=VJ109GA_NRT_DIR,
-    envvar="VJ109GA_NRT_DIR",
-    show_default=True,
-    help="Base directory for VIIRS granule files. Date subdirectories will be "
-    "created (e.g., 2023.10.03). Can be set via VJ109GA_NRT_DIR env var.",
-)
-@click.option(
     "-p",
     "--product",
     type=click.Choice(["VJ1", "VNP", "both"], case_sensitive=False),
@@ -140,7 +131,7 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
     show_default=True,
     help="Which VIIRS product to download: VJ1 (NOAA-20), VNP (NPP), or both.",
 )
-def get_nrt_data(start_date, end_date, output_dir, product):
+def get_nrt_data(start_date, end_date, product):
     """
     Download VIIRS Near Real-Time data for a date range.
 
@@ -151,10 +142,7 @@ def get_nrt_data(start_date, end_date, output_dir, product):
     Supports both VJ109GA (NOAA-20/JPSS-1) and VNP09GA (NPP/Suomi) products.
     """
     logger.info(f"Starting NRT download from {start_date.date()} to {end_date.date()}")
-    logger.info(f"Output directory: {output_dir}")
 
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Determine which products to fetch
     products_to_fetch = []
@@ -171,6 +159,14 @@ def get_nrt_data(start_date, end_date, output_dir, product):
         logger.info(f"{'='*60}")
 
         product_files = 0
+
+        if "VNP" in short_name:
+            output_dir = Path(VNP09GA_NRT_DIR)
+            output_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            output_dir = Path(VJ109GA_NRT_DIR)
+            output_dir.mkdir(parents=True, exist_ok=True)
+
 
         for date in date_range(start_date=start_date, end_date=end_date):
             logger.info(f"Processing {short_name} for {date.strftime('%Y-%m-%d')}")
