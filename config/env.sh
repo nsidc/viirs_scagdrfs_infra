@@ -7,6 +7,8 @@ export TOPDIR="$(dirname "${SCRIPT_DIR}")"
 
 # PetaLibrary paths
 export PETALIB_DIR=/pl/active/daac-production
+# TODO:  Do we want the same staging directory for MOD and VIIRS?
+#        If not, maybe this should be .../viirs_scagdrfs/staging
 export PETALIB_STAGING_DIR=/pl/active/daac-production/scagdrfs/staging
 
 # VIIRS data paths
