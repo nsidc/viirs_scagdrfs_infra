@@ -3,4 +3,5 @@ pathdef.m
 .nfs*
 slurm*
 scag/
+scagdrfs_jpl/
 __pycache__/

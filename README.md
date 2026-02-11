@@ -1,33 +1,9 @@
-# Template instructions (delete me)
-
-- [ ] Replace the following variables in this README:
-    * `{title}`: The title of this application / repository.
-    * `{audience}`: The target audience of this repository.
-    * `{utility}`: Things this repository enables the audience to do.
-    * `{requirements}`: A bulleted list of pre-requisites.
-    * `{installation}`: Describe how to install this software, with platform-specific
-      instructions if necessary.
-    * `{usage}`: Describe how to use this software, with platform-specific instructions
-      if necessary.
-    * `{troubleshooting}`: Describe any tips or tricks in case the user runs into
-      problems.
-
-- [ ] In the "Level of Support" section, choose one LoS and delete the other.
-
-- [ ] Choose a license, rename it to `LICENSE`, and delete the unused one.
-    * The `NASA` license must be used for DAAC projects. The contract number is our
-      5-year DAAC contract and does not need to be changed or maintained in your
-      codebase unless work extends into a new 5-year contract period.
-    * The `GENERAL` license is for all other work.
-
-- [ ] Delete this section.
-
 <p align="center">
   <img alt="NSIDC logo" src="https://nsidc.org/themes/custom/nsidc/logo.svg" width="150" />
 </p>
 
 
-# {title}
+# VIIRS SCAGDRFS Infrastructure
 
 {title} enables {audience} to {utility}.
 
@@ -37,8 +13,6 @@
 * This repository is fully supported by NSIDC. If you discover any problems or bugs,
   please submit an Issue. If you would like to contribute to this repository, you may fork
   the repository and submit a pull request.
-* This repository is not actively supported by NSIDC but we welcome issue submissions and
-  pull requests in order to foster community contribution.
 
 See the [LICENSE](LICENSE) for details on permissions and warranties. Please contact
 nsidc@nsidc.org for more information.
@@ -46,12 +20,45 @@ nsidc@nsidc.org for more information.
 
 ## Requirements
 
-{requirements}
+* Access to NSIDC Alpine compute environment
+* NASA Earthdata Login credentials (https://urs.earthdata.nasa.gov/)
+* Conda or Mamba package manager
 
 
 ## Installation
 
-{installation}
+### 1. Clone the repository
+```bash
+cd /projects/$USER
+git clone  viirs_scagdrfs_infra
+cd viirs_scagdrfs_infra
+```
+
+### 2. Get an interactive node
+```bash
+ salloc --nodes=2 --ntasks=2 --qos=normal --partition=amilan --time=03:00:00 srun --pty $SHELL
+```
+
+### 3. Create conda environment
+```bash
+# Using mamba (faster)
+mamba env create -f environment.yml
+
+# or using build in script
+./scripts/activate-viirs-conda.sh
+```
+
+### 3. Configure Earthdata credentials
+
+Create a `.netrc` file in your home directory for authentication:
+```bash
+cat > ~/.netrc << EOF
+machine urs.earthdata.nasa.gov
+    login YOUR_USERNAME
+    password YOUR_PASSWORD
+EOF
+chmod 600 ~/.netrc
+```
 
 
 ## Usage
