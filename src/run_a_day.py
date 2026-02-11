@@ -13,7 +13,7 @@ from dask_jobqueue import SLURMCluster
 from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 # from scagdrfs_infra.error import ScagDrfsFileError
-from scagdrfs_infra.move_tiles import copy_tile_file
+from src.move_tiles import copy_tile_file
 # from scagdrfs_infra.run_drfs import run_drfs
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
@@ -53,15 +53,16 @@ def setup_day_cluster():
     type=click.DateTime(formats=["%Y%m%d", "%Y-%m-%d"]),
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
-    help="Date of the day of MOD09GA tiles to process.",
+    help="Date of the day of the tiles to process.",
 )
 @click.option(
     "-i",
     "--input-dir",
     type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    envvar="MOD09GA_NRT_DIR",
+    # NOTE this will change depending on the product
+    envvar="VNP09GA_NRT_DIR",
     show_default=True,
-    help="Absolute directory to existing MOD09GA granule files set by MOD09GA_NRT_DIR"
+    help="Absolute directory to existing granule files set by VNP09GA_NRT_DIR"
     " environment variable. Date and tile ID subdirectories will be added"
     " (e.g. 2023.10.03/h08v04).",
 )
