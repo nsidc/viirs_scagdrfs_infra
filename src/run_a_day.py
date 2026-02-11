@@ -143,17 +143,18 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         staging_dir.mkdir(parents=True, exist_ok=True)
     tile_params["staging_dir"] = staging_dir
 
-    # grab HDf files for day
+    # NOTE: maybe this is NOT the best method to find files. I feel like we can be more exact
+    # grab files for day
     if not skip:
         copy_tile_file(
             move_date=day, input_dir=input_dir, output_dir=working_dir, tile=tile
         )
-    hdf_files = list(working_dir.glob("**/*.hdf"))
-    if len(hdf_files) != 1:
+    h5_files = list(working_dir.glob("**/*.h5"))
+    if len(h5_files) != 1:
         print(
-            f"Found either zero or multiple HDF files in working directory: {working_dir}\n"
+            f"Found either zero or multiple files in working directory: {working_dir}\n"
         )
-        print(f"This will not run until there is 1 hdf file in {working_dir}\n")
+        print(f"This will not run until there is 1 file in {working_dir}\n")
         print("An empty netcdf will be created.\n")
         create_netcdf(
             day=day,
@@ -162,9 +163,9 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         )
 
     else:
-        hdf_file = hdf_files[0]
-        tile_params["hdf_file"] = hdf_file
-        # bipify HDF files
+        h5_file = h5_files[0]
+        tile_params["h5_file"] = h5_file
+        # bipify files
         bipify_files(input_dir=working_dir, output_dir=working_dir)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
         # if len(bip_meta_files) != 1:
@@ -191,22 +192,24 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
 
             # Run DRFS and SCAG on the command line not in the supercomputer
             if no_queue:
+                # NOTE: COMMENTING OUT DRFS FOR TESTING
+                # TODO: Uncomment later
                 # skip drfs if there are 6 tifs present (masked and unmasked drfs)
-                if tifCounter0 != 6:
-                    print("Running DRFS for ", tile_params["hdf_file"], "...\n")
-                    ctx.invoke(
-                        run_drfs,
-                        hdf_file=tile_params["hdf_file"],
-                        working_dir=tile_params["working_dir"],
-                        staging_dir=tile_params["staging_dir"],
-                        component_dir=tile_params["component_dir"],
-                    )
+                # if tifCounter0 != 6:
+                #     print("Running DRFS for ", tile_params["h5_file"], "...\n")
+                #     ctx.invoke(
+                #         run_drfs,
+                #         h5_file=tile_params["h5_file"],
+                #         working_dir=tile_params["working_dir"],
+                #         staging_dir=tile_params["staging_dir"],
+                #         component_dir=tile_params["component_dir"],
+                #     )
 
                 # Always run scag
                 ctx.invoke(
                     run_scag,
                     bip_file=tile_params["bip_meta_file"].with_suffix(""),
-                    hdf_file=tile_params["hdf_file"],
+                    h5_file=tile_params["h5_file"],
                     working_dir=tile_params["working_dir"],
                 )
 
@@ -215,12 +218,12 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                 if tifCounter0 != 6:
                     print(
                         "Submitting DRFS run to queue for ",
-                        tile_params["hdf_file"],
+                        tile_params["h5_file"],
                         "...\n",
                     )
                     cmd_drfs = ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
                         os.environ.get("TOPDIR"),
-                        tile_params["hdf_file"],
+                        tile_params["h5_file"],
                         tile_params["working_dir"],
                         tile_params["staging_dir"],
                         tile_params["component_dir"],
@@ -247,13 +250,13 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                 # Always run SCAG
                 print(
                     "Submitting scag run to queue for ",
-                    tile_params["hdf_file"],
+                    tile_params["h5_file"],
                     "...\n",
                 )
                 cmd_scag = ". {}/tasks/run-scag.sh -b {} -h {} -w {}".format(
                     os.environ.get("TOPDIR"),
                     tile_params["bip_meta_file"].with_suffix(""),
-                    tile_params["hdf_file"],
+                    tile_params["h5_file"],
                     tile_params["working_dir"],
                 )
                 print("SCAG command to run: ", cmd_scag, "\n")
