@@ -186,15 +186,13 @@ def get_info_from_bip_file(meta_path):
 def get_sensor_from_filename(filename):
     # Loop through sensors until we find a match
 
-    sensor = None
-
     # Is this a MODIS file?
     modis_regex = re.compile("\S*MOD09GA\S+")
     modis_matches = modis_regex.search(str(filename))
-    if sensor is None and modis_matches is None:
-        sensor = None
-    else:
-        sensor = "MODIS"
+
+    # Is this a VIIRS-VJ1 file?
+    viirsVJ1_regex = re.compile("\S*VJ1\S+")
+    viirsVJ1_matches = viirsVJ1_regex.search(str(filename))
 
     # Is this a VIIRS-VNP file?
     # NOTE: Assuming that code uses "VIIRS" for sensor
@@ -202,18 +200,15 @@ def get_sensor_from_filename(filename):
     #       VIIRS satellites.
     viirs_regex = re.compile("\S*VNP09GA\S+")
     viirs_matches = viirs_regex.search(str(filename))
-    if sensor is None and viirs_matches is None:
-        sensor = None
-    else:
-        sensor = "VIIRS"
 
-    # Is this a VIIRS-VJ1 file?
-    viirsVJ1_regex = re.compile("\S*VJ1\S+")
-    viirsVJ1_matches = viirsVJ1_regex.search(str(filename))
-    if sensor is None and viirsVJ1_matches is None:
-        sensor = None
-    else:
+    if modis_matches:
+        sensor = "MODIS"
+    elif viirs_matches:
+        sensor = "VIIRS"
+    elif viirsVJ1_matches:
         sensor = "VIIRS_VJ1"
+    else: 
+        sensor = None
 
     if sensor is None:
         raise RuntimeError(f"Cannot determine sensor from filename: {filename}")
