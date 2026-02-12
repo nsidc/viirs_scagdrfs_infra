@@ -28,8 +28,8 @@ def get_data(filename, data_type, error_value):
     return data
 
 
-def get_bip_full_mask(working_dir, hdf_root, file_info):
-    bip_file = Path(working_dir) / (hdf_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
+def get_bip_full_mask(working_dir, h5_root, file_info):
+    bip_file = Path(working_dir) / (h5_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
     with open(bip_file, "rb") as fbip:
         data = np.fromfile(fbip, dtype=np.uint16)
     data = data.reshape(2400, 2400, 7)
@@ -89,7 +89,7 @@ def write_outfile(outfile, data_cw):
 
 
 def mask_drfs(
-    tile_id: str, date: dt.date, hdf_file: Path, working_dir: Path, staging_dir: Path
+    tile_id: str, date: dt.date, h5_file: Path, working_dir: Path, staging_dir: Path
 ):
     # Add suffix to default working and staging dirs.
     if str(working_dir) == os.environ.get("WORK_DIR"):
@@ -102,13 +102,13 @@ def mask_drfs(
     water_mask_data = get_water_mask(file_info, tile_id)
 
     # Created .dat file names from IDL processing
-    hdf_root = hdf_file.stem
+    h5_root = h5_file.stem
     delta_vis_suffix = file_info.get("FILE_INFO", "DELTA_VIS_SUFFIX")
-    delta_vis_path = Path(working_dir) / (str(hdf_root) + delta_vis_suffix)
+    delta_vis_path = Path(working_dir) / (str(h5_root) + delta_vis_suffix)
     grain_size_suffix = file_info.get("FILE_INFO", "GRAIN_SIZE_SUFFIX")
-    grain_size_path = Path(working_dir) / (str(hdf_root) + grain_size_suffix)
+    grain_size_path = Path(working_dir) / (str(h5_root) + grain_size_suffix)
     forcing_suffix = file_info.get("FILE_INFO", "FORCING_SUFFIX")
-    forcing_path = Path(working_dir) / (str(hdf_root) + forcing_suffix)
+    forcing_path = Path(working_dir) / (str(h5_root) + forcing_suffix)
 
     # Get binary data and change error values
     delta_vis_data = get_data(
@@ -151,7 +151,7 @@ def mask_drfs(
     forcing_outfile = Path(working_dir) / forcing_name
     write_outfile(forcing_outfile, forcing_data)
 
-    bip_full_mask = get_bip_full_mask(working_dir, hdf_root, file_info)
+    bip_full_mask = get_bip_full_mask(working_dir, h5_root, file_info)
 
     # Apply cloud and water masks
     # TODO: Should use BITDEPTH to choose correct cw_mask[16]() routine
