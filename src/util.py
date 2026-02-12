@@ -191,7 +191,7 @@ def get_sensor_from_filename(filename):
     # Is this a MODIS file?
     modis_regex = re.compile("\S*MOD09GA\S+")
     modis_matches = modis_regex.search(str(filename))
-    if modis_matches is None:
+    if sensor is None and modis_matches is None:
         sensor = None
     else:
         sensor = "MODIS"
@@ -202,7 +202,7 @@ def get_sensor_from_filename(filename):
     #       VIIRS satellites.
     viirs_regex = re.compile("\S*VNP09GA\S+")
     viirs_matches = viirs_regex.search(str(filename))
-    if viirs_matches is None:
+    if sensor is None and viirs_matches is None:
         sensor = None
     else:
         sensor = "VIIRS"
@@ -210,7 +210,7 @@ def get_sensor_from_filename(filename):
     # Is this a VIIRS-VJ1 file?
     viirsVJ1_regex = re.compile("\S*VJ1\S+")
     viirsVJ1_matches = viirsVJ1_regex.search(str(filename))
-    if viirsVJ1_matches is None:
+    if sensor is None and viirsVJ1_matches is None:
         sensor = None
     else:
         sensor = "VIIRS_VJ1"
