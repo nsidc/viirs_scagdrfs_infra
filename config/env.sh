@@ -20,6 +20,10 @@ export VJ109GA_NRT_DIR=${PETALIB_DIR}/VJ109GA/NRT
 # Working directories
 export WORK_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/working
 
+# SCAG specific environment setup
+export SCAG_DIR=${TOPDIR}/scag
+export SCAG_CONFIG_DIR=${SCAG_DIR}/config
+
 # Python configuration - FIX THIS LINE
 ### TODO: This is probably not necessary.  Leaving it here until
 ###       that is confirmed
