@@ -21,7 +21,9 @@ export VJ109GA_NRT_DIR=${PETALIB_DIR}/VJ109GA/NRT
 export WORK_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/working
 
 # Python configuration - FIX THIS LINE
-export PYTHONPATH="${TOPDIR}${PYTHONPATH:+:${PYTHONPATH}}"
+### TODO: This is probably not necessary.  Leaving it here until
+###       that is confirmed
+### export PYTHONPATH="${TOPDIR}${PYTHONPATH:+:${PYTHONPATH}}"
 export CONSTANTS_DIR=${TOPDIR}/src/constants
 
 # Create necessary directories
