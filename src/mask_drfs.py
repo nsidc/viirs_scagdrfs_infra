@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from src.masking import cloud16, cw_mask, h2o16
-from src.contants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
+from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
 
 
 def get_data(filename, data_type, error_value):
