@@ -5,3 +5,4 @@ slurm*
 scag/
 scagdrfs_jpl/
 __pycache__/
+outlog.txt

@@ -66,8 +66,10 @@ def cw_mask16(bfull_mask, water, data):
 
 def get_file_info_config():
     # parser = SafeConfigParser(os.environ)
+    CONSTANTS_DIR = Path(__file__).parent / "constants"
+    TILES_CONFIG_PATH = CONSTANTS_DIR / "tiles.ini"
     parser = configparser.ConfigParser(os.environ)
-    parser.read(os.path.join(os.environ.get("SCAGDRFS_CONSTANTS_DIR"), "file_info.ini"))
+    parser.read(TILES_CONFIG_PATH)
     return parser
 
 
