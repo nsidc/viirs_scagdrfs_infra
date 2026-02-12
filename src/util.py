@@ -181,3 +181,54 @@ def get_info_from_bip_file(meta_path):
     y_lr = match.group(1)
     bip_meta_file["lr_corner_y"] = y_lr
     return bip_meta_file
+
+
+def get_sensor_from_filename(filename):
+    # Loop through sensors until we find a match
+
+    sensor = None
+
+    # Is this a MODIS file?
+    modis_regex = re.compile("\S*MOD09GA\S+")
+    modis_matches = modis_regex.search(str(filename))
+    if modis_matches is None:
+        sensor = None
+    else:
+        sensor = "MODIS"
+
+    # Is this a VIIRS-VNP file?
+    # NOTE: Assuming that code uses "VIIRS" for sensor
+    #       but we will want to distinguish different
+    #       VIIRS satellites.
+    viirs_regex = re.compile("\S*VNP09GA\S+")
+    viirs_matches = viirs_regex.search(str(filename))
+    if viirs_matches is None:
+        sensor = None
+    else:
+        sensor = "VIIRS"
+
+    # Is this a VIIRS-VJ1 file?
+    viirsVJ1_regex = re.compile("\S*VJ1\S+")
+    viirsVJ1_matches = viirsVJ1_regex.search(str(filename))
+    if viirsVJ1_matches is None:
+        sensor = None
+    else:
+        sensor = "VIIRS_VJ1"
+
+    if sensor is None:
+        raise RuntimeError(f"Cannot determine sensor from filename: {filename}")
+    else:
+        print(f'Determined that filename sensor is: {sensor}')
+
+    return sensor
+
+
+def get_bitdepth_for_field_name(field_name):
+    """Returns the bit depth -- eg 8 for uint8 and 16 for uint16 -- for a DRFS or SCAG
+    data field name"""
+    try:
+        return FIELD_BITDEPTHS[field_name]
+    except KeyError:
+        raise RuntimeError(
+            f"field name {field_name} does not have a bitdepth defined: {FIELD_BITDEPTHS.keys()}"
+        )

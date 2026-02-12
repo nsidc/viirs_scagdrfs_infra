@@ -55,7 +55,6 @@ def setup_scagdrfs_cluster():
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
     help="Start date of tiles to process.",
-    callback=datetime_to_date,
 )
 @click.option(
     "-e",
@@ -64,7 +63,6 @@ def setup_scagdrfs_cluster():
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
     help="End date of tiles to process.",
-    callback=datetime_to_date,
 )
 @click.option(
     "-r",
@@ -191,7 +189,7 @@ def run_scagdrfs(
                 else:
                     print('    NOT in no_queue...')
                     cmd = (
-                        ". {}/tasks/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
+                        ". {}/scripts/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
                             os.environ.get("TOPDIR"),
                             day,
                             orig_input_dir,

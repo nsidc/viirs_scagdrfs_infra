@@ -15,20 +15,28 @@ def copy_tile_file(move_date: dt.date, input_dir: Path, output_dir: Path, tile: 
     output_filepath = output_dir
     if output_dir == os.environ.get("WORK_DIR"):
         output_filepath = output_dir / f"{date_str}/{tile}"
-    if not os.path.exists(mod09ga_output_filepath):
+    if not os.path.exists(output_filepath):
         os.makedirs(output_filepath)
-    # TODO edit for viirs
-    mod09ga_filename = f"MOD09GA.A{date_file}.{tile}"
-    mod09ga_filepath_start = input_dir / f"{date_str}"
-    possible_files = os.listdir(mod09ga_filepath_start)
-    mod09ga_file = [f for f in possible_files if f.startswith(mod09ga_filename)]
-    if (len(mod09ga_file)) < 1:
-        print(f"No files match {mod09ga_filename} in {mod09ga_filepath_start}")
+    # TODO edit for viirs VJ1
+    # TODO: This will need to be modified for different sensors:
+    #  eg:
+    # MOD09GA.A2026042.h16v17.061.2026043020955.NRT.hdf
+    # -----------------------
+    #   filename_start (for MOD)
+    # VNP09GA_NRT.A2026042.h12v02.002.2026043033539.h5
+    # ---------------------------
+    #     filename_start (for VNP)
+    filename_start = f"VNP09GA_NRT.A{date_file}.{tile}"
+    filepath_start = input_dir / f"{date_str}"
+    possible_files = os.listdir(filepath_start)
+    output_file = [f for f in possible_files if f.startswith(filename_start)]
+    if (len(output_file)) < 1:
+        print(f"No files match {filename_start} in {filepath_start}")
         return
     else:
-        mod09ga_filepath = str(mod09ga_filepath_start) + "/" + mod09ga_file[0]
+        filepath = str(filepath_start) + "/" + output_file[0]
 
-    shutil.copy2(mod09ga_filepath, mod09ga_output_filepath)
-    print(f"{mod09ga_filename} copied to {mod09ga_output_filepath}.")
+    shutil.copy2(filepath, output_filepath)
+    print(f"{filename_start} copied to {output_filepath}.")
 
-    return f"Tile files have been copied to {mod09ga_output_filepath}."
+    return f"Tile files have been copied to {output_filepath}."

@@ -256,7 +256,6 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                     tile_params["h5_file"],
                     "...\n",
                 )
-                #cmd_scag = ". {}/tasks/run-scag.sh -b {} -h {} -w {}".format(
                 cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {}".format(
                     os.environ.get("TOPDIR"),
                     tile_params["bip_meta_file"].with_suffix(""),
