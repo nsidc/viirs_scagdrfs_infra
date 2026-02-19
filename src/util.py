@@ -99,6 +99,11 @@ def get_field_name(filename):
     This assumes a filename (type Path) with a .stem of the form:
     MODSCGDRF_NRT_GS_h08v04_VNP09GANRT061_20250331_V01.1.bin.mask
     ...or similar
+
+    VNP:
+      VNP09GA_NRT.A2026042.h30v13.002.2026043041826.grnsz.bin
+
+    TODO: This function is handling a LOT of different file name templates!
     """
     if isinstance(filename, Path):
         base_filename = str(filename.stem)
@@ -109,6 +114,8 @@ def get_field_name(filename):
             f"filename {filename} is neither Path nor str: {type(filename)}"
         )
 
+    print(f'in get_field_name(), filename is: {filename}', flush=True)
+
     n_underscores = base_filename.count("_")
     if n_underscores > 3:
         fn_parts = base_filename.split("_")
@@ -117,6 +124,11 @@ def get_field_name(filename):
         fn_parts = base_filename.split(".")
         field_index = 6
 
+    print(f'n_underscores: {n_underscores}')
+
+    if fn_parts[field_index] == 'bin':
+        field_index = field_index - 1
+
     try:
         field_name = fn_parts[field_index]
     except IndexError:
@@ -124,6 +136,7 @@ def get_field_name(filename):
             f"No index {field_index} on parts {fn_parts} for filename {filename}"
         )
 
+    print(f'...returning field_name: {field_name}')
     return field_name
 
 
