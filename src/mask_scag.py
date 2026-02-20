@@ -44,7 +44,7 @@ def write_data(
 ):
     # TODO: update this
     filename = (
-        "MODSCGDRF_NRT_{var}_{tile}_MOD09GANRT061_{date_str}_V01.1.bin."
+        "VIRSCGDRF_NRT_{var}_{tile}_VNP09GANRT061_{date_str}_V01.1.bin."
         "{mask_status}".format(
             var=var, tile=tile, date_str=date_str, mask_status=mask_status
         )

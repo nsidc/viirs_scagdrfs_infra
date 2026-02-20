@@ -82,7 +82,7 @@ def check_expected_tif_files_with_glob(tif_dir, tile):
     for file_type in file_types:
         # Pattern to match both masked and unmasked versions
         # TODO: update to VNP or VJ1
-        pattern = f"MODSCGDRF_NRT_{file_type}_{tile}_VNP09GANRT061_*_V*.tif"
+        pattern = f"VIRSCGDRF_NRT_{file_type}_{tile}_VNP09GANRT061_*_V*.tif"
         search_pattern = os.path.join(tif_dir, pattern)
         matches = glob.glob(search_pattern)
         found_by_type[file_type] = len(matches)
