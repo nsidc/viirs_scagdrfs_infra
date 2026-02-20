@@ -4,7 +4,7 @@
 start_time=$(date +%s)
 
 source ${PWD}/config/env.sh
-source ${PWD}/tasks/activate-viirs-conda.sh
+source ${PWD}/scripts/activate-viirs-conda.sh
 python -m src.run_scagdrfs "$@"
 
 # Record the end time

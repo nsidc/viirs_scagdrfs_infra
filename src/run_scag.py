@@ -61,7 +61,7 @@ def setup_scag_cluster():
     "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
     " will be added (e.g. 2023.10.03/h08v04).",
 )
-def run_scag(bip_file, hdf_file, working_dir):
+def run_scag(bip_file, h5_file, working_dir):
 
     scag_cluster = setup_scag_cluster()
     scag_client = Client(scag_cluster)
@@ -114,7 +114,7 @@ def run_scag(bip_file, hdf_file, working_dir):
 
     # # create netcdf files
     # create_netcdf(
-    #     day=get_date_from_filename(hdf_file),
+    #     day=get_date_from_filename(h5_file),
     #     tif_dir=working_dir,
     #     tile_id=bip_info["tile_id"],
     # )

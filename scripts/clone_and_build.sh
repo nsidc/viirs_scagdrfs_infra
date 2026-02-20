@@ -20,8 +20,8 @@ echo "Building scag"
 cd ${TOPDIR}/scag
 make build-alpine
 
-echo "Building scagdrfs"
-cd ${TOPDIR}/scagdrfs_jpl
+#echo "Building scagdrfs"
+#cd ${TOPDIR}/scagdrfs_jpl
 #ln -s pathdef_R2021b.m pathdef.m
 
 cd $TOPDIR

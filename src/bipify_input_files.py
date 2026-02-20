@@ -17,7 +17,7 @@ def bipify_files(input_dir: Path, output_dir: Path):
     Returns:
         str: A success message indicating that the BIP files have been created.
     """
-    for input_file in input_dir.glob("**/*.hdf"):
+    for input_file in input_dir.glob("**/*.h5"):
         outfile = output_dir / input_file.with_suffix(".bip").name
         bipify_file(input_file, outfile)
 

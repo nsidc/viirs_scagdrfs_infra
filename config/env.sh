@@ -16,12 +16,19 @@ export PETALIB_STAGING_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/staging
 # VIIRS data paths
 export VNP09GA_NRT_DIR=${PETALIB_DIR}/VNP09GA/NRT
 export VJ109GA_NRT_DIR=${PETALIB_DIR}/VJ109GA/NRT
+export WATER_MASK_DIR=${PETALIB_DIR}/post_process_watermasks
 
 # Working directories
 export WORK_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/working
 
+# SCAG specific environment setup
+export SCAG_DIR=${TOPDIR}/scag
+export SCAG_CONFIG_DIR=${SCAG_DIR}/config
+
 # Python configuration - FIX THIS LINE
-export PYTHONPATH="${TOPDIR}${PYTHONPATH:+:${PYTHONPATH}}"
+### TODO: This is probably not necessary.  Leaving it here until
+###       that is confirmed
+### export PYTHONPATH="${TOPDIR}${PYTHONPATH:+:${PYTHONPATH}}"
 export CONSTANTS_DIR=${TOPDIR}/src/constants
 
 # Create necessary directories

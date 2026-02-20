@@ -9,10 +9,10 @@ import click
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-from scagdrfs_infra.error import ScagDrfsDateRangeError
-from scagdrfs_infra.output_to_peta import copy_output_to_peta
-from scagdrfs_infra.output_to_v0 import copy_output_to_v0
-from scagdrfs_infra.run_a_day import run_a_day
+#from scagdrfs_infra.error import ScagDrfsDateRangeError
+#from scagdrfs_infra.output_to_peta import copy_output_to_peta
+#from scagdrfs_infra.output_to_v0 import copy_output_to_v0
+from src.run_a_day import run_a_day
 from src.util import (
     date_range,
     get_list_of_defined_regions,
@@ -55,7 +55,6 @@ def setup_scagdrfs_cluster():
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
     help="Start date of tiles to process.",
-    callback=datetime_to_date,
 )
 @click.option(
     "-e",
@@ -64,7 +63,6 @@ def setup_scagdrfs_cluster():
     default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
     help="End date of tiles to process.",
-    callback=datetime_to_date,
 )
 @click.option(
     "-r",
@@ -88,7 +86,7 @@ def setup_scagdrfs_cluster():
     "-i",
     "--input-dir",
     type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    envvar="VNP01GA_NRT_DIR",
+    envvar="VNP09GA_NRT_DIR",
     show_default=True,
     help="Absolute directory to existing granule files set by {product}_NRT_DIR"
     " environment variable. Date and tile ID subdirectories will be added"
@@ -112,7 +110,9 @@ def setup_scagdrfs_cluster():
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    envvar="PETALIB_TRANSFER_DIR",
+    #envvar="PETALIB_TRANSFER_DIR",
+    # TODO: Don't use work_dir for transfer_dir (!)
+    envvar="WORK_DIR",
     show_default=True,
     help="Path to data transfer directory where output files are stored before "
     "being transferred to the final V0 directory. Defaults to environment "
@@ -142,13 +142,13 @@ def run_scagdrfs(
     # Forces a run even with 18 tifs should be a click option
     force_run_scagdrfs = False  # This should be false for normal Ops operations
 
-    if end_date < start_date:
-        raise ScagDrfsDateRangeError(
-            "The start date of processing: "
-            + start_date.strftime("%m/%d/%Y")
-            + "  is after the end date: "
-            + end_date.strftime("%m/%d/%Y")
-        )
+    # if end_date < start_date:
+    #     raise ScagDrfsDateRangeError(
+    #         "The start date of processing: "
+    #         + start_date.strftime("%m/%d/%Y")
+    #         + "  is after the end date: "
+    #         + end_date.strftime("%m/%d/%Y")
+    #     )
 
     orig_input_dir = input_dir
     orig_working_dir = working_dir
@@ -158,10 +158,13 @@ def run_scagdrfs(
         scagdrfs_cluster = setup_scagdrfs_cluster()
         scagdrfs_client = Client(scagdrfs_cluster)
         day_futures = []
+
     for day in date_range(start_date=start_date, end_date=end_date):
+        print(f'run_scagdrfs: loop day: {day}')
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
-            if input_dir == os.environ.get("VNP01GA_NRT_DIR"):
+            print(f'    run_scagdrfs: tile: {tile}')
+            if input_dir == os.environ.get("VNP09GA_NRT_DIR"):
                 input_dir = orig_input_dir / day.strftime("%Y.%m.%d")
             tif_dir = os.path.join(working_dir, day.strftime("%Y.%m.%d"), tile)
             tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)
@@ -170,8 +173,9 @@ def run_scagdrfs(
                     f"You have all expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
                 )
             else:
-                print(f"Running SCAGDRFS for day: {day}\n")
+                print(f"Running VIIRS - SCAGDRFS for day: {day}\n")
                 if no_queue:
+                    print('    in no_queue...')
                     ctx.invoke(
                         run_a_day,
                         day=day,
@@ -183,8 +187,9 @@ def run_scagdrfs(
                         no_queue=no_queue,
                     )
                 else:
+                    print('    NOT in no_queue...')
                     cmd = (
-                        ". {}/tasks/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
+                        ". {}/scripts/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
                             os.environ.get("TOPDIR"),
                             day,
                             orig_input_dir,
@@ -214,30 +219,30 @@ def run_scagdrfs(
         scagdrfs_client.close()
         scagdrfs_cluster.close()
 
-    # move DRFS and SCAG output to petalibrary
-    if not no_publish:
-        print(
-            f"Copying output to peta for {start_date} to {end_date} from {working_dir} to {transfer_dir} for {regions}"
-        )
-        copy_output_to_peta(
-            start_date=start_date,
-            end_date=end_date,
-            input_dir=working_dir,
-            output_dir=transfer_dir,
-            regions=regions,
-        )
-        # move DRFS and SCAG output to v0
-        v0_staging_dir = os.environ.get("V0_DIR")
-        print(
-            f"Copying output to V0 for {start_date} to {end_date} from {transfer_dir} to {v0_staging_dir} for {regions}"
-        )
-        copy_output_to_v0(
-            start_date=start_date,
-            end_date=end_date,
-            transfer_dir=transfer_dir,
-            output_dir=v0_staging_dir,
-            tiles=tile_ids,
-        )
+    # # move DRFS and SCAG output to petalibrary
+    # if not no_publish:
+    #     print(
+    #         f"Copying output to peta for {start_date} to {end_date} from {working_dir} to {transfer_dir} for {regions}"
+    #     )
+    #     copy_output_to_peta(
+    #         start_date=start_date,
+    #         end_date=end_date,
+    #         input_dir=working_dir,
+    #         output_dir=transfer_dir,
+    #         regions=regions,
+    #     )
+    #     # move DRFS and SCAG output to v0
+    #     v0_staging_dir = os.environ.get("V0_DIR")
+    #     print(
+    #         f"Copying output to V0 for {start_date} to {end_date} from {transfer_dir} to {v0_staging_dir} for {regions}"
+    #     )
+    #     copy_output_to_v0(
+    #         start_date=start_date,
+    #         end_date=end_date,
+    #         transfer_dir=transfer_dir,
+    #         output_dir=v0_staging_dir,
+    #         tiles=tile_ids,
+    #     )
 
     print(f"Finished run_scagdrfs() at {dt.datetime.now()}")
 

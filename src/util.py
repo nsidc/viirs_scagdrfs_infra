@@ -82,7 +82,7 @@ def check_expected_tif_files_with_glob(tif_dir, tile):
     for file_type in file_types:
         # Pattern to match both masked and unmasked versions
         # TODO: update to VNP or VJ1
-        pattern = f"MODSCGDRF_NRT_{file_type}_{tile}_VNP09GANRT061_*_V*.tif"
+        pattern = f"VIRSCGDRF_NRT_{file_type}_{tile}_VNP09GANRT061_*_V*.tif"
         search_pattern = os.path.join(tif_dir, pattern)
         matches = glob.glob(search_pattern)
         found_by_type[file_type] = len(matches)
@@ -99,6 +99,11 @@ def get_field_name(filename):
     This assumes a filename (type Path) with a .stem of the form:
     MODSCGDRF_NRT_GS_h08v04_VNP09GANRT061_20250331_V01.1.bin.mask
     ...or similar
+
+    VNP:
+      VNP09GA_NRT.A2026042.h30v13.002.2026043041826.grnsz.bin
+
+    TODO: This function is handling a LOT of different file name templates!
     """
     if isinstance(filename, Path):
         base_filename = str(filename.stem)
@@ -109,6 +114,8 @@ def get_field_name(filename):
             f"filename {filename} is neither Path nor str: {type(filename)}"
         )
 
+    print(f'in get_field_name(), filename is: {filename}', flush=True)
+
     n_underscores = base_filename.count("_")
     if n_underscores > 3:
         fn_parts = base_filename.split("_")
@@ -117,6 +124,11 @@ def get_field_name(filename):
         fn_parts = base_filename.split(".")
         field_index = 6
 
+    print(f'n_underscores: {n_underscores}')
+
+    if fn_parts[field_index] == 'bin':
+        field_index = field_index - 1
+
     try:
         field_name = fn_parts[field_index]
     except IndexError:
@@ -124,6 +136,7 @@ def get_field_name(filename):
             f"No index {field_index} on parts {fn_parts} for filename {filename}"
         )
 
+    print(f'...returning field_name: {field_name}')
     return field_name
 
 
@@ -181,3 +194,49 @@ def get_info_from_bip_file(meta_path):
     y_lr = match.group(1)
     bip_meta_file["lr_corner_y"] = y_lr
     return bip_meta_file
+
+
+def get_sensor_from_filename(filename):
+    # Loop through sensors until we find a match
+
+    # Is this a MODIS file?
+    modis_regex = re.compile("\S*MOD09GA\S+")
+    modis_matches = modis_regex.search(str(filename))
+
+    # Is this a VIIRS-VJ1 file?
+    viirsVJ1_regex = re.compile("\S*VJ1\S+")
+    viirsVJ1_matches = viirsVJ1_regex.search(str(filename))
+
+    # Is this a VIIRS-VNP file?
+    # NOTE: Assuming that code uses "VIIRS" for sensor
+    #       but we will want to distinguish different
+    #       VIIRS satellites.
+    viirs_regex = re.compile("\S*VNP09GA\S+")
+    viirs_matches = viirs_regex.search(str(filename))
+
+    if modis_matches:
+        sensor = "MODIS"
+    elif viirs_matches:
+        sensor = "VIIRS"
+    elif viirsVJ1_matches:
+        sensor = "VIIRS_VJ1"
+    else: 
+        sensor = None
+
+    if sensor is None:
+        raise RuntimeError(f"Cannot determine sensor from filename: {filename}")
+    else:
+        print(f'Determined that filename sensor is: {sensor}')
+
+    return sensor
+
+
+def get_bitdepth_for_field_name(field_name):
+    """Returns the bit depth -- eg 8 for uint8 and 16 for uint16 -- for a DRFS or SCAG
+    data field name"""
+    try:
+        return FIELD_BITDEPTHS[field_name]
+    except KeyError:
+        raise RuntimeError(
+            f"field name {field_name} does not have a bitdepth defined: {FIELD_BITDEPTHS.keys()}"
+        )
