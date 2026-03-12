@@ -20,6 +20,7 @@ from src.constants.field_info import (
     FIELD_BITDEPTHS,
     VALID_FIELD_NAMES,
 )
+from src.constants.products import PRODUCT_FILE_EXTENSION
 from src.util import get_bitdepth_for_field_name, get_field_name
 
 
@@ -56,23 +57,25 @@ def write_data(
 
 
 def mask_scag(date: dt.date, working_dir: Path, tile: str):
-    h5_files = list(working_dir.glob("**/*.h5"))
-    if len(h5_files) != 1:
+    ext = PRODUCT_FILE_EXTENSION[product.upper()]
+
+    src_files = list(working_dir.glob(f"**/*{ext}"))
+    if len(src_files) != 1:
         print(
             "Found either zero or multiple HDF files in working directory: "
             + str(working_dir)
         )
-    h5_file = h5_files[0]
+    src_file = src_files[0]
 
     file_info = get_file_info_config()
-    h5_root = h5_file.stem
-    bip_full_mask = get_bip_full_mask(working_dir, h5_root, file_info)
+    src_root = src_file.stem
+    bip_full_mask = get_bip_full_mask(working_dir, src_root, file_info)
     water_mask_data = get_water_mask(file_info, tile)
 
     scag_bin_files = np.sort(glob.glob(os.path.join(working_dir, "*.bin")))
 
     bip_meta_file = Path(working_dir) / (
-        h5_root + file_info.get("FILE_INFO", "BIP_META_SUFFIX")
+        src_root + file_info.get("FILE_INFO", "BIP_META_SUFFIX")
     )
 
     # NOTE: This logic is tricky because it looks at both snow and grnsz
