@@ -9,7 +9,7 @@ from dask_jobqueue import SLURMCluster
 
 from src.mask_scag import mask_scag
 # from scagdrfs_infra.netcdf import create_netcdf
-from src.constants.products import PRODUCT_FILE_EXTENSION
+from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
 from src.util import get_date_from_filename, get_info_from_bip_file
 
 
@@ -51,6 +51,14 @@ def setup_scag_cluster():
     help="H5 or HDF file to process.",
 )
 @click.option(
+    "--product",
+    "-P",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    default="VNP09GA",
+    show_default=True,
+    help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
+)
+@click.option(
     "-w",
     "--working-dir",
     type=click.Path(
@@ -62,7 +70,7 @@ def setup_scag_cluster():
     "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
     " will be added (e.g. 2023.10.03/h08v04).",
 )
-def run_scag(bip_file, src_file, working_dir):
+def run_scag(bip_file, src_file, working_dir, product):
 
     scag_cluster = setup_scag_cluster()
     scag_client = Client(scag_cluster)

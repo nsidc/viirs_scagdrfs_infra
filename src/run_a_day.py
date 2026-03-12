@@ -17,7 +17,7 @@ from src.move_tiles import copy_tile_file
 # from scagdrfs_infra.run_drfs import run_drfs
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
-from src.constants.products import PRODUCT_FILE_EXTENSION
+from src.constants.products import PRODUCT_FILE_EXTENSION, SUPPORTED_PRODUCTS
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -58,27 +58,12 @@ def setup_day_cluster():
     help="Date of the day of the tiles to process.",
 )
 @click.option(
-    "-i",
-    "--input-dir",
-    type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    # NOTE this will change depending on the product
-    envvar="VNP09GA_NRT_DIR",
+    "--product",
+    "-P",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    default="VNP09GA",
     show_default=True,
-    help="Absolute directory to existing granule files set by VNP09GA_NRT_DIR"
-    " environment variable. Date and tile ID subdirectories will be added"
-    " (e.g. 2023.10.03/h08v04).",
-)
-@click.option(
-    "-w",
-    "--working-dir",
-    type=click.Path(
-        file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
-    ),
-    envvar="WORK_DIR",
-    show_default=True,
-    help="Path to working directory where intermediate files are stored. "
-    "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
-    " will be added (e.g. 2023.10.03/h08v04).",
+    help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
     "-s",
@@ -217,6 +202,7 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                     bip_file=tile_params["bip_meta_file"].with_suffix(""),
                     src_file=tile_params["src_file"],
                     working_dir=tile_params["working_dir"],
+                    product=product,
                 )
 
             # Run DRFS and SCAG in the supercomputer queue

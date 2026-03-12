@@ -56,7 +56,7 @@ def write_data(
     return outfile_path
 
 
-def mask_scag(date: dt.date, working_dir: Path, tile: str):
+def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
 
     src_files = list(working_dir.glob(f"**/*{ext}"))

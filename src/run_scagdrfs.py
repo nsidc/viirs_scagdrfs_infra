@@ -184,11 +184,9 @@ def run_scagdrfs(
                 else:
                     print('    NOT in no_queue...')
                     cmd = (
-                        ". {}/scripts/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
+                        ". {}/scripts/run-a-day.sh -d {} -s {} -t {}".format(
                             os.environ.get("TOPDIR"),
                             day,
-                            input_dir,
-                            working_dir,
                             orig_transfer_dir,
                             tile,
                         )
