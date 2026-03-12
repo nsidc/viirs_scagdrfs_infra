@@ -20,7 +20,7 @@ export MOD09GA_NRT_DIR=${PETALIB_DIR}/MOD09GA/NRT
 export WATER_MASK_DIR=${PETALIB_DIR}/post_process_watermasks
 
 # Working directories
-export WORK_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/working
+export WORK_DIR=/scratch/alpine/${USER}/scagdrfs/working
 
 # SCAG specific environment setup
 export SCAG_DIR=${TOPDIR}/scag

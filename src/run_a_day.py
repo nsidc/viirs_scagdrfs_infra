@@ -56,29 +56,6 @@ def setup_day_cluster():
     help="Date of the day of the tiles to process.",
 )
 @click.option(
-    "-i",
-    "--input-dir",
-    type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    # NOTE this will change depending on the product
-    envvar="VNP09GA_NRT_DIR",
-    show_default=True,
-    help="Absolute directory to existing granule files set by VNP09GA_NRT_DIR"
-    " environment variable. Date and tile ID subdirectories will be added"
-    " (e.g. 2023.10.03/h08v04).",
-)
-@click.option(
-    "-w",
-    "--working-dir",
-    type=click.Path(
-        file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
-    ),
-    envvar="WORK_DIR",
-    show_default=True,
-    help="Path to working directory where intermediate files are stored. "
-    "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
-    " will be added (e.g. 2023.10.03/h08v04).",
-)
-@click.option(
     "-s",
     "--staging-dir",
     type=click.Path(

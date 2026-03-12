@@ -160,16 +160,15 @@ def run_scagdrfs(
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
             print(f'    run_scagdrfs: tile: {tile}')
-            if input_dir == os.environ.get("VNP09GA_NRT_DIR"):
-                day_input_dir = input_dir / day.strftime("%Y.%m.%d")
-            tif_dir = os.path.join(working_dir, day.strftime("%Y.%m.%d"), tile)
+            day_input_dir = input_dir / day.strftime("%Y.%m.%d")
+            tif_dir = os.path.join(working_dir, product.upper(), day.strftime("%Y.%m.%d"), tile)
             tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)
             if tifCounter and not force_run_scagdrfs:
                 print(
                     f"You have all expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
                 )
             else:
-                print(f"Running VIIRS - SCAGDRFS for day: {day}\n")
+                print(f"Running SCAGDRFS for {product},day: {day}\n")
                 if no_queue:
                     print('    in no_queue...')
                     ctx.invoke(
