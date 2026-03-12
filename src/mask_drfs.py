@@ -36,9 +36,9 @@ def get_bip_full_mask(working_dir, src_root, file_info):
     try:
         data = data.reshape(2400, 2400, 7)
     except ValueError as e:
-        print(f'Error attempting to reshape data')
-        print(f'  bip_file: {bip_file}')
-        print(f'  size of bip_files data: {data.size}')
+        print(f"Error attempting to reshape data")
+        print(f"  bip_file: {bip_file}")
+        print(f"  size of bip_files data: {data.size}")
         raise e
 
     thresh_b1 = 310
@@ -98,7 +98,12 @@ def write_outfile(outfile, data_cw):
 
 
 def mask_drfs(
-        tile_id: str, date: dt.date, src_file: Path, working_dir: Path, staging_dir: Path, product: str
+    tile_id: str,
+    date: dt.date,
+    src_file: Path,
+    working_dir: Path,
+    staging_dir: Path,
+    product: str,
 ):
     # Add suffix to default working and staging dirs.
     if str(working_dir) == os.environ.get("WORK_DIR"):

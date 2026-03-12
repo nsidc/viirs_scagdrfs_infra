@@ -73,7 +73,9 @@ def get_data(date, concept_id, dated_output_dir, short_name):
 
             print(f"Skipped (no data links): {skipped_no_links}")
             print(f"Skipped (tile not in set): {skipped_no_match}")
-            print(f"Filtered to {len(filtered_results)} granules matching region tiles.")
+            print(
+                f"Filtered to {len(filtered_results)} granules matching region tiles."
+            )
 
             if not filtered_results:
                 print("No matching granules found for download.")
@@ -130,6 +132,4 @@ def chown_data(dated_output_dir):
         for file_path in dated_output_dir.rglob("*"):
             os.chown(file_path, -1, TARGET_GROUP_ID)
     except (PermissionError, OSError) as e:
-        print(
-            f"WARNING: Could not change group ownership on {dated_output_dir}: {e}"
-        )
+        print(f"WARNING: Could not change group ownership on {dated_output_dir}: {e}")

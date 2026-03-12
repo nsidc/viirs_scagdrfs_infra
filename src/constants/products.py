@@ -5,8 +5,8 @@ import os
 
 # Concept IDs for different VIIRS products
 # TODO: Is there also a non-NRT concept-id for each of these?
-# RM NOTE: The concept-id is definitely different for not NRT. 
-LANCE_CONCEPT_ID_MOD = "C2007661943-LANCEMODIS"  # MOD09GA NRT 
+# RM NOTE: The concept-id is definitely different for not NRT.
+LANCE_CONCEPT_ID_MOD = "C2007661943-LANCEMODIS"  # MOD09GA NRT
 LANCE_CONCEPT_ID_VNP = "C2780105555-LANCEMODIS"  # VNP09GA (NPP) NRT
 LANCE_CONCEPT_ID_VJ1 = "C2781246545-LANCEMODIS"  # VJ109GA (NOAA-20) NRT
 
@@ -39,9 +39,9 @@ DIR_PERMISSIONS = 0o775
 
 # Maps product short name → its NRT input dir env var
 PRODUCT_INPUT_DIR_ENVVAR = {
-    "MOD09GA":    "MOD09GA_NRT_DIR",
-    "VNP09GA":    "VNP09GA_NRT_DIR",
-    "VJ109GA":    "VJ109GA_NRT_DIR",
+    "MOD09GA": "MOD09GA_NRT_DIR",
+    "VNP09GA": "VNP09GA_NRT_DIR",
+    "VJ109GA": "VJ109GA_NRT_DIR",
 }
 
 SUPPORTED_PRODUCTS = list(PRODUCT_INPUT_DIR_ENVVAR.keys())

@@ -49,9 +49,7 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
     skipped_count = 0
 
     # Check both .h5 and .hdf files
-    for f in list(dated_output_dir.glob("*.h5")) + list(
-        dated_output_dir.glob("*.hdf")
-    ):
+    for f in list(dated_output_dir.glob("*.h5")) + list(dated_output_dir.glob("*.hdf")):
         parts = f.name.split(".")
         if len(parts) < 3:
             logger.warning(f"Skipping malformed filename: {f.name}")
@@ -143,7 +141,6 @@ def get_nrt_data(start_date, end_date, product):
     """
     logger.info(f"Starting NRT download from {start_date.date()} to {end_date.date()}")
 
-
     # Determine which products to fetch
     products_to_fetch = []
     if product.upper() in ["VJ1", "BOTH"]:
@@ -166,7 +163,6 @@ def get_nrt_data(start_date, end_date, product):
         else:
             output_dir = Path(VJ109GA_NRT_DIR)
             output_dir.mkdir(parents=True, exist_ok=True)
-
 
         for date in date_range(start_date=start_date, end_date=end_date):
             logger.info(f"Processing {short_name} for {date.strftime('%Y-%m-%d')}")

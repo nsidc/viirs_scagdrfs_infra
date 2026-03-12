@@ -20,7 +20,11 @@ from src.constants.field_info import (
     FIELD_BITDEPTHS,
     VALID_FIELD_NAMES,
 )
-from src.constants.products import PRODUCT_FILE_EXTENSION, PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
+from src.constants.products import (
+    PRODUCT_FILE_EXTENSION,
+    PRODUCT_OUTPUT_PREFIX,
+    PRODUCT_SOURCE_ID,
+)
 from src.util import get_bitdepth_for_field_name, get_field_name
 
 

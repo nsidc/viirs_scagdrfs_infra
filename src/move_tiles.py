@@ -6,9 +6,11 @@ import shutil
 from pathlib import Path
 
 
-def copy_tile_file(move_date: dt.date, input_dir: Path, output_dir: Path, tile: str, product:str):
+def copy_tile_file(
+    move_date: dt.date, input_dir: Path, output_dir: Path, tile: str, product: str
+):
     """Copies  tiles from the input directory specified or the
-    *_NRT_DIR (environment variable) 
+    *_NRT_DIR (environment variable)
     """
     date_str = move_date.strftime("%Y.%m.%d")
     date_file = move_date.strftime("%Y%j")

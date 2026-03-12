@@ -8,6 +8,7 @@ from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
 from src.mask_scag import mask_scag
+
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
 from src.util import get_date_from_filename, get_info_from_bip_file

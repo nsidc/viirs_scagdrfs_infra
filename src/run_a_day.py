@@ -12,12 +12,18 @@ from dask_jobqueue import SLURMCluster
 
 from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
+
 # from scagdrfs_infra.error import ScagDrfsFileError
 from src.move_tiles import copy_tile_file
+
 # from scagdrfs_infra.run_drfs import run_drfs
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
-from src.constants.products import PRODUCT_FILE_EXTENSION, SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
+from src.constants.products import (
+    PRODUCT_FILE_EXTENSION,
+    SUPPORTED_PRODUCTS,
+    PRODUCT_INPUT_DIR_ENVVAR,
+)
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -142,14 +148,18 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
     # grab files for day
     if not skip:
         copy_tile_file(
-            move_date=day, input_dir=input_dir, output_dir=working_dir, tile=tile, product=product
+            move_date=day,
+            input_dir=input_dir,
+            output_dir=working_dir,
+            tile=tile,
+            product=product,
         )
     if len(src_files) != 1:
         print(
             f"Found either zero or multiple files in working directory: {working_dir}\n"
         )
         print(f"This will not run until there is 1 file in {working_dir}\n")
-        print('SKIPPING create_netcdf()')
+        print("SKIPPING create_netcdf()")
         # print("An empty netcdf will be created.\n")
         # create_netcdf(
         #     day=day,
@@ -170,8 +180,8 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         #     )
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
-        print('SKIPPING DRFS_COMPONENT_DIR -> component_dir')
-        #tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
+        print("SKIPPING DRFS_COMPONENT_DIR -> component_dir")
+        # tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
@@ -181,7 +191,6 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
             day_client = Client(day_cluster)
             drfs_futures = []
             scag_futures = []
-
 
         for tile_params in param_lists:
             tifCounter0 = len(glob.glob(os.path.join(working_dir, "*.tif")))
@@ -291,6 +300,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                         os.remove(f)
             else:
                 print(f"You have {tifCounter} tif files in {working_dir}")
+
 
 if __name__ == "__main__":
     """Executed from the command line"""
