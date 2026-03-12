@@ -132,6 +132,26 @@ Files are automatically organized by product and date in separate directories:
 └── 2026.02.03/
 ```
 
+### Running SCAGDRFS processing
+```bash
+./scripts/run-scagdrfs.sh --product VNP09GA --start-date 2026-03-11
+
+# Run for MODIS
+./scripts/run-scagdrfs.sh --product MOD09GA --start-date 2026-03-11
+```
+
+(still working on)Supported products: `MOD09GA`, `VNP09GA`, `VJ109GA`.
+
+Working directories are organized by product under `$WORK_DIR`:
+```
+/scratch/alpine/$USER/scagdrfs/working/
+├── MOD09GA/
+│   └── 2026.03.11/h08v04/
+├── VNP09GA/
+│   └── 2026.03.11/h08v04/
+└── VJ109GA/
+    └── 2026.03.11/h08v04/
+```
 
 ## Troubleshooting
 
