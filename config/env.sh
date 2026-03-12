@@ -13,9 +13,10 @@ export PETALIB_DIR=/pl/active/daac-production
 # NOTE: This is temporary for while we are in development phase
 export PETALIB_STAGING_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/staging
 
-# VIIRS data paths
+# data paths
 export VNP09GA_NRT_DIR=${PETALIB_DIR}/VNP09GA/NRT
 export VJ109GA_NRT_DIR=${PETALIB_DIR}/VJ109GA/NRT
+export MOD09GA_NRT_DIR=${PETALIB_DIR}/MOD09GA/NRT
 export WATER_MASK_DIR=${PETALIB_DIR}/post_process_watermasks
 
 # Working directories
