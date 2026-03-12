@@ -20,7 +20,7 @@ from src.constants.field_info import (
     FIELD_BITDEPTHS,
     VALID_FIELD_NAMES,
 )
-from src.constants.products import PRODUCT_FILE_EXTENSION
+from src.constants.products import PRODUCT_FILE_EXTENSION, PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
 from src.util import get_bitdepth_for_field_name, get_field_name
 
 
@@ -43,9 +43,10 @@ def get_data(filename):
 def write_data(
     output_dir: str, var: str, tile: str, date_str: str, mask_status: str, actual_var
 ):
-    # TODO: update this
+    prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
+    source_id = PRODUCT_SOURCE_ID[product.upper()]
     filename = (
-        "VIRSCGDRF_NRT_{var}_{tile}_VNP09GANRT061_{date_str}_V01.1.bin."
+        "{prefix}_NRT_{var}_{tile}_{source_id)_{date_str}_V01.1.bin."
         "{mask_status}".format(
             var=var, tile=tile, date_str=date_str, mask_status=mask_status
         )

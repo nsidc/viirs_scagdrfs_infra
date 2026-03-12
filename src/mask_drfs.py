@@ -10,6 +10,7 @@ import numpy as np
 
 from src.masking import cloud16, cw_mask, h2o16
 from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
+from src.constants.products import PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
 
 
 def get_data(filename, data_type, error_value):
@@ -72,7 +73,6 @@ def cw_mask16(bfull_mask, water, data):
 
 
 def get_file_info_config():
-    # parser = SafeConfigParser(os.environ)
     CONSTANTS_DIR = Path(__file__).parent / "constants"
     TILES_CONFIG_PATH = CONSTANTS_DIR / "file_info.ini"
     parser = configparser.ConfigParser(os.environ)
@@ -98,7 +98,7 @@ def write_outfile(outfile, data_cw):
 
 
 def mask_drfs(
-    tile_id: str, date: dt.date, src_file: Path, working_dir: Path, staging_dir: Path
+        tile_id: str, date: dt.date, src_file: Path, working_dir: Path, staging_dir: Path, product: str
 ):
     # Add suffix to default working and staging dirs.
     if str(working_dir) == os.environ.get("WORK_DIR"):
@@ -137,7 +137,9 @@ def mask_drfs(
     # Write unmasked field output files
     datestring = date.strftime("%Y%m%d")
     delta_vis_outpath = file_info.get("FILE_INFO", "DELTA_VIS_UNMASKED", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -145,7 +147,9 @@ def mask_drfs(
     write_outfile(delta_vis_outfile, delta_vis_data)
 
     outfile_name = file_info.get("FILE_INFO", "GRAIN_SIZE_UNMASKED", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -153,7 +157,9 @@ def mask_drfs(
     write_outfile(grain_size_outfile, grain_data)
 
     forcing_name = file_info.get("FILE_INFO", "FORCING_UNMASKED", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -171,7 +177,9 @@ def mask_drfs(
     # Write field output files
     datestring = date.strftime("%Y%m%d")
     delta_vis_outpath = file_info.get("FILE_INFO", "DELTA_VIS_OUTFILE", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -179,7 +187,9 @@ def mask_drfs(
     write_outfile(delta_vis_outfile, delta_vis_cw)
 
     outfile_name = file_info.get("FILE_INFO", "GRAIN_SIZE_OUTFILE", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -187,7 +197,9 @@ def mask_drfs(
     write_outfile(grain_size_outfile, grain_cw)
 
     forcing_name = file_info.get("FILE_INFO", "FORCING_OUTFILE", raw=True) % (
+        prefix,
         tile_id,
+        soruce_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )

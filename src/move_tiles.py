@@ -26,7 +26,7 @@ def copy_tile_file(move_date: dt.date, input_dir: Path, output_dir: Path, tile: 
     # VNP09GA_NRT.A2026042.h12v02.002.2026043033539.h5
     # ---------------------------
     #     filename_start (for VNP)
-    filename_start = f"VNP09GA_NRT.A{date_file}.{tile}"
+    filename_start = f"{product}_NRT.A{date_file}.{tile}"
     filepath_start = input_dir / f"{date_str}"
     possible_files = os.listdir(filepath_start)
     output_file = [f for f in possible_files if f.startswith(filename_start)]
