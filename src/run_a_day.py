@@ -17,7 +17,7 @@ from src.move_tiles import copy_tile_file
 # from scagdrfs_infra.run_drfs import run_drfs
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
-from src.constants.products import PRODUCT_FILE_EXTENSION, SUPPORTED_PRODUCTS
+from src.constants.products import PRODUCT_FILE_EXTENSION, SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -94,13 +94,19 @@ def setup_day_cluster():
     "-n", "--no-queue", is_flag=True, help="Do not run tasks in the SLURM queue."
 )
 @click.pass_context
-def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queue):
+def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
     # NOTE: In normal operation, all sections of this code should run
     #       Developers may set some of these flags to False to speed
     #       up debug iteration
     remove_intermediate_files = True
 
+    envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
+    input_dir = Path(os.environ[envvar])
+    input_dir = Path(os.environ[envvar])
+    work_base = Path(os.environ["WORK_DIR"])
+    working_dir = work_base / product.upper() / day.strftime("%Y.%m.%d") / tile
+    working_dir.mkdir(parents=True, exist_ok=True)
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
     src_files = list(working_dir.glob(f"**/*{ext}"))
     logger.info("Running a day for %s with tile %s", day, tile)
@@ -136,7 +142,7 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
     # grab files for day
     if not skip:
         copy_tile_file(
-            move_date=day, input_dir=input_dir, output_dir=working_dir, tile=tile
+            move_date=day, input_dir=input_dir, output_dir=working_dir, tile=tile, product=product
         )
     if len(src_files) != 1:
         print(

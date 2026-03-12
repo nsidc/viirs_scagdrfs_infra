@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 
-def copy_tile_file(move_date: dt.date, input_dir: Path, output_dir: Path, tile: str):
+def copy_tile_file(move_date: dt.date, input_dir: Path, output_dir: Path, tile: str, product:str):
     """Copies  tiles from the input directory specified or the
     *_NRT_DIR (environment variable) 
     """
@@ -14,7 +14,7 @@ def copy_tile_file(move_date: dt.date, input_dir: Path, output_dir: Path, tile: 
     date_file = move_date.strftime("%Y%j")
     output_filepath = output_dir
     if output_dir == os.environ.get("WORK_DIR"):
-        output_filepath = output_dir / f"{date_str}/{tile}"
+        output_filepath = output_dir / f"{product}/{date_str}/{tile}"
     if not os.path.exists(output_filepath):
         os.makedirs(output_filepath)
     # TODO edit for viirs VJ1

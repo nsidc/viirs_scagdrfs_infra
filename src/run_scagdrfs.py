@@ -174,8 +174,7 @@ def run_scagdrfs(
                     ctx.invoke(
                         run_a_day,
                         day=day,
-                        input_dir=input_dir,
-                        working_dir=working_dir,
+                        product=product,
                         staging_dir=orig_transfer_dir,
                         tile=tile,
                         skip=skip,
@@ -184,11 +183,12 @@ def run_scagdrfs(
                 else:
                     print('    NOT in no_queue...')
                     cmd = (
-                        ". {}/scripts/run-a-day.sh -d {} -s {} -t {}".format(
+                        ". {}/scripts/run-a-day.sh -d {} -s {} -t {} -P {}".format(
                             os.environ.get("TOPDIR"),
                             day,
                             orig_transfer_dir,
                             tile,
+                            product,
                         )
                     )
                     if skip:
