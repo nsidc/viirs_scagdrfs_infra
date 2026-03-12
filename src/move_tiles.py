@@ -5,6 +5,8 @@ import os
 import shutil
 from pathlib import Path
 
+from src.constants.products import PRODUCT_FILE_EXTENSION
+
 
 def copy_tile_file(
     move_date: dt.date, input_dir: Path, output_dir: Path, tile: str, product: str
@@ -19,16 +21,10 @@ def copy_tile_file(
         output_filepath = output_dir / f"{product}/{date_str}/{tile}"
     if not os.path.exists(output_filepath):
         os.makedirs(output_filepath)
-    # TODO edit for viirs VJ1
-    # TODO: This will need to be modified for different sensors:
-    #  eg:
-    # MOD09GA.A2026042.h16v17.061.2026043020955.NRT.hdf
-    # -----------------------
-    #   filename_start (for MOD)
-    # VNP09GA_NRT.A2026042.h12v02.002.2026043033539.h5
-    # ---------------------------
-    #     filename_start (for VNP)
-    filename_start = f"{product}_NRT.A{date_file}.{tile}"
+    if product == "MOD09GA":
+        filename_start = f"{product}.A{date_file}.{tile}"
+    else:
+        filename_start = f"{product}_NRT.A{date_file}.{tile}"
     filepath_start = input_dir / f"{date_str}"
     possible_files = os.listdir(filepath_start)
     output_file = [f for f in possible_files if f.startswith(filename_start)]
