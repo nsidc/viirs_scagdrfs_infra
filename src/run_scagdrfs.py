@@ -12,7 +12,7 @@ from dask_jobqueue import SLURMCluster
 #from scagdrfs_infra.error import ScagDrfsDateRangeError
 #from scagdrfs_infra.output_to_peta import copy_output_to_peta
 #from scagdrfs_infra.output_to_v0 import copy_output_to_v0
-from src.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
+from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
 from src.run_a_day import run_a_day
 from src.util import (
     date_range,
@@ -161,7 +161,7 @@ def run_scagdrfs(
         for tile in tile_ids:
             print(f'    run_scagdrfs: tile: {tile}')
             if input_dir == os.environ.get("VNP09GA_NRT_DIR"):
-                input_dir = orig_input_dir / day.strftime("%Y.%m.%d")
+                day_input_dir = input_dir / day.strftime("%Y.%m.%d")
             tif_dir = os.path.join(working_dir, day.strftime("%Y.%m.%d"), tile)
             tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)
             if tifCounter and not force_run_scagdrfs:
@@ -175,8 +175,8 @@ def run_scagdrfs(
                     ctx.invoke(
                         run_a_day,
                         day=day,
-                        input_dir=orig_input_dir,
-                        working_dir=orig_working_dir,
+                        input_dir=input_dir,
+                        working_dir=working_dir,
                         staging_dir=orig_transfer_dir,
                         tile=tile,
                         skip=skip,
@@ -188,8 +188,8 @@ def run_scagdrfs(
                         ". {}/scripts/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
                             os.environ.get("TOPDIR"),
                             day,
-                            orig_input_dir,
-                            orig_working_dir,
+                            input_dir,
+                            working_dir,
                             orig_transfer_dir,
                             tile,
                         )
