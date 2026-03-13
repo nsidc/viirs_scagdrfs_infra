@@ -105,7 +105,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
     # NOTE: In normal operation, all sections of this code should run
     #       Developers may set some of these flags to False to speed
     #       up debug iteration
-    remove_intermediate_files = True
+    remove_intermediate_files = False
 
     envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
     input_dir = Path(os.environ[envvar])
@@ -171,7 +171,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         src_file = src_files[0]
         tile_params["src_file"] = src_file
         # bipify files
-        bipify_files(input_dir=working_dir, output_dir=working_dir)
+        bipify_files(input_dir=working_dir, output_dir=working_dir, product=product)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
         # if len(bip_meta_files) != 1:
         #     raise ScagDrfsFileError(
