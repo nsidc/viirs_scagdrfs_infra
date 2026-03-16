@@ -50,9 +50,14 @@ def write_data(
     prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
     source_id = PRODUCT_SOURCE_ID[product.upper()]
     filename = (
-        "{prefix}_NRT_{var}_{tile}_{source_id)_{date_str}_V01.1.bin."
+        "{prefix}_NRT_{var}_{tile}_{source_id}_{date_str}_V01.1.bin."
         "{mask_status}".format(
-            var=var, tile=tile, date_str=date_str, mask_status=mask_status
+            prefix=prefix,
+            var=var,
+            tile=tile,
+            source_id=source_id,
+            date_str=date_str,
+            mask_status=mask_status,
         )
     )
     outfile_path = os.path.join(output_dir, filename)
