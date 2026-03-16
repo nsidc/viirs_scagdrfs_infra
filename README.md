@@ -140,7 +140,7 @@ Files are automatically organized by product and date in separate directories:
 ./scripts/run-scagdrfs.sh --product MOD09GA --start-date 2026-03-11
 ```
 
-(still working on)Supported products: `MOD09GA`, `VNP09GA`, `VJ109GA`.
+Currently supported products (work in progress): `MOD09GA`, `VNP09GA`, `VJ109GA`.
 
 Working directories are organized by product under `$WORK_DIR`:
 ```
