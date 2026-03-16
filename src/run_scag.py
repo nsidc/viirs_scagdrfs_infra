@@ -8,7 +8,9 @@ from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
 from src.mask_scag import mask_scag
+
 # from scagdrfs_infra.netcdf import create_netcdf
+from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
 from src.util import get_date_from_filename, get_info_from_bip_file
 
 
@@ -45,9 +47,17 @@ def setup_scag_cluster():
 )
 @click.option(
     "-h",
-    "--h5-file",
+    "--src-file",
     type=click.Path(file_okay=True, dir_okay=False, exists=True, path_type=Path),
-    help="H5 file to process.",
+    help="H5 or HDF file to process.",
+)
+@click.option(
+    "--product",
+    "-P",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    default="VNP09GA",
+    show_default=True,
+    help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
     "-w",
@@ -61,7 +71,7 @@ def setup_scag_cluster():
     "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
     " will be added (e.g. 2023.10.03/h08v04).",
 )
-def run_scag(bip_file, h5_file, working_dir):
+def run_scag(bip_file, src_file, working_dir, product):
 
     scag_cluster = setup_scag_cluster()
     scag_client = Client(scag_cluster)
@@ -80,6 +90,7 @@ def run_scag(bip_file, h5_file, working_dir):
         result.check_returncode()
         return result.stdout
 
+    ext = PRODUCT_FILE_EXTENSION[product.upper()]
     delayed_tasks = []
     for control_file in control_files:
         cmd = f"cd {working_dir}; {os.environ.get('TOPDIR')}/scag/bin/scag {bip_file.name} {bip_info['num_bands']} {bip_info['num_samples']} {bip_info['num_lines']} {control_file.name}"
@@ -98,7 +109,7 @@ def run_scag(bip_file, h5_file, working_dir):
     pic_files = list(working_dir.glob("**/*.pic"))
 
     user = os.environ.get("USER")
-    cmd_sort = f"cd {working_dir}; /projects/{user}/scagdrfs_infra/scag/bin/scag_sort 2eminput 3eminput modprty2 modprty3 {str(h5_file).replace('.h5', '.')} {bip_info['num_samples']} {bip_info['num_lines']}"
+    cmd_sort = f"cd {working_dir}; /projects/{user}/scagdrfs_infra/scag/bin/scag_sort 2eminput 3eminput modprty2 modprty3 {str(src_file).replace(f'{ext}', '.')} {bip_info['num_samples']} {bip_info['num_lines']}"
     result_sort = subprocess.run(
         cmd_sort, shell=True, capture_output=True, text=True, executable="/usr/bin/bash"
     )
@@ -107,14 +118,15 @@ def run_scag(bip_file, h5_file, working_dir):
 
     # mask scag and create geotifs
     mask_scag(
-        date=get_date_from_filename(h5_file),
+        date=get_date_from_filename(src_file),
         working_dir=working_dir,
         tile=bip_info["tile_id"],
+        product=product,
     )
 
     # # create netcdf files
     # create_netcdf(
-    #     day=get_date_from_filename(h5_file),
+    #     day=get_date_from_filename(src_file),
     #     tif_dir=working_dir,
     #     tile_id=bip_info["tile_id"],
     # )

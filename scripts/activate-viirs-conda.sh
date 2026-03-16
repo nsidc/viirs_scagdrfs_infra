@@ -23,7 +23,7 @@ if { conda env list | grep 'viirs'; } >/dev/null 2>&1; then
 else
     echo "Creating conda environment."
     echo "Note; this might not work..."
-    conda create -y -n viirs 
+    conda create -y -n viirs
     conda env update -f ${TOPDIR}/environment.yml
     conda init
     echo "And now activating viirs conda environment for the first time"

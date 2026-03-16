@@ -9,9 +9,10 @@ import click
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-#from scagdrfs_infra.error import ScagDrfsDateRangeError
-#from scagdrfs_infra.output_to_peta import copy_output_to_peta
-#from scagdrfs_infra.output_to_v0 import copy_output_to_v0
+# from scagdrfs_infra.error import ScagDrfsDateRangeError
+# from scagdrfs_infra.output_to_peta import copy_output_to_peta
+# from scagdrfs_infra.output_to_v0 import copy_output_to_v0
+from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
 from src.run_a_day import run_a_day
 from src.util import (
     date_range,
@@ -83,26 +84,12 @@ def setup_scagdrfs_cluster():
     "--no-queue", "-n", is_flag=True, help="Do not run tasks in the SLURM queue."
 )
 @click.option(
-    "-i",
-    "--input-dir",
-    type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    envvar="VNP09GA_NRT_DIR",
+    "--product",
+    "-P",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    default="VNP09GA",
     show_default=True,
-    help="Absolute directory to existing granule files set by {product}_NRT_DIR"
-    " environment variable. Date and tile ID subdirectories will be added"
-    " (e.g. 2023.10.03/h08v04).",
-)
-@click.option(
-    "-w",
-    "--working-dir",
-    type=click.Path(
-        file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
-    ),
-    envvar="WORK_DIR",
-    show_default=True,
-    help="Path to working directory where intermediate files are stored. "
-    "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
-    " will be added (e.g. 2023.10.03/h08v04).",
+    help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
     "-t",
@@ -110,7 +97,7 @@ def setup_scagdrfs_cluster():
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    #envvar="PETALIB_TRANSFER_DIR",
+    # envvar="PETALIB_TRANSFER_DIR",
     # TODO: Don't use work_dir for transfer_dir (!)
     envvar="WORK_DIR",
     show_default=True,
@@ -134,10 +121,9 @@ def run_scagdrfs(
     regions,
     skip,
     no_queue,
-    input_dir,
-    working_dir,
     transfer_dir,
     no_publish,
+    product,
 ):
     # Forces a run even with 18 tifs should be a click option
     force_run_scagdrfs = False  # This should be false for normal Ops operations
@@ -150,53 +136,62 @@ def run_scagdrfs(
     #         + end_date.strftime("%m/%d/%Y")
     #     )
 
-    orig_input_dir = input_dir
-    orig_working_dir = working_dir
+    envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
+    input_dir = Path(os.environ[envvar])
+    working_dir = Path(os.environ["WORK_DIR"])
     orig_transfer_dir = transfer_dir
 
+    try:
+        input_dir = Path(os.environ[envvar])
+    except KeyError:
+        raise click.UsageError(
+            f"Environment variable {envvar} is not set for product {product}"
+        )
+
+    try:
+        working_dir = Path(os.environ["WORK_DIR"])
+    except KeyError:
+        raise click.UsageError("Environment variable WORK_DIR is not set")
     if not no_queue:
         scagdrfs_cluster = setup_scagdrfs_cluster()
         scagdrfs_client = Client(scagdrfs_cluster)
         day_futures = []
 
     for day in date_range(start_date=start_date, end_date=end_date):
-        print(f'run_scagdrfs: loop day: {day}')
+        print(f"run_scagdrfs: loop day: {day}")
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
-            print(f'    run_scagdrfs: tile: {tile}')
-            if input_dir == os.environ.get("VNP09GA_NRT_DIR"):
-                input_dir = orig_input_dir / day.strftime("%Y.%m.%d")
-            tif_dir = os.path.join(working_dir, day.strftime("%Y.%m.%d"), tile)
+            print(f"    run_scagdrfs: tile: {tile}")
+            day_input_dir = input_dir / day.strftime("%Y.%m.%d")
+            tif_dir = os.path.join(
+                working_dir, product.upper(), day.strftime("%Y.%m.%d"), tile
+            )
             tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)
             if tifCounter and not force_run_scagdrfs:
                 print(
                     f"You have all expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
                 )
             else:
-                print(f"Running VIIRS - SCAGDRFS for day: {day}\n")
+                print(f"Running SCAGDRFS for {product},day: {day}\n")
                 if no_queue:
-                    print('    in no_queue...')
+                    print("    in no_queue...")
                     ctx.invoke(
                         run_a_day,
                         day=day,
-                        input_dir=orig_input_dir,
-                        working_dir=orig_working_dir,
+                        product=product,
                         staging_dir=orig_transfer_dir,
                         tile=tile,
                         skip=skip,
                         no_queue=no_queue,
                     )
                 else:
-                    print('    NOT in no_queue...')
-                    cmd = (
-                        ". {}/scripts/run-a-day.sh -d {} -i {} -w {} -s {} -t {}".format(
-                            os.environ.get("TOPDIR"),
-                            day,
-                            orig_input_dir,
-                            orig_working_dir,
-                            orig_transfer_dir,
-                            tile,
-                        )
+                    print("    NOT in no_queue...")
+                    cmd = ". {}/scripts/run-a-day.sh -d {} -s {} -t {} -P {}".format(
+                        os.environ.get("TOPDIR"),
+                        day,
+                        orig_transfer_dir,
+                        tile,
+                        product,
                     )
                     if skip:
                         cmd += " -k"

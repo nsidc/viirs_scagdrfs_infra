@@ -10,6 +10,7 @@ import numpy as np
 
 from src.masking import cloud16, cw_mask, h2o16
 from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
+from src.constants.products import PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
 
 
 def get_data(filename, data_type, error_value):
@@ -28,16 +29,16 @@ def get_data(filename, data_type, error_value):
     return data
 
 
-def get_bip_full_mask(working_dir, h5_root, file_info):
-    bip_file = Path(working_dir) / (h5_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
+def get_bip_full_mask(working_dir, src_root, file_info):
+    bip_file = Path(working_dir) / (src_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
     with open(bip_file, "rb") as fbip:
         data = np.fromfile(fbip, dtype=np.uint16)
     try:
         data = data.reshape(2400, 2400, 7)
     except ValueError as e:
-        print(f'Error attempting to reshape data')
-        print(f'  bip_file: {bip_file}')
-        print(f'  size of bip_files data: {data.size}')
+        print(f"Error attempting to reshape data")
+        print(f"  bip_file: {bip_file}")
+        print(f"  size of bip_files data: {data.size}")
         raise e
 
     thresh_b1 = 310
@@ -72,7 +73,6 @@ def cw_mask16(bfull_mask, water, data):
 
 
 def get_file_info_config():
-    # parser = SafeConfigParser(os.environ)
     CONSTANTS_DIR = Path(__file__).parent / "constants"
     TILES_CONFIG_PATH = CONSTANTS_DIR / "file_info.ini"
     parser = configparser.ConfigParser(os.environ)
@@ -98,7 +98,12 @@ def write_outfile(outfile, data_cw):
 
 
 def mask_drfs(
-    tile_id: str, date: dt.date, h5_file: Path, working_dir: Path, staging_dir: Path
+    tile_id: str,
+    date: dt.date,
+    src_file: Path,
+    working_dir: Path,
+    staging_dir: Path,
+    product: str,
 ):
     # Add suffix to default working and staging dirs.
     if str(working_dir) == os.environ.get("WORK_DIR"):
@@ -111,13 +116,13 @@ def mask_drfs(
     water_mask_data = get_water_mask(file_info, tile_id)
 
     # Created .dat file names from IDL processing
-    h5_root = h5_file.stem
+    src_root = src_file.stem
     delta_vis_suffix = file_info.get("FILE_INFO", "DELTA_VIS_SUFFIX")
-    delta_vis_path = Path(working_dir) / (str(h5_root) + delta_vis_suffix)
+    delta_vis_path = Path(working_dir) / (str(src_root) + delta_vis_suffix)
     grain_size_suffix = file_info.get("FILE_INFO", "GRAIN_SIZE_SUFFIX")
-    grain_size_path = Path(working_dir) / (str(h5_root) + grain_size_suffix)
+    grain_size_path = Path(working_dir) / (str(src_root) + grain_size_suffix)
     forcing_suffix = file_info.get("FILE_INFO", "FORCING_SUFFIX")
-    forcing_path = Path(working_dir) / (str(h5_root) + forcing_suffix)
+    forcing_path = Path(working_dir) / (str(src_root) + forcing_suffix)
 
     # Get binary data and change error values
     delta_vis_data = get_data(
@@ -135,9 +140,13 @@ def mask_drfs(
     grain_data[grain_data == 0.0] = 2550
 
     # Write unmasked field output files
+    prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
+    source_id = PRODUCT_SOURCE_ID[product.upper()]
     datestring = date.strftime("%Y%m%d")
     delta_vis_outpath = file_info.get("FILE_INFO", "DELTA_VIS_UNMASKED", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -145,7 +154,9 @@ def mask_drfs(
     write_outfile(delta_vis_outfile, delta_vis_data)
 
     outfile_name = file_info.get("FILE_INFO", "GRAIN_SIZE_UNMASKED", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -153,14 +164,16 @@ def mask_drfs(
     write_outfile(grain_size_outfile, grain_data)
 
     forcing_name = file_info.get("FILE_INFO", "FORCING_UNMASKED", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
     forcing_outfile = Path(working_dir) / forcing_name
     write_outfile(forcing_outfile, forcing_data)
 
-    bip_full_mask = get_bip_full_mask(working_dir, h5_root, file_info)
+    bip_full_mask = get_bip_full_mask(working_dir, src_root, file_info)
 
     # Apply cloud and water masks
     # TODO: Should use BITDEPTH to choose correct cw_mask[16]() routine
@@ -171,7 +184,9 @@ def mask_drfs(
     # Write field output files
     datestring = date.strftime("%Y%m%d")
     delta_vis_outpath = file_info.get("FILE_INFO", "DELTA_VIS_OUTFILE", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -179,7 +194,9 @@ def mask_drfs(
     write_outfile(delta_vis_outfile, delta_vis_cw)
 
     outfile_name = file_info.get("FILE_INFO", "GRAIN_SIZE_OUTFILE", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -187,7 +204,9 @@ def mask_drfs(
     write_outfile(grain_size_outfile, grain_cw)
 
     forcing_name = file_info.get("FILE_INFO", "FORCING_OUTFILE", raw=True) % (
+        prefix,
         tile_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )

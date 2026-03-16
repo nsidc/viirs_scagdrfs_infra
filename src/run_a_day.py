@@ -12,11 +12,19 @@ from dask_jobqueue import SLURMCluster
 
 from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
+
 # from scagdrfs_infra.error import ScagDrfsFileError
 from src.move_tiles import copy_tile_file
+
 # from scagdrfs_infra.run_drfs import run_drfs
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
+from src.constants.products import (
+    PRODUCT_FILE_EXTENSION,
+    SUPPORTED_PRODUCTS,
+    PRODUCT_INPUT_DIR_ENVVAR,
+)
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -56,27 +64,12 @@ def setup_day_cluster():
     help="Date of the day of the tiles to process.",
 )
 @click.option(
-    "-i",
-    "--input-dir",
-    type=click.Path(file_okay=False, dir_okay=True, exists=False, path_type=Path),
-    # NOTE this will change depending on the product
-    envvar="VNP09GA_NRT_DIR",
+    "--product",
+    "-P",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    default="VNP09GA",
     show_default=True,
-    help="Absolute directory to existing granule files set by VNP09GA_NRT_DIR"
-    " environment variable. Date and tile ID subdirectories will be added"
-    " (e.g. 2023.10.03/h08v04).",
-)
-@click.option(
-    "-w",
-    "--working-dir",
-    type=click.Path(
-        file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
-    ),
-    envvar="WORK_DIR",
-    show_default=True,
-    help="Path to working directory where intermediate files are stored. "
-    "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
-    " will be added (e.g. 2023.10.03/h08v04).",
+    help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
     "-s",
@@ -107,13 +100,19 @@ def setup_day_cluster():
     "-n", "--no-queue", is_flag=True, help="Do not run tasks in the SLURM queue."
 )
 @click.pass_context
-def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queue):
+def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
     # NOTE: In normal operation, all sections of this code should run
     #       Developers may set some of these flags to False to speed
     #       up debug iteration
-    remove_intermediate_files = True
+    remove_intermediate_files = False
 
+    envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
+    input_dir = Path(os.environ[envvar])
+    work_base = Path(os.environ["WORK_DIR"])
+    working_dir = work_base / product.upper() / day.strftime("%Y.%m.%d") / tile
+    working_dir.mkdir(parents=True, exist_ok=True)
+    ext = PRODUCT_FILE_EXTENSION[product.upper()]
     logger.info("Running a day for %s with tile %s", day, tile)
     param_lists = []
     print(
@@ -123,39 +122,29 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         os.environ.get("WORK_DIR"),
         "\n",
     )
-    add_to_work_dir = False
-    original_work_dir = working_dir
-    if str(working_dir) == os.environ.get("WORK_DIR"):
-        add_to_work_dir = True
-    add_to_staging_dir = False
-    original_staging_dir = staging_dir
-    if str(staging_dir) == os.environ.get("STAGING_DIR"):
-        add_to_staging_dir = True
     tile_params = {}
-    if add_to_work_dir:
-        working_dir = original_work_dir / day.strftime("%Y.%m.%d") / tile
-    if not working_dir.exists():
-        working_dir.mkdir(parents=True, exist_ok=True)
     tile_params["working_dir"] = working_dir
-    if add_to_staging_dir:
-        staging_dir = original_staging_dir / day.strftime("%Y.%m.%d") / tile
-    if not staging_dir.exists():
-        staging_dir.mkdir(parents=True, exist_ok=True)
+    staging_dir = staging_dir / day.strftime("%Y.%m.%d") / tile
+    staging_dir.mkdir(parents=True, exist_ok=True)
     tile_params["staging_dir"] = staging_dir
 
     # NOTE: maybe this is NOT the best method to find files. I feel like we can be more exact
     # grab files for day
     if not skip:
         copy_tile_file(
-            move_date=day, input_dir=input_dir, output_dir=working_dir, tile=tile
+            move_date=day,
+            input_dir=input_dir,
+            output_dir=working_dir,
+            tile=tile,
+            product=product,
         )
-    h5_files = list(working_dir.glob("**/*.h5"))
-    if len(h5_files) != 1:
+    src_files = list(working_dir.glob(f"**/*{ext}"))
+    if len(src_files) != 1:
         print(
             f"Found either zero or multiple files in working directory: {working_dir}\n"
         )
         print(f"This will not run until there is 1 file in {working_dir}\n")
-        print('SKIPPING create_netcdf()')
+        print("SKIPPING create_netcdf()")
         # print("An empty netcdf will be created.\n")
         # create_netcdf(
         #     day=day,
@@ -164,10 +153,10 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         # )
 
     else:
-        h5_file = h5_files[0]
-        tile_params["h5_file"] = h5_file
+        src_file = src_files[0]
+        tile_params["src_file"] = src_file
         # bipify files
-        bipify_files(input_dir=working_dir, output_dir=working_dir)
+        bipify_files(input_dir=working_dir, output_dir=working_dir, product=product)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
         # if len(bip_meta_files) != 1:
         #     raise ScagDrfsFileError(
@@ -176,8 +165,8 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
         #     )
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
-        print('SKIPPING DRFS_COMPONENT_DIR -> component_dir')
-        #tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
+        print("SKIPPING DRFS_COMPONENT_DIR -> component_dir")
+        # tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
@@ -187,7 +176,6 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
             day_client = Client(day_cluster)
             drfs_futures = []
             scag_futures = []
-
 
         for tile_params in param_lists:
             tifCounter0 = len(glob.glob(os.path.join(working_dir, "*.tif")))
@@ -199,10 +187,10 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                 # TODO: Uncomment later
                 # skip drfs if there are 6 tifs present (masked and unmasked drfs)
                 # if tifCounter0 != 6:
-                #     print("Running DRFS for ", tile_params["h5_file"], "...\n")
+                #     print("Running DRFS for ", tile_params["src_file"], "...\n")
                 #     ctx.invoke(
                 #         run_drfs,
-                #         h5_file=tile_params["h5_file"],
+                #         src_file=tile_params["src_file"],
                 #         working_dir=tile_params["working_dir"],
                 #         staging_dir=tile_params["staging_dir"],
                 #         component_dir=tile_params["component_dir"],
@@ -212,8 +200,9 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                 ctx.invoke(
                     run_scag,
                     bip_file=tile_params["bip_meta_file"].with_suffix(""),
-                    h5_file=tile_params["h5_file"],
+                    src_file=tile_params["src_file"],
                     working_dir=tile_params["working_dir"],
+                    product=product,
                 )
 
             # Run DRFS and SCAG in the supercomputer queue
@@ -221,12 +210,12 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                 # if tifCounter0 != 6:
                 #     print(
                 #         "Submitting DRFS run to queue for ",
-                #         tile_params["h5_file"],
+                #         tile_params["src_file"],
                 #         "...\n",
                 #     )
                 #     cmd_drfs = ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
                 #         os.environ.get("TOPDIR"),
-                #         tile_params["h5_file"],
+                #         tile_params["src_file"],
                 #         tile_params["working_dir"],
                 #         tile_params["staging_dir"],
                 #         tile_params["component_dir"],
@@ -253,13 +242,13 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                 # Always run SCAG
                 print(
                     "Submitting scag run to queue for ",
-                    tile_params["h5_file"],
+                    tile_params["src_file"],
                     "...\n",
                 )
                 cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {}".format(
                     os.environ.get("TOPDIR"),
                     tile_params["bip_meta_file"].with_suffix(""),
-                    tile_params["h5_file"],
+                    tile_params["src_file"],
                     tile_params["working_dir"],
                 )
                 print("SCAG command to run: ", cmd_scag, "\n")
@@ -296,6 +285,7 @@ def run_a_day(ctx, day, input_dir, working_dir, staging_dir, tile, skip, no_queu
                         os.remove(f)
             else:
                 print(f"You have {tifCounter} tif files in {working_dir}")
+
 
 if __name__ == "__main__":
     """Executed from the command line"""

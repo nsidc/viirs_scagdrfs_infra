@@ -114,7 +114,7 @@ def get_field_name(filename):
             f"filename {filename} is neither Path nor str: {type(filename)}"
         )
 
-    print(f'in get_field_name(), filename is: {filename}', flush=True)
+    print(f"in get_field_name(), filename is: {filename}", flush=True)
 
     n_underscores = base_filename.count("_")
     if n_underscores > 3:
@@ -124,9 +124,9 @@ def get_field_name(filename):
         fn_parts = base_filename.split(".")
         field_index = 6
 
-    print(f'n_underscores: {n_underscores}')
+    print(f"n_underscores: {n_underscores}")
 
-    if fn_parts[field_index] == 'bin':
+    if fn_parts[field_index] == "bin":
         field_index = field_index - 1
 
     try:
@@ -136,7 +136,7 @@ def get_field_name(filename):
             f"No index {field_index} on parts {fn_parts} for filename {filename}"
         )
 
-    print(f'...returning field_name: {field_name}')
+    print(f"...returning field_name: {field_name}")
     return field_name
 
 
@@ -220,13 +220,13 @@ def get_sensor_from_filename(filename):
         sensor = "VIIRS"
     elif viirsVJ1_matches:
         sensor = "VIIRS_VJ1"
-    else: 
+    else:
         sensor = None
 
     if sensor is None:
         raise RuntimeError(f"Cannot determine sensor from filename: {filename}")
     else:
-        print(f'Determined that filename sensor is: {sensor}')
+        print(f"Determined that filename sensor is: {sensor}")
 
     return sensor
 

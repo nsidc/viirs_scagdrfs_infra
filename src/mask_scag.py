@@ -20,6 +20,11 @@ from src.constants.field_info import (
     FIELD_BITDEPTHS,
     VALID_FIELD_NAMES,
 )
+from src.constants.products import (
+    PRODUCT_FILE_EXTENSION,
+    PRODUCT_OUTPUT_PREFIX,
+    PRODUCT_SOURCE_ID,
+)
 from src.util import get_bitdepth_for_field_name, get_field_name
 
 
@@ -40,13 +45,25 @@ def get_data(filename):
 
 
 def write_data(
-    output_dir: str, var: str, tile: str, date_str: str, mask_status: str, actual_var
+    output_dir: str,
+    var: str,
+    tile: str,
+    date_str: str,
+    mask_status: str,
+    actual_var,
+    product: str,
 ):
-    # TODO: update this
+    prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
+    source_id = PRODUCT_SOURCE_ID[product.upper()]
     filename = (
-        "VIRSCGDRF_NRT_{var}_{tile}_VNP09GANRT061_{date_str}_V01.1.bin."
+        "{prefix}_NRT_{var}_{tile}_{source_id}_{date_str}_V01.1.bin."
         "{mask_status}".format(
-            var=var, tile=tile, date_str=date_str, mask_status=mask_status
+            prefix=prefix,
+            var=var,
+            tile=tile,
+            source_id=source_id,
+            date_str=date_str,
+            mask_status=mask_status,
         )
     )
     outfile_path = os.path.join(output_dir, filename)
@@ -55,24 +72,26 @@ def write_data(
     return outfile_path
 
 
-def mask_scag(date: dt.date, working_dir: Path, tile: str):
-    h5_files = list(working_dir.glob("**/*.h5"))
-    if len(h5_files) != 1:
+def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
+    ext = PRODUCT_FILE_EXTENSION[product.upper()]
+
+    src_files = list(working_dir.glob(f"**/*{ext}"))
+    if len(src_files) != 1:
         print(
             "Found either zero or multiple HDF files in working directory: "
             + str(working_dir)
         )
-    h5_file = h5_files[0]
+    src_file = src_files[0]
 
     file_info = get_file_info_config()
-    h5_root = h5_file.stem
-    bip_full_mask = get_bip_full_mask(working_dir, h5_root, file_info)
+    src_root = src_file.stem
+    bip_full_mask = get_bip_full_mask(working_dir, src_root, file_info)
     water_mask_data = get_water_mask(file_info, tile)
 
     scag_bin_files = np.sort(glob.glob(os.path.join(working_dir, "*.bin")))
 
     bip_meta_file = Path(working_dir) / (
-        h5_root + file_info.get("FILE_INFO", "BIP_META_SUFFIX")
+        src_root + file_info.get("FILE_INFO", "BIP_META_SUFFIX")
     )
 
     # NOTE: This logic is tricky because it looks at both snow and grnsz

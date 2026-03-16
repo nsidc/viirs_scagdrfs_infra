@@ -1,4 +1,5 @@
 """Constants package for VIIRS SCAGDRFS."""
+
 from .paths import (
     TOPDIR,
     PETALIB_DIR,
