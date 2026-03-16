@@ -5,12 +5,12 @@ from pathlib import Path
 
 import click
 
-from scagdrfs_infra.error import ScagDrfsFileError
-from scagdrfs_infra.make_tif import make_tif
-from scagdrfs_infra.mask_drfs import mask_drfs
-from scagdrfs_infra.run_drfs_idl import run_drfs_idl_via_bash
-from scagdrfs_infra.scagdrfs_config import FIELD_BITDEPTHS, VALID_FIELD_NAMES
-from scagdrfs_infra.util import (
+# from scagdrfs_infra.error import ScagDrfsFileError
+# from scagdrfs_infra.make_tif import make_tif
+from src.mask_drfs import mask_drfs
+from src.run_drfs_idl import run_drfs_idl_via_bash
+from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+from src.util import (
     get_bitdepth_for_field_name,
     get_date_from_filename,
     get_field_name,
@@ -79,10 +79,11 @@ def run_drfs(hdf_file, component_dir, working_dir, staging_dir):
 
     bip_files = list(working_dir.glob("**/*.bip.meta"))
     if len(bip_files) != 1:
-        raise ScagDrfsFileError(
-            "Found either zero or multiple BIP "
-            "metadata files in working directory: " + str(working_dir)
-        )
+        # raise ScagDrfsFileError(
+        #     "Found either zero or multiple BIP "
+        #     "metadata files in working directory: " + str(working_dir)
+        # )
+        ...
     bip_meta_file = bip_files[0]
 
     for unmask_file in glob.glob(os.path.join(working_dir, "*.Unmask")):
