@@ -219,7 +219,7 @@ def get_sensor_from_filename(filename):
     elif viirs_matches:
         sensor = "VIIRS"
     elif viirsVJ1_matches:
-        sensor = "VIIRS_VJ1"
+        sensor = "VIIRS"
     else:
         sensor = None
 
