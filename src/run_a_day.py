@@ -162,7 +162,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
         print("SKIPPING DRFS_COMPONENT_DIR -> component_dir")
-        # tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
+        tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
