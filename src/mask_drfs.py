@@ -140,6 +140,8 @@ def mask_drfs(
     grain_data[grain_data == 0.0] = 2550
 
     # Write unmasked field output files
+    prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
+    source_id = PRODUCT_SOURCE_ID[product.upper()]
     datestring = date.strftime("%Y%m%d")
     delta_vis_outpath = file_info.get("FILE_INFO", "DELTA_VIS_UNMASKED", raw=True) % (
         prefix,
