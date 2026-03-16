@@ -206,7 +206,7 @@ def mask_drfs(
     forcing_name = file_info.get("FILE_INFO", "FORCING_OUTFILE", raw=True) % (
         prefix,
         tile_id,
-        soruce_id,
+        source_id,
         datestring,
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
