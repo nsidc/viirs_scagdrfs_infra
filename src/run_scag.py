@@ -121,6 +121,7 @@ def run_scag(bip_file, src_file, working_dir, product):
         date=get_date_from_filename(src_file),
         working_dir=working_dir,
         tile=bip_info["tile_id"],
+        product=product,
     )
 
     # # create netcdf files
