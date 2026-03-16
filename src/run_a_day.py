@@ -16,7 +16,8 @@ from src.copy_scag_ancillary import copy_scag_ancillary_files
 # from scagdrfs_infra.error import ScagDrfsFileError
 from src.move_tiles import copy_tile_file
 
-# from scagdrfs_infra.run_drfs import run_drfs
+from src.run_drfs import run_drfs
+
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
 from src.constants.products import (
@@ -158,11 +159,6 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         # bipify files
         bipify_files(input_dir=working_dir, output_dir=working_dir, product=product)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
-        # if len(bip_meta_files) != 1:
-        #     raise ScagDrfsFileError(
-        #         "Found either zero or multiple BIP "
-        #         "metadata files in working directory: " + str(working_dir)
-        #     )
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
         print("SKIPPING DRFS_COMPONENT_DIR -> component_dir")
