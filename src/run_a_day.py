@@ -114,7 +114,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
     working_dir = work_base / product.upper() / day.strftime("%Y.%m.%d") / tile
     working_dir.mkdir(parents=True, exist_ok=True)
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
-    src_files = list(working_dir.glob(f"**/*{ext}"))
+    src_files = list(input_dir.glob(f"**/*{ext}"))
     logger.info("Running a day for %s with tile %s", day, tile)
     param_lists = []
     print(
