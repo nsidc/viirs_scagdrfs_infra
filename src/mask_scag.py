@@ -45,7 +45,13 @@ def get_data(filename):
 
 
 def write_data(
-    output_dir: str, var: str, tile: str, date_str: str, mask_status: str, actual_var
+    output_dir: str,
+    var: str,
+    tile: str,
+    date_str: str,
+    mask_status: str,
+    actual_var,
+    product: str,
 ):
     prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
     source_id = PRODUCT_SOURCE_ID[product.upper()]
