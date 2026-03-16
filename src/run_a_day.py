@@ -109,12 +109,10 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
     envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
     input_dir = Path(os.environ[envvar])
-    input_dir = Path(os.environ[envvar])
     work_base = Path(os.environ["WORK_DIR"])
     working_dir = work_base / product.upper() / day.strftime("%Y.%m.%d") / tile
     working_dir.mkdir(parents=True, exist_ok=True)
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
-    src_files = list(input_dir.glob(f"**/*{ext}"))
     logger.info("Running a day for %s with tile %s", day, tile)
     param_lists = []
     print(
@@ -124,24 +122,10 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         os.environ.get("WORK_DIR"),
         "\n",
     )
-    add_to_work_dir = False
-    original_work_dir = working_dir
-    if str(working_dir) == os.environ.get("WORK_DIR"):
-        add_to_work_dir = True
-    add_to_staging_dir = False
-    original_staging_dir = staging_dir
-    if str(staging_dir) == os.environ.get("STAGING_DIR"):
-        add_to_staging_dir = True
     tile_params = {}
-    if add_to_work_dir:
-        working_dir = original_work_dir / day.strftime("%Y.%m.%d") / tile
-    if not working_dir.exists():
-        working_dir.mkdir(parents=True, exist_ok=True)
     tile_params["working_dir"] = working_dir
-    if add_to_staging_dir:
-        staging_dir = original_staging_dir / day.strftime("%Y.%m.%d") / tile
-    if not staging_dir.exists():
-        staging_dir.mkdir(parents=True, exist_ok=True)
+    staging_dir = staging_dir / day.strftime("%Y.%m.%d") / tile
+    staging_dir.mkdir(parents=True, exist_ok=True)
     tile_params["staging_dir"] = staging_dir
 
     # NOTE: maybe this is NOT the best method to find files. I feel like we can be more exact
@@ -154,6 +138,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
             tile=tile,
             product=product,
         )
+    src_files = list(working_dir.glob(f"**/*{ext}"))
     if len(src_files) != 1:
         print(
             f"Found either zero or multiple files in working directory: {working_dir}\n"
