@@ -6,10 +6,10 @@
 # Suggested output name to use for this routine:
 #   drfs_idl_startup.bat
 # So, the suggested usage is:
-#   ./tasks/gen_drfs_idl_startup.sh ./tasks/drfs_idl_startup.bat
+#   ./scripts/gen_drfs_idl_startup.sh ./scripts/drfs_idl_startup.bat
 # which will:
-#  create:  ./tasks/drfs_idl_startup.bat
-#  output:  Successfully created: ./tasks/drfs_idl_startup.bat
+#  create:  ./scripts/drfs_idl_startup.bat
+#  output:  Successfully created: ./scripts/drfs_idl_startup.bat
 
 
 # Use this output file with IDL by invoking with "-idl_startup <filename>", eg

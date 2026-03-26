@@ -26,6 +26,15 @@ export WORK_DIR=/scratch/alpine/${USER}/scagdrfs/working
 export SCAG_DIR=${TOPDIR}/scag
 export SCAG_CONFIG_DIR=${SCAG_DIR}/config
 
+# DRFS specific environment setup
+# TODO:  This is actively changing while drfs is implemented...
+# NOTE:  The system and LD path were changed in scagdrfs_infra, but did not seem to be needed here
+module load idl
+export DRFS_DIR=${TOPDIR}/scagdrfs_jpl
+export DRFS_IDL_DIR=${DRFS_DIR}/snowHydro
+export DRFS_COMPONENT_DIR=/pl/active/daac-production/jpl_DRFS_Components/
+export SCAGDRFS_CONSTANTS_DIR=${TOPDIR}/scagdrfs_infra/constants
+
 # Python configuration - FIX THIS LINE
 ### TODO: This is probably not necessary.  Leaving it here until
 ###       that is confirmed

@@ -132,6 +132,22 @@ Files are automatically organized by product and date in separate directories:
 └── 2026.02.03/
 ```
 
+### Running DRFS processing (TEMPORARY)
+
+The files needed to run DRFS have been copied to this repository.  There are several requirements to be able to run DRFS in standalone mode:
+
+- Be in the `scag` conda environment:
+  - ```conda activate scag```
+- Generate the `drfs_idl_startup.bat` file by running the generation script:
+  - From "root" repo directory, run:
+    - ``` ./scripts/gen_drfs_idl_startup.sh ./scripts/drfs_idl_startup.bat```
+  - NOTE: This only needs to be run the first time you set up the environment
+- Run the `./scripts/run-drfs.sh` script
+  - A script has been written with hardcoded values for that work for development
+  - NOTE: this procedure requires that the MODIS .hdf file and the corresponding .bip and .bip_meta files already exist
+  - From the "root" repo directory, run:
+    - ```./runonlydrfs.sh```
+
 ### Running SCAGDRFS processing
 ```bash
 ./scripts/run-scagdrfs.sh --product VNP09GA --start-date 2026-03-11
