@@ -147,6 +147,34 @@ The files needed to run DRFS have been copied to this repository.  There are sev
   - NOTE: this procedure requires that the MODIS .hdf file and the corresponding .bip and .bip_meta files already exist
   - From the "root" repo directory, run:
     - ```./runonlydrfs.sh```
+- This creates .dat, .bin, .mask, .tif output files.  The .tif files match exactly the .tif files created via `scagdrfs_infra`.  For the default values and operator_name `scotts`, the output files are:
+```
+ls -lrt /scratch/alpine/scotts/scagdrfs/working/2026.03.09/h09v05
+total 373249
+-rwxrwxr-x 1 scotts scottsgrp 80572911 Mar 10 02:03 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
+-rw-rw-r-- 1 scotts scottsgrp 80640000 Mar 10 09:41 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.bip
+-rw-rw-r-- 1 scotts scottsgrp      532 Mar 10 09:41 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.bip.meta
+-rw-rw-r-- 1 scotts scottsgrp 11520000 Mar 26 11:29 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.SolarZenith_1.dat
+-rw-rw-r-- 1 scotts scottsgrp 11520000 Mar 26 11:29 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.SolarAzimuth_1.dat
+-rw-rw-r-- 1 scotts scottsgrp 23040000 Mar 26 11:30 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.deltavis.dat
+-rw-rw-r-- 1 scotts scottsgrp 23040000 Mar 26 11:30 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.forcing.dat
+-rw-rw-r-- 1 scotts scottsgrp 23040000 Mar 26 11:30 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.drfs.grnsz.dat
+-rw-rw-r-- 1 scotts scottsgrp 23040000 Mar 26 11:30 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.forcing.cleanse.dat
+-rw-rw-r-- 1 scotts scottsgrp 23040000 Mar 26 11:30 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.deltavis.cleanse.dat
+-rw-rw-r-- 1 scotts scottsgrp 23040000 Mar 26 11:30 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.drfs.grnsz.cleanse.dat
+-rw-rw-r-- 1 scotts scottsgrp  5760000 Mar 26 11:30 MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.bin.Unmask
+-rw-rw-r-- 1 scotts scottsgrp 11520000 Mar 26 11:30 MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.bin.Unmask
+-rw-rw-r-- 1 scotts scottsgrp 11520000 Mar 26 11:30 MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.bin.Unmask
+-rw-rw-r-- 1 scotts scottsgrp  5760000 Mar 26 11:30 MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.bin.mask
+-rw-rw-r-- 1 scotts scottsgrp 11520000 Mar 26 11:30 MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.bin.mask
+-rw-rw-r-- 1 scotts scottsgrp 11520000 Mar 26 11:30 MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.bin.mask
+-rw-rw-r-- 1 scotts scottsgrp   208559 Mar 26 11:31 MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.Unmask.tif
+-rw-rw-r-- 1 scotts scottsgrp   221398 Mar 26 11:31 MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.Unmask.tif
+-rw-rw-r-- 1 scotts scottsgrp   106395 Mar 26 11:31 MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.Unmask.tif
+-rw-rw-r-- 1 scotts scottsgrp   269919 Mar 26 11:31 MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.tif
+-rw-rw-r-- 1 scotts scottsgrp   160929 Mar 26 11:31 MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.tif
+-rw-rw-r-- 1 scotts scottsgrp   273074 Mar 26 11:31 MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.tif
+```
 
 ### Running SCAGDRFS processing
 ```bash
