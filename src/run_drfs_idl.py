@@ -21,8 +21,8 @@ def invoke_idl_drfs(
     thresh,
 ):
     """call to system and return the stdout and stderr of that call"""
-    idl_startup_batch = f'{os.environ.get("TOPDIR")}/tasks/drfs_idl_startup.bat'
-    idl_bash_script = f'{os.environ.get("TOPDIR")}/tasks/drfs_bash_commands'
+    idl_startup_batch = f'{os.environ.get("TOPDIR")}/scripts/drfs_idl_startup.bat'
+    idl_bash_script = f'{os.environ.get("TOPDIR")}/scripts/drfs_bash_commands'
     # TODO: Consider wrapping this shell command in timeout so that
     #       it doesn't run forever if there is an IDL error.  Perhaps 20min?
     # NOTE: The shell call to idl requires that the config/env.sh script has
@@ -31,6 +31,9 @@ def invoke_idl_drfs(
     #       in run-drfs.sh and therefore does not need to happen here.
     cmd_idl = f"idl {idl_bash_script} -idl_startup {idl_startup_batch} -args {filename_prefix} {working_dir} {component_path} {ns} {nl} {nb} {date} {year} {horizontal} {vertical} {thresh}"
 
+    print(f"cmd_idl:\n{cmd_idl}")
+
+    # breakpoint()
     try:
         cmd_idl_result = subprocess.run(
             cmd_idl,
@@ -62,7 +65,7 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
     because idlpy is limited to Python version 2.7, 3.5, or 3.6
     on CU's alpine supercomputer.
 
-    Per the set of dash commands -- ./tasks/drfs_bash_commands --
+    Per the set of dash commands -- ./scripts/drfs_bash_commands --
     the command line command to invoke IDL is a single line:
 
         idl drfs_bash_commands -idl_startup drfs_idl_startup.bat
@@ -83,24 +86,29 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
         MOD09GA.A2025090.h08v04.061.2025091013655.NRT.hdf
         MOD09GA.A2025090.h08v04.061.2025091013655.NRT
     """
+    print(f"HERE 0", flush=True)
     # NOTE: working_dir should == hdf_file.parent
     filename_prefix = hdf_file.stem
+    print(f"HERE 1", flush=True)
 
     # Get information from the BIP metadata file.
     meta_path = Path(str(hdf_file).replace(hdf_file.suffix, ".bip.meta"))
     meta_content = None
+    print(f"HERE 2", flush=True)
     with meta_path.open() as meta_file:
         meta_content = meta_file.read()
     if meta_content is None:
         raise RuntimeError(
             "Cannot read BIP metadata file: {bip_file}".format(bip_file=meta_path)
         )
+    print(f"HERE 3", flush=True)
     match = re.search("NLINES=(\d+)", meta_content)
     # TODO: this calculation appears to assume square input grids
     nl = match.group(1)
     ns = match.group(1)
     match = re.search("NBANDS=(\d+)", meta_content)
     nb = match.group(1)
+    print(f"HERE 4", flush=True)
     match = re.search("ZONE_NUMBER=h(\d+)v(\d+)", meta_content)
     horizontal = match.group(1)
     vertical = match.group(2)
@@ -112,12 +120,27 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
 
     # NOTE: This directory must end in a slash '/' for IDL purposes
     idl_components_dir = f"{os.environ.get('DRFS_COMPONENT_DIR')}"
+    print(f"HERE 5", flush=True)
     try:
         assert str(idl_components_dir[-1]) == os.sep
     except AssertionError:
         raise ValueError(
             f"idl_components_dir (from env var DRFS_COMPONENT_DIR) must end in slash: {idl_components_dir}"
         )
+
+    print(f"About to call invoke_idl_drfs() with:")
+    print(f"  {idl_components_dir=}")
+    print(f"  {filename_prefix=}")
+    print(f"  {working_dir=}")
+    print(f"  {ns=}")
+    print(f"  {nl=}")
+    print(f"  {nb=}")
+    print(f"  {date=}")
+    print(f"  {year=}")
+    print(f"  {horizontal=}")
+    print(f"  {vertical=}")
+    print(f"  {thresh=}")
+    print(flush=True)
 
     idl_drfs_output = invoke_idl_drfs(
         idl_components_dir,
@@ -132,5 +155,7 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
         vertical,
         thresh,
     )
+
+    print(f"Returning!", flush=True)
 
     return idl_drfs_output
