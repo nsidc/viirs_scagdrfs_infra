@@ -1,28 +1,34 @@
 # type: ignore
 import configparser
 import datetime as dt
-from ast import literal_eval
+import glob
+import logging
 import os
 import re
-import logging
-import glob
+from ast import literal_eval
 from pathlib import Path
 from typing import Iterator
 
 import pandas as pd
 
-from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+# TODO: reconcile import path between scagdrfs_infra.scagdrfs_config and src.constants.field_info
+from scagdrfs_infra.scagdrfs_config import FIELD_BITDEPTHS, VALID_FIELD_NAMES
 
 CONSTANTS_DIR = Path(__file__).parent / "constants"
 TILES_CONFIG_PATH = CONSTANTS_DIR / "tiles.ini"
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Region / tile helpers
+# ---------------------------------------------------------------------------
 
 
 def get_list_of_defined_regions():
     config = configparser.ConfigParser()
     config.read(TILES_CONFIG_PATH)
-    region_names_list = [key for key in config["TILES"].keys()]
-
-    return region_names_list
+    return [key for key in config["TILES"].keys()]
 
 
 def get_region_tile_ids(regions):
@@ -34,76 +40,77 @@ def get_region_tile_ids(regions):
     return tile_ids
 
 
+# ---------------------------------------------------------------------------
+# Date helpers
+# ---------------------------------------------------------------------------
+
+
 def date_range(*, start_date: dt.date, end_date: dt.date) -> Iterator[dt.date]:
-    """Yield a dt.date object representing each day between start_date and end_date."""
+    """Yield a dt.date for each day between start_date and end_date (inclusive)."""
     for pd_timestamp in pd.date_range(start=start_date, end=end_date, freq="D"):
         yield pd_timestamp.date()
 
 
+def datetime_to_date(_ctx, _param, value: dt.datetime) -> dt.date:
+    """Click callback that converts a dt.datetime to dt.date."""
+    return value.date()
+
+
+# ---------------------------------------------------------------------------
+# Filename parsing helpers
+# ---------------------------------------------------------------------------
+
+
+def get_sensor_from_filename(filename):
+    """Determine sensor (MODIS or VIIRS) from a data filename."""
+    filename_str = str(filename)
+
+    if re.search(r"\S*MOD09GA\S+", filename_str):
+        sensor = "MODIS"
+    elif re.search(r"\S*VNP09GA\S+", filename_str):
+        sensor = "VIIRS"
+    elif re.search(r"\S*VJ1\S+", filename_str):
+        sensor = "VIIRS"
+    else:
+        raise RuntimeError(f"Cannot determine sensor from filename: {filename}")
+
+    logger.debug("Determined sensor '%s' from filename: %s", sensor, filename)
+    return sensor
+
+
 def get_date_from_filename(filename):
-    date_regex = re.compile("\S*.A(\d{7}).\S+")
-    date_matches = date_regex.search(str(filename))
-    if date_matches is None:
+    date_regex = re.compile(r"\S*.A(\d{7}).\S+")
+    match = date_regex.search(str(filename))
+    if match is None:
         raise RuntimeError(f"Cannot determine date from filename: {filename}")
-    file_date = dt.datetime.strptime(date_matches.group(1), "%Y%j")
-    return file_date
+    return dt.datetime.strptime(match.group(1), "%Y%j")
 
 
 def get_tile_id_from_filename(filename):
-    tile_id_regex = re.compile("\S*(h\d{2}v\d{2})\S+")
-    tile_id_matches = tile_id_regex.search(str(filename))
-    if tile_id_matches is None:
+    tile_id_regex = re.compile(r"\S*(h\d{2}v\d{2})\S+")
+    match = tile_id_regex.search(str(filename))
+    if match is None:
         raise RuntimeError(f"Cannot determine tile ID from filename: {filename}")
-    return tile_id_matches.group(1)
+    return match.group(1)
 
 
-def check_expected_tif_files_with_glob(tif_dir, tile):
-    """
-    Check for expected TIF files using glob patterns with wildcards.
-    """
-
-    file_types = [
-        "GS",
-        "ICE",
-        "ROCK",
-        "SHADE",
-        "SNOW",
-        "VEG",
-        "DELTAVIS",
-        "drfsGS",
-        "RF",
-    ]
-    expected_total = len(file_types) * 2
-
-    # Count matching files for each type (should be 2 each - masked and unmasked)
-    total_found = 0
-    found_by_type = {}
-
-    for file_type in file_types:
-        # Pattern to match both masked and unmasked versions
-        # TODO: update to VNP or VJ1
-        pattern = f"VIRSCGDRF_NRT_{file_type}_{tile}_VNP09GANRT061_*_V*.tif"
-        search_pattern = os.path.join(tif_dir, pattern)
-        matches = glob.glob(search_pattern)
-        found_by_type[file_type] = len(matches)
-        total_found += len(matches)
-
-    if total_found == expected_total:
-        return True
+def get_filename_stem(filename):
+    """Return the base filename without extension."""
+    if isinstance(filename, str):
+        return os.path.basename(os.path.splitext(filename)[0])
+    elif isinstance(filename, Path):
+        return filename.stem
     else:
-        return False
+        raise RuntimeError(f"Could not determine basename of: {filename}")
 
 
 def get_field_name(filename):
-    """Return the scientific field name from a data file name
-    This assumes a filename (type Path) with a .stem of the form:
-    MODSCGDRF_NRT_GS_h08v04_VNP09GANRT061_20250331_V01.1.bin.mask
-    ...or similar
+    """Return the scientific field name from a data filename.
 
-    VNP:
+    Handles filenames of the form:
+      MODSCGDRF_NRT_GS_h08v04_MOD09GANRT061_20250331_V01.1.bin.mask
       VNP09GA_NRT.A2026042.h30v13.002.2026043041826.grnsz.bin
-
-    TODO: This function is handling a LOT of different file name templates!
+    ...and similar variants.
     """
     if isinstance(filename, Path):
         base_filename = str(filename.stem)
@@ -114,8 +121,6 @@ def get_field_name(filename):
             f"filename {filename} is neither Path nor str: {type(filename)}"
         )
 
-    print(f"in get_field_name(), filename is: {filename}", flush=True)
-
     n_underscores = base_filename.count("_")
     if n_underscores > 3:
         fn_parts = base_filename.split("_")
@@ -124,10 +129,9 @@ def get_field_name(filename):
         fn_parts = base_filename.split(".")
         field_index = 6
 
-    print(f"n_underscores: {n_underscores}")
-
+    # Guard against hitting a bare "bin" token instead of the actual field name
     if fn_parts[field_index] == "bin":
-        field_index = field_index - 1
+        field_index -= 1
 
     try:
         field_name = fn_parts[field_index]
@@ -136,107 +140,124 @@ def get_field_name(filename):
             f"No index {field_index} on parts {fn_parts} for filename {filename}"
         )
 
-    print(f"...returning field_name: {field_name}")
+    logger.debug("Resolved field name '%s' from filename: %s", field_name, filename)
     return field_name
 
 
-def get_filename_stem(filename):
-    """Return the base file name"""
-    if isinstance(filename, str):
-        base_filename = os.path.basename(os.path.splitext(filename)[0])
-    elif isinstance(filename, Path):
-        base_filename = filename.stem
-    else:
-        raise RuntimeError(f"Could not determine basename of: {filename}")
-
-    return base_filename
-
-
-def get_info_from_bip_file(meta_path):
-    meta_content = None
-    with meta_path.open() as meta_file:
-        meta_content = meta_file.read()
-    if meta_content is None:
-        raise Exception(
-            "Cannot read BIP metadata file: {bip_file}".format(bip_file=meta_path)
-        )
-    bip_meta_file = {}
-    match = re.search("SOURCE_FILE=(.+)", meta_content)
-    source_file = match.group(1)
-    bip_meta_file["source_file"] = source_file
-    match = re.search("NLINES=(\d+)", meta_content)
-    nl = match.group(1)
-    bip_meta_file["num_lines"] = nl
-    ns = match.group(1)
-    bip_meta_file["num_samples"] = ns
-    match = re.search("NBANDS=(\d+)", meta_content)
-    nb = match.group(1)
-    bip_meta_file["num_bands"] = nb
-    match = re.search("PROJ_STRING=(.+)", meta_content)
-    proj_string = match.group(1)
-    bip_meta_file["proj_string"] = proj_string
-    match = re.search("ZONE_NUMBER=h(\d+)v(\d+)", meta_content)
-    horizontal = match.group(1)
-    bip_meta_file["horizontal"] = horizontal
-    vertical = match.group(2)
-    bip_meta_file["vertical"] = vertical
-    bip_meta_file["tile_id"] = "h" + horizontal + "v" + vertical
-    match = re.search("CORNER_UL_PROJECTION_X_PRODUCT=(.+)", meta_content)
-    x_ul = match.group(1)
-    bip_meta_file["ul_corner_x"] = x_ul
-    match = re.search("CORNER_UL_PROJECTION_Y_PRODUCT=(.+)", meta_content)
-    y_ul = match.group(1)
-    bip_meta_file["ul_corner_y"] = y_ul
-    match = re.search("CORNER_LR_PROJECTION_X_PRODUCT=(.+)", meta_content)
-    x_lr = match.group(1)
-    bip_meta_file["lr_corner_x"] = x_lr
-    match = re.search("CORNER_LR_PROJECTION_Y_PRODUCT=(.+)", meta_content)
-    y_lr = match.group(1)
-    bip_meta_file["lr_corner_y"] = y_lr
-    return bip_meta_file
-
-
-def get_sensor_from_filename(filename):
-    # Loop through sensors until we find a match
-
-    # Is this a MODIS file?
-    modis_regex = re.compile("\S*MOD09GA\S+")
-    modis_matches = modis_regex.search(str(filename))
-
-    # Is this a VIIRS-VJ1 file?
-    viirsVJ1_regex = re.compile("\S*VJ1\S+")
-    viirsVJ1_matches = viirsVJ1_regex.search(str(filename))
-
-    # Is this a VIIRS-VNP file?
-    # NOTE: Assuming that code uses "VIIRS" for sensor
-    #       but we will want to distinguish different
-    #       VIIRS satellites.
-    viirs_regex = re.compile("\S*VNP09GA\S+")
-    viirs_matches = viirs_regex.search(str(filename))
-
-    if modis_matches:
-        sensor = "MODIS"
-    elif viirs_matches:
-        sensor = "VIIRS"
-    elif viirsVJ1_matches:
-        sensor = "VIIRS"
-    else:
-        sensor = None
-
-    if sensor is None:
-        raise RuntimeError(f"Cannot determine sensor from filename: {filename}")
-    else:
-        print(f"Determined that filename sensor is: {sensor}")
-
-    return sensor
-
-
 def get_bitdepth_for_field_name(field_name):
-    """Returns the bit depth -- eg 8 for uint8 and 16 for uint16 -- for a DRFS or SCAG
-    data field name"""
+    """Return the bit depth (8 or 16) for a DRFS or SCAG data field name."""
     try:
         return FIELD_BITDEPTHS[field_name]
     except KeyError:
         raise RuntimeError(
-            f"field name {field_name} does not have a bitdepth defined: {FIELD_BITDEPTHS.keys()}"
+            f"field name '{field_name}' has no defined bitdepth. "
+            f"Known fields: {list(FIELD_BITDEPTHS.keys())}"
         )
+
+
+# ---------------------------------------------------------------------------
+# TIF file validation
+# ---------------------------------------------------------------------------
+
+# Sensor-specific glob pattern components
+_SENSOR_PATTERN_MAP = {
+    "MODIS": ("MODSCGDRF_NRT", "MOD09GANRT061"),
+    "VIIRS": (
+        "VIRSCGDRF_NRT",
+        "VNP09GANRT061",
+    ),  # TODO: distinguish VNP vs VJ1 if needed
+}
+
+_TIF_FILE_TYPES = [
+    "GS",
+    "ICE",
+    "ROCK",
+    "SHADE",
+    "SNOW",
+    "VEG",
+    "DELTAVIS",
+    "drfsGS",
+    "RF",
+]
+
+
+def check_expected_tif_files_with_glob(tif_dir, tile, sensor):
+    """Check that all expected TIF files (masked + unmasked) exist for a tile.
+
+    Args:
+        tif_dir: Directory to search.
+        tile: MODIS/VIIRS tile ID, e.g. "h08v04".
+        sensor: "MODIS" or "VIIRS".
+
+    Returns:
+        True if all expected files are present, False otherwise.
+    """
+    try:
+        product_prefix, product_id = _SENSOR_PATTERN_MAP[sensor]
+    except KeyError:
+        raise ValueError(
+            f"Unknown sensor '{sensor}'. Expected one of: {list(_SENSOR_PATTERN_MAP)}"
+        )
+
+    expected_total = len(_TIF_FILE_TYPES) * 2  # masked + unmasked
+    total_found = 0
+    found_by_type = {}
+
+    for file_type in _TIF_FILE_TYPES:
+        pattern = f"{product_prefix}_{file_type}_{tile}_{product_id}_*_V*.tif"
+        matches = glob.glob(os.path.join(tif_dir, pattern))
+        found_by_type[file_type] = len(matches)
+        total_found += len(matches)
+
+    if total_found != expected_total:
+        logger.debug(
+            "TIF file check failed for tile %s (sensor=%s): found %d / %d. "
+            "Breakdown: %s",
+            tile,
+            sensor,
+            total_found,
+            expected_total,
+            found_by_type,
+        )
+
+    return total_found == expected_total
+
+
+# ---------------------------------------------------------------------------
+# BIP metadata helper
+# ---------------------------------------------------------------------------
+
+
+def get_info_from_bip_file(meta_path):
+    with meta_path.open() as meta_file:
+        meta_content = meta_file.read()
+
+    if not meta_content:
+        raise Exception(f"Cannot read BIP metadata file: {meta_path}")
+
+    def _extract(pattern):
+        match = re.search(pattern, meta_content)
+        if match is None:
+            raise RuntimeError(
+                f"Pattern '{pattern}' not found in BIP metadata file: {meta_path}"
+            )
+        return match.group(1)
+
+    horizontal, vertical = re.search(r"ZONE_NUMBER=h(\d+)v(\d+)", meta_content).groups()
+
+    return {
+        "source_file": _extract(r"SOURCE_FILE=(.+)"),
+        "num_lines": _extract(r"NLINES=(\d+)"),
+        "num_samples": _extract(
+            r"NLINES=(\d+)"
+        ),  # NOTE: original code reused NLINES for num_samples
+        "num_bands": _extract(r"NBANDS=(\d+)"),
+        "proj_string": _extract(r"PROJ_STRING=(.+)"),
+        "horizontal": horizontal,
+        "vertical": vertical,
+        "tile_id": f"h{horizontal}v{vertical}",
+        "ul_corner_x": _extract(r"CORNER_UL_PROJECTION_X_PRODUCT=(.+)"),
+        "ul_corner_y": _extract(r"CORNER_UL_PROJECTION_Y_PRODUCT=(.+)"),
+        "lr_corner_x": _extract(r"CORNER_LR_PROJECTION_X_PRODUCT=(.+)"),
+        "lr_corner_y": _extract(r"CORNER_LR_PROJECTION_Y_PRODUCT=(.+)"),
+    }
