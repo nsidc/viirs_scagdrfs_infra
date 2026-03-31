@@ -33,7 +33,7 @@ module load idl
 export DRFS_DIR=${TOPDIR}/scagdrfs_jpl
 export DRFS_IDL_DIR=${DRFS_DIR}/snowHydro
 export DRFS_COMPONENT_DIR=/pl/active/daac-production/jpl_DRFS_Components/
-export SCAGDRFS_CONSTANTS_DIR=${TOPDIR}/scagdrfs_infra/constants
+export SCAGDRFS_CONSTANTS_DIR=${TOPDIR}/src/constants
 
 # Python configuration - FIX THIS LINE
 ### TODO: This is probably not necessary.  Leaving it here until

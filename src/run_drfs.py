@@ -9,7 +9,7 @@ from src.error import ScagDrfsFileError
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs
 from src.run_drfs_idl import run_drfs_idl_via_bash
-from src.scagdrfs_config import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
 from src.util import (
     get_bitdepth_for_field_name,
     get_date_from_filename,

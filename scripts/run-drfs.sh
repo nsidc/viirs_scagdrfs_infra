@@ -11,5 +11,5 @@ echo "SKIPPING..."
 
 echo
 echo "Invoking run_drfs..."
-echo "   python -m scagdrfs_infra.run_drfs \"$@\""
-python -m scagdrfs_infra.run_drfs "$@"
+echo "   python -m src.run_drfs \"$@\""
+python -m src.run_drfs "$@"
