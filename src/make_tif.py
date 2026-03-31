@@ -4,7 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from scagdrfs_infra.util import (
+from src.util import (
     get_date_from_filename,
     get_filename_stem,
     get_info_from_bip_file,
