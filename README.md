@@ -138,6 +138,7 @@ The files needed to run DRFS have been copied to this repository.  There are sev
 
 - Be in the `scag` conda environment:
   - ```conda activate scag```
+- Run `. config/env.sh`
 - Generate the `drfs_idl_startup.bat` file by running the generation script:
   - From "root" repo directory, run:
     - ``` ./scripts/gen_drfs_idl_startup.sh ./scripts/drfs_idl_startup.bat```
