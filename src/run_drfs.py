@@ -8,6 +8,7 @@ import click
 from src.error import ScagDrfsFileError
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs
+from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
 from src.run_drfs_idl import run_drfs_idl_via_bash
 from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
 from src.util import (
@@ -21,12 +22,12 @@ from src.util import (
 @click.command()
 @click.option(
     "-h",
-    "--hdf-file",
+    "--src-file",
     required=True,
     type=click.Path(
         file_okay=True, dir_okay=False, writable=False, exists=True, path_type=Path
     ),
-    help="Path to the HDF file to be processed.",
+    help="Path to the source file to be processed.",
 )
 @click.option(
     "-c",
@@ -61,26 +62,35 @@ from src.util import (
     " transferred to the final directory. Defaults to environment variable STAGING_DIR."
     " Date and tile ID subdirectories will be added (e.g. 2023.10.03/h08v04).",
 )
-def run_drfs(hdf_file, component_dir, working_dir, staging_dir):
+@click.option(
+    "--product",
+    "-P",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    default="MOD09GA",
+    show_default=True,
+    help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
+)
+def run_drfs(src_file, component_dir, working_dir, staging_dir, product):
     """Process the DRFS files: DELTAVIS, drfsGS, RF"""
-    day = get_date_from_filename(hdf_file)
-    tile = get_tile_id_from_filename(hdf_file)
+    day = get_date_from_filename(src_file)
+    tile = get_tile_id_from_filename(src_file)
 
     print(f"about to run_drfs() for {day=} and {tile=}", flush=True)
     print(f"Executing run_drfs_idl_via_bash() with:")
-    print(f"  {hdf_file=}")
+    print(f"  {src_file=}")
     print(f"  {component_dir=}")
     print(f"  {working_dir=}")
     print(f"  ...", flush=True)
-    IDL_output = run_drfs_idl_via_bash(hdf_file, component_dir, working_dir)
-    print(f"IDL_output for file {hdf_file}:\n{IDL_output}", flush=True)
+    IDL_output = run_drfs_idl_via_bash(src_file, component_dir, working_dir)
+    print(f"IDL_output for file {src_file}:\n{IDL_output}", flush=True)
 
     mask_drfs(
         tile_id=tile,
         date=day,
-        hdf_file=hdf_file,
+        src_file=src_file,
         working_dir=working_dir,
         staging_dir=staging_dir,
+        product=product,
     )
 
     bip_files = list(working_dir.glob("**/*.bip.meta"))
