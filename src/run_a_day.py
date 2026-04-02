@@ -16,7 +16,8 @@ from src.copy_scag_ancillary import copy_scag_ancillary_files
 # from scagdrfs_infra.error import ScagDrfsFileError
 from src.move_tiles import copy_tile_file
 
-# from scagdrfs_infra.run_drfs import run_drfs
+from src.run_drfs import run_drfs
+
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.run_scag import run_scag
 from src.constants.products import (
@@ -158,15 +159,10 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         # bipify files
         bipify_files(input_dir=working_dir, output_dir=working_dir, product=product)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
-        # if len(bip_meta_files) != 1:
-        #     raise ScagDrfsFileError(
-        #         "Found either zero or multiple BIP "
-        #         "metadata files in working directory: " + str(working_dir)
-        #     )
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
         print("SKIPPING DRFS_COMPONENT_DIR -> component_dir")
-        # tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
+        tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
@@ -182,19 +178,18 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
             # Run DRFS and SCAG on the command line not in the supercomputer
             if no_queue:
-                # NOTE: COMMENTING OUT DRFS FOR TESTING
                 # TODO: re-DO assign "component_dir"
-                # TODO: Uncomment later
                 # skip drfs if there are 6 tifs present (masked and unmasked drfs)
-                # if tifCounter0 != 6:
-                #     print("Running DRFS for ", tile_params["src_file"], "...\n")
-                #     ctx.invoke(
-                #         run_drfs,
-                #         src_file=tile_params["src_file"],
-                #         working_dir=tile_params["working_dir"],
-                #         staging_dir=tile_params["staging_dir"],
-                #         component_dir=tile_params["component_dir"],
-                #     )
+                if product.upper() == "MOD09GA":
+                    if tifCounter0 != 6:
+                        print("Running DRFS for ", tile_params["src_file"], "...\n")
+                        ctx.invoke(
+                            run_drfs,
+                            src_file=tile_params["src_file"],
+                            working_dir=tile_params["working_dir"],
+                            staging_dir=tile_params["staging_dir"],
+                            component_dir=tile_params["component_dir"],
+                        )
 
                 # Always run scag
                 ctx.invoke(
@@ -207,37 +202,40 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
             # Run DRFS and SCAG in the supercomputer queue
             else:  # this is the "not no_queue" condition; i.e. run on supercomputer with dask
-                # if tifCounter0 != 6:
-                #     print(
-                #         "Submitting DRFS run to queue for ",
-                #         tile_params["src_file"],
-                #         "...\n",
-                #     )
-                #     cmd_drfs = ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
-                #         os.environ.get("TOPDIR"),
-                #         tile_params["src_file"],
-                #         tile_params["working_dir"],
-                #         tile_params["staging_dir"],
-                #         tile_params["component_dir"],
-                #     )
-                #     print(f"DRFS command to run: {cmd_drfs} \n")
-                #     drfs_results = []
-                #     try:
-                #         cmd_drfs_output = subprocess.run(
-                #             cmd_drfs,
-                #             shell=True,
-                #             capture_output=True,
-                #             text=True,
-                #             executable="/usr/bin/bash",
-                #         )
-                #         cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}"
-                #         drfs_results.append(cmd_drfs_string)
-                #     except Exception as e:
-                #         cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}\n  WITH EXCEPTION: {str(e)}"
-                #         drfs_results.append(cmd_drfs_string)
+                if product.upper() == "MOD09GA":
+                    if tifCounter0 != 6:
+                        print(
+                            "Submitting DRFS run to queue for ",
+                            tile_params["src_file"],
+                            "...\n",
+                        )
+                        cmd_drfs = (
+                            ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
+                                os.environ.get("TOPDIR"),
+                                tile_params["src_file"],
+                                tile_params["working_dir"],
+                                tile_params["staging_dir"],
+                                tile_params["component_dir"],
+                            )
+                        )
+                        print(f"DRFS command to run: {cmd_drfs} \n")
+                        drfs_results = []
+                        try:
+                            cmd_drfs_output = subprocess.run(
+                                cmd_drfs,
+                                shell=True,
+                                capture_output=True,
+                                text=True,
+                                executable="/usr/bin/bash",
+                            )
+                            cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}"
+                            drfs_results.append(cmd_drfs_string)
+                        except Exception as e:
+                            cmd_drfs_string = f"Ran cmd_drfs: {cmd_drfs}\n  cmd_drfs_output: {str(cmd_drfs_output)}\n  WITH EXCEPTION: {str(e)}"
+                            drfs_results.append(cmd_drfs_string)
 
-                #     for drfs_result in drfs_results:
-                #         print("DRFS process result: ", drfs_result, "\n")
+                        for drfs_result in drfs_results:
+                            print("DRFS process result: ", drfs_result, "\n")
 
                 # Always run SCAG
                 print(
