@@ -27,7 +27,7 @@ dependencies:
   - imagemagick~=7.1.0_50
   - imagecodecs
   - earthdata~=0.4.0
+  - scipy
 
-  - pip
   - pip:
       - git+https://github.com/nsidc/landsatxplore.git
