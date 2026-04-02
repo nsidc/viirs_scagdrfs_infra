@@ -1,12 +1,7 @@
 import os
 import re
 import subprocess
-import sys
 from pathlib import Path
-
-import click
-
-
 def invoke_idl_drfs(
     component_path,
     filename_prefix,
