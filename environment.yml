@@ -14,6 +14,7 @@ dependencies:
   - flake8~=5.0.4
   - mamba~=0.24.0
   - numpy
+  - pytest
 
   # runtime dependencies
   - dask~=2023.11.0

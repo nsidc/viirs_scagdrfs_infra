@@ -12,16 +12,14 @@ def load_irradiance_arrays(comps_dir: Path) -> tuple[np.ndarray, np.ndarray]:
     """Load direct and diffuse irradiance arrays.
 
     Returns (dir_arr, dif_arr) each shape (216, 14, 19)
-    where dimensions are (spectral_bands, solar_zenith_angles, elevations)
     """
-    direct = np.fromfile(comps_dir / "CRB/direct.bin", dtype=np.float32).reshape(
-        216, 14, 19
-    )
-    total = np.fromfile(comps_dir / "CRB/total.bin", dtype=np.float32).reshape(
-        216, 14, 19
-    )
-    diffuse = total - direct
-    return direct, diffuse
+    direct = np.fromfile(comps_dir / "CRB/direct.bin", dtype=np.float32)
+    total = np.fromfile(comps_dir / "CRB/total.bin", dtype=np.float32)
+    # IDL reform() uses column-major order, numpy needs order='F' to match
+    dir_arr = direct.reshape(216, 14, 19, order="F")
+    tot_arr = total.reshape(216, 14, 19, order="F")
+    dif_arr = tot_arr - dir_arr
+    return dir_arr, dif_arr
 
 
 def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
@@ -31,7 +29,7 @@ def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
 
 def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load AVIRIS wavelengths. Shape: (2, 216)"""
-    return np.loadtxt(comps_dir / "irrad10nm.wvl")
+    return np.loadtxt(comps_dir / "irrad10nm.wvl").T
 
 
 def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
@@ -43,7 +41,7 @@ def load_sli(comps_dir: Path, sza: int) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
     path = comps_dir / f"MODIS.z{sza}.sli"
     data = np.fromfile(path, dtype=np.float32)
-    return data.reshape(7, -1)[:, :110]
+    return data.reshape(7, -1)[:, :110] / 10.0
 
 
 def load_all_luts(comps_dir: Path) -> dict:
