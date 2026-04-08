@@ -3,6 +3,7 @@ Pytest configuration and fixtures for DRFS binary regression tests.
 
 Requires environment variables set in env.sh:
     PETALIB_DIR   e.g. /pl/active/daac-production
+    # NOTE this should be updates in viirs_scagdrfs_infra but IS FINE For now
     WORK_DIR   e.g. /scratch/alpine/roma8902/scagdrfs/working
 
 Tile lists are read from scagdrfs_infra/constants/tiles.ini in the repo root.
@@ -27,7 +28,7 @@ _PETALIB_DIR = os.environ.get("PETALIB_DIR")
 _WORK_DIR = os.environ.get("WORK_DIR")
 
 # tiles.ini lives at the repo root — two levels up from tests/drfs_regression/
-_TILES_INI = Path(__file__).parents[2] / "scagdrfs_infra" / "constants" / "tiles.ini"
+_TILES_INI = Path(__file__).parents[2] / "src" / "constants" / "tiles.ini"
 
 
 def _load_tiles(region: str) -> list[str]:
