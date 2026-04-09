@@ -20,6 +20,7 @@ from src.drfs_components import (
 )
 from src.drfs_geometry import preprocess_geometry, load_solar_geometry
 from src.drfs_core import compute_drfs, write_drfs_outputs
+from src.drfs_hdf_solar import extract_hdf_solar_fields
 
 
 def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> str:
@@ -51,6 +52,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     slope, aspect = load_terrain(component_dir, h, v)
     dem = load_dem(component_dir, h, v)
     print("  component files loaded.", flush=True)
+
+    # --- Extract solar geometry from input file ---
+    # This should generate the Solar .dat files that are read in below
+    extract_hdf_solar_fields(src_file)
 
     # --- Load solar geometry ---
     print("  loading solar geometry...", flush=True)
