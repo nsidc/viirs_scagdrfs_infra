@@ -7,3 +7,5 @@ scagdrfs_jpl/
 __pycache__/
 outlog.txt
 */drfs_idl_startup.bat
+*.dat
+*.hdf
