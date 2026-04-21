@@ -54,9 +54,16 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     print("  component files loaded.", flush=True)
 
     # --- Extract solar geometry from input file ---
+    # This replaces IDL's command:
+    #   drfs_hdf_solar,in_file=full_filename
     # This should generate the Solar .dat files that are read in below
+    #   <...>.SolarZenith_1.dat
+    #   <...>.SolarAzimuth_1.dat
     extract_hdf_solar_fields(src_file)
 
+    # Write a python version of:
+    #    create_bip = extract_modis_reflectance(file, bip) ; HDF file needs full path.  Inserted by AB, 9/3/13
+    #    (in mod_drfs_v1_2.pro)
     # --- Load solar geometry ---
     print("  loading solar geometry...", flush=True)
     zenith_file = working_dir / f"{filename_prefix}.SolarZenith_1.dat"
