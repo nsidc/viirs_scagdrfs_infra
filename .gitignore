@@ -9,3 +9,8 @@ outlog.txt
 */drfs_idl_startup.bat
 *.dat
 *.hdf
+
+*.meta
+*.bat
+*.h5
+out*
