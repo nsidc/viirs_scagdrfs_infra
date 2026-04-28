@@ -6,6 +6,7 @@ import logging
 
 import click
 
+from src.fetch_nrt import move_granules_to_date_dirs
 from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
 
@@ -13,7 +14,7 @@ from src.constants import (
     VJ109GA_DIR,
     FILE_PERMISSIONS,
     LANCE_CONCEPT_ID_VJ1,
-    PRODUCT_SHORT_NAME_VNP,
+    PRODUCT_SHORT_NAME_VJ1,
 )
 
 # configure logging
@@ -62,14 +63,45 @@ logger = logging.getLogger(__name__)
 )
 def get_lp_data(start_date, end_date, output_dir, product):
 
-    for date in date_range(start_date=start_date, end_date=end_date):
-        print("output dir: ", output_dir)
-        dated_output_dir = output_dir / date.strftime("%Y.%m.%d")
-        dated_output_dir.mkdir(parents=True, exist_ok=True)
+    products_to_fetch = []
+    if product.upper() in "VJ1":
+        products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1))
 
-        get_data(date, LANCE_CONCEPT_ID_VJ1, dated_output_dir)
-        chmod_data(dated_output_dir)
-        chown_data(dated_output_dir)
+    for short_name, concept_id in products_to_fetch:
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Downloading {short_name} (Concept ID: {concept_id})")
+        logger.info(f"{'='*60}")
+
+        product_files = 0
+
+        for date in date_range(start_date=start_date, end_date=end_date):
+
+            logger.info(f"Processing {short_name} for {date.strftime('%Y-%m-%d')}")
+
+            dated_output_dir = output_dir / date.strftime("%Y.%m.%d")
+            dated_output_dir.mkdir(parents=True, exist_ok=True)
+
+            files = get_data(date, concept_id, dated_output_dir, short_name)
+
+            if files:
+                move_granules_to_date_dirs(dated_output_dir, output_dir)
+                chmod_data(dated_output_dir)
+                chown_data(dated_output_dir)
+                product_files += len(files)
+                logger.info(
+                    f"Successfully processed {len(files)} files for {date.strftime('%Y-%m-%d')}"
+                )
+            else:
+                logger.warning(
+                    f"No files downloaded for {short_name} on {date.strftime('%Y-%m-%d')}"
+                )
+
+        logger.info(f"{short_name} complete: {product_files} files downloaded")
+        total_files += product_files
+
+    logger.info(f"\n{'='*60}")
+    logger.info(f"All downloads complete: {total_files} total files")
+    logger.info(f"{'='*60}")
 
 
 if __name__ == "__main__":
