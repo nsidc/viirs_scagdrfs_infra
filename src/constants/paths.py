@@ -14,6 +14,7 @@ V0_DIR = Path(os.getenv("V0_DIR", "/disks/sidads_ftp/pub/DATASETS/MODSCGDRF_NRT_
 VJ109GA_NRT_DIR = Path(os.getenv("VJ109GA_NRT_DIR", f"{PETALIB_DIR}/VJ109GA/NRT"))
 VNP09GA_NRT_DIR = Path(os.getenv("VNP09GA_NRT_DIR", f"{PETALIB_DIR}/VJNP09GA/NRT"))
 MOD09GA_NRT_DIR = Path(os.getenv("MOD09GA_NRT_DIR", f"{PETALIB_DIR}/MOD09GA/NRT"))
+VJ109GA_DIR = Path(os.getenv("VJ109GA_NRT_DIR", f"{PETALIB_DIR}/VJ109GA"))
 
 WORK_DIR = Path(
     os.getenv("WORK_DIR", f"/scratch/alpine/{os.getenv('USER')}/viirs_scagdrfs/working")
