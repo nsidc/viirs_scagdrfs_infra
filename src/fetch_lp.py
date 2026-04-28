@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
     "-e",
     "--end-date",
     type=click.DateTime(formats=["%Y%m%d", "%Y-%m-%d"]),
-    default=str(dt.datetime.today().date() - dt.timedelta(days=1)),
+    default=str(dt.datetime.today().date() - dt.timedelta(days=2)),
     show_default=True,
     help="End date of MOD09GA LP data to download.",
 )
@@ -66,6 +66,8 @@ def get_lp_data(start_date, end_date, output_dir, product):
     products_to_fetch = []
     if product.upper() in "VJ1":
         products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1))
+
+    total_files = 0
 
     for short_name, concept_id in products_to_fetch:
         logger.info(f"\n{'='*60}")
