@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# This fetched the final `daily surface reflectance` data 
 
 import datetime as dt
 from pathlib import Path
