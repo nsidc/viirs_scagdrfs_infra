@@ -2,26 +2,26 @@
 Input files:  These change with each day's products
 
 Surface reflectances
-  MOD09GA:
-    Example:           MOD09GA.A2026091.h29v13.061.2026092014830.NRT.hdf
-    Template:          <prodID>.A<YYYYDDD>.<tileID>.<MODver>.<timestamp>.NRT.hdf   [Note: hdf4]
-    Source:
+  MOD09GA (NRT):
+    Example:          MOD09GA.A2026091.h29v13.061.2026092014830.NRT.hdf
+    Template:         <prodID>.A<YYYYDDD>.<tileID>.<MODver>.<timestamp>.NRT.hdf   [Note: hdf4]
+    Source:           https://www.earthdata.nasa.gov/data/catalog/lancemodis-mod09ga-6.1nrt
     On-supercomputer: /pl/active/daac-production/MOD09GA/NRT/2026.04.01/MOD09GA.A2026091.h29v13.061.2026092014830.NRT.hdf
     Working location: /scratch/alpine/jeca4282/scagdrfs/working/2026.04.01/h08v05/MOD09GA.A2026091.h08v05.061.2026092010000.NRT.hdf
 
   VNP09GA
     Example:          VNP09GA_NRT.A2026072.h29v13.002.2026073061435.h5
     Template:         <prodName>.A<YYYYDDD>.<tile#>.<ver>.<timestamp>.h5  [Note: HDF5]
-    Source:
+    Source:           https://www.earthdata.nasa.gov/data/catalog/lpcloud-vj109ga-002
     On-supercomputer: /pl/active/daac-production/VNP09GA/NRT/2026.03.13/VNP09GA_NRT.A2026072.h29v13.002.2026073061435.h5
     Working location: 
 
   VJ109GA (NRT)
-    Example:           VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
-    Template:           <prodName>.A<YYYYDDD>.<tile#>.<ver>.<timestamp>.h5  [Note: HDF5]
-    Source:
-    On-supercomputer:  /pl/active/daac-production/VJ109GA/NRT/2026.04.20/VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
-    Working location:  /scratch/alpine/scotts/scagdrfs/working/VJ109GA/2026.04.20/h29v13/VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
+    Example:          VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
+    Template:         <prodName>.A<YYYYDDD>.<tile#>.<ver>.<timestamp>.h5  [Note: HDF5]
+    Source:           https://www.earthdata.nasa.gov/data/catalog/lancemodis-vj109ga-nrt-2
+    On-supercomputer: /pl/active/daac-production/VJ109GA/NRT/2026.04.20/VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
+    Working location: /scratch/alpine/scotts/scagdrfs/working/VJ109GA/2026.04.20/h29v13/VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
 
 
 
