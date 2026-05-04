@@ -11,4 +11,4 @@ PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 source "${PROJECT_ROOT}/config/env.sh"
 
 # Run the fetch module
-python3 -m src.fetch_lp "$@"
+python3 -m src.fetch_final "$@"
