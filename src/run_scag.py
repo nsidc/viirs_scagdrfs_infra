@@ -11,6 +11,7 @@ from src.mask_scag import mask_scag
 
 # from scagdrfs_infra.netcdf import create_netcdf
 from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
+from src.constants.paths import WORK_DIR, TOPDIR
 from src.util import get_date_from_filename, get_info_from_bip_file
 
 
@@ -23,13 +24,13 @@ def setup_scag_cluster():
         cores=5,
         memory="10GB",
         walltime="01:00:00",
-        local_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask')}",
+        local_directory=str(WORK_DIR / "dask"),
         job_extra_directives=[
             "--qos=normal",
             "--job-name=scag-proc",
             "--partition=amilan",
         ],
-        log_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask', 'scag', 'jobqueue-logs')}",
+        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
     # cluster.adapt(minimum_jobs=1, maximum_jobs=50)
     # This should be 30 so that all 30 pic files can be created at once
@@ -64,7 +65,7 @@ def setup_scag_cluster():
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    envvar="WORK_DIR",
+    default=lambda: WORK_DIR,
     show_default=True,
     help="Path to working directory where intermediate files are stored. "
     "Defaults to environment variable WORK_DIR. Date and tile ID subdirectories"
@@ -92,7 +93,7 @@ def run_scag(bip_file, src_file, working_dir, product):
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
     delayed_tasks = []
     for control_file in control_files:
-        cmd = f"cd {working_dir}; {os.environ.get('TOPDIR')}/scag/bin/scag {bip_file.name} {bip_info['num_bands']} {bip_info['num_samples']} {bip_info['num_lines']} {control_file.name}"
+        cmd = f"cd {working_dir}; {TOPDIR}/scag/bin/scag {bip_file.name} {bip_info['num_bands']} {bip_info['num_samples']} {bip_info['num_lines']} {control_file.name}"
         # Switch from delayed/compute to submit/gather
         # delayed_tasks.append(delayed(run_command)(cmd))
         delayed_task = scag_client.submit(run_command, cmd)
@@ -108,7 +109,7 @@ def run_scag(bip_file, src_file, working_dir, product):
     pic_files = list(working_dir.glob("**/*.pic"))
 
     user = os.environ.get("USER")
-    cmd_sort = f"cd {working_dir}; /projects/{user}/scagdrfs_infra/scag/bin/scag_sort 2eminput 3eminput modprty2 modprty3 {str(src_file).replace(f'{ext}', '.')} {bip_info['num_samples']} {bip_info['num_lines']}"
+    cmd_sort = f"cd {working_dir}; {TOPDIR}/scag/bin/scag_sort 2eminput 3eminput modprty2 modprty3 {str(src_file).replace(f'{ext}', '.')} {bip_info['num_samples']} {bip_info['num_lines']}"
     result_sort = subprocess.run(
         cmd_sort, shell=True, capture_output=True, text=True, executable="/usr/bin/bash"
     )

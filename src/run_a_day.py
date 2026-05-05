@@ -15,7 +15,6 @@ from src.copy_scag_ancillary import copy_scag_ancillary_files
 
 # from scagdrfs_infra.error import ScagDrfsFileError
 from src.move_tiles import copy_tile_file
-
 from src.run_drfs import run_drfs
 
 # from scagdrfs_infra.netcdf import create_netcdf
@@ -23,8 +22,8 @@ from src.run_scag import run_scag
 from src.constants.products import (
     PRODUCT_FILE_EXTENSION,
     SUPPORTED_PRODUCTS,
-    PRODUCT_INPUT_DIR_ENVVAR,
 )
+from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,13 +40,13 @@ def setup_day_cluster():
         memory="10GB",
         walltime="03:00:00",
         death_timeout="1200",
-        local_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask')}",
+        local_directory=str(WORK_DIR / "dask"),
         job_extra_directives=[
             "--qos=normal",
             "--job-name=scagdrfs-day",
             "--partition=amilan",
         ],
-        log_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask', 'jobqueue-logs')}",
+        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
     cluster.adapt(minimum_jobs=1, maximum_jobs=100)
 
@@ -107,19 +106,14 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
     #       up debug iteration
     remove_intermediate_files = False
 
-    envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
-    input_dir = Path(os.environ[envvar])
-    work_base = Path(os.environ["WORK_DIR"])
-    working_dir = work_base / product.upper() / day.strftime("%Y.%m.%d") / tile
+    input_dir = get_nrt_dir(product.upper())
+    working_dir = WORK_DIR / product.upper() / day.strftime("%Y.%m.%d") / tile
     working_dir.mkdir(parents=True, exist_ok=True)
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
     logger.info("Running a day for %s with tile %s", day, tile)
     param_lists = []
     print(
-        "original working dir: ",
-        working_dir,
-        "  work_dir: ",
-        os.environ.get("WORK_DIR"),
+        f"original working dir: {working_dir} work_dir: {WORK_DIR}",
         "\n",
     )
     tile_params = {}
@@ -212,7 +206,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                         )
                         cmd_drfs = (
                             ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
-                                os.environ.get("TOPDIR"),
+                                TOPDIR,
                                 tile_params["src_file"],
                                 tile_params["working_dir"],
                                 tile_params["staging_dir"],

@@ -11,6 +11,7 @@ from src.mask_drfs import mask_drfs
 from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
 from src.run_drfs_idl import run_drfs_idl_via_bash
 from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
 from src.util import (
     get_bitdepth_for_field_name,
     get_date_from_filename,
@@ -45,7 +46,7 @@ from src.util import (
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    envvar="WORK_DIR",
+    default=lambda: WORK_DIR,
     show_default=True,
     help="Path to working directory where intermediate files are stored. "
     "Defaults to environment variable WORK_DIR.",
