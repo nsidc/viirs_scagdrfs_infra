@@ -10,6 +10,7 @@ import numpy as np
 
 from src.masking import cloud16, cw_mask, h2o16
 from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
+from src.constants.paths import WATER_MASK_DIR
 from src.constants.products import PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
 
 
@@ -82,7 +83,7 @@ def get_file_info_config():
 
 def get_water_mask(file_info, tile):
     water_mask_path = os.path.join(
-        os.environ.get("WATER_MASK_DIR"),
+        WATER_MASK_DIR,
         (file_info.get("FILE_INFO", "WATER_MASK_REGEX", raw=True) % tile),
     )
     water_mask_files = glob.glob(water_mask_path)
