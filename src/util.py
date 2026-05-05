@@ -200,7 +200,7 @@ def check_expected_tif_files_with_glob(tif_dir, tile, product):
             "TIF file check failed for tile %s (sensor=%s): found %d / %d. "
             "Breakdown: %s",
             tile,
-            sensor,
+            product,
             total_found,
             expected_total,
             found_by_type,

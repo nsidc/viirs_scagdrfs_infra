@@ -23,7 +23,8 @@ def get_nrt_dir(product: str) -> Path:
     Follows the standard layout: PETALIB_DIR/<product>/NRT.
     Override for a specific product by setting <PRODUCT>_NRT_DIR in the environment.
     """
-    env_var = f"{product.upper()}_NRT_DIR"
+    product = product.upper()
+    env_var = f"{product}_NRT_DIR"
     return Path(os.getenv(env_var, str(PETALIB_DIR / product / "NRT")))
 
 
@@ -33,7 +34,8 @@ def get_final_dir(product: str) -> Path:
     Follows the standard layout: PETALIB_DIR/<product>/FIN.
     Override by setting <PRODUCT>_DIR in the environment.
     """
-    env_var = f"{product.upper()}_DIR"
+    product = product.upper()
+    env_var = f"{product}_DIR"
     return Path(os.getenv(env_var, str(PETALIB_DIR / product / "FIN")))
 
 

@@ -27,7 +27,6 @@ class TestGetNrtDir:
         with patch.dict(os.environ, {"VNP09GA_NRT_DIR": str(tmp_path)}):
             from src.constants import paths
 
-            # reload to pick up monkeypatched env
             result = paths.get_nrt_dir("VNP09GA")
         assert result == tmp_path
 
@@ -66,7 +65,6 @@ class TestTopdir:
         """TOPDIR should be three levels above src/constants/paths.py."""
         from src.constants.paths import TOPDIR
 
-        # src/constants/paths.py -> src/constants -> src -> topdir
         assert (TOPDIR / "src" / "constants" / "paths.py").exists()
 
 
@@ -89,6 +87,32 @@ class TestProductRegistry:
             short_name, concept_id = PRODUCT_LANCE_CONFIG[product]
             assert short_name, f"Missing short_name for {product}"
             assert concept_id, f"Missing concept_id for {product}"
+
+    def test_lance_concept_ids(self):
+        from src.constants.products import (
+            LANCE_CONCEPT_ID_MOD_NRT,
+            LANCE_CONCEPT_ID_VNP_NRT,
+            LANCE_CONCEPT_ID_VJ1_NRT,
+            LANCE_CONCEPT_ID_VJ1,
+        )
+
+        assert LANCE_CONCEPT_ID_MOD_NRT == "C2007661943-LANCEMODIS"
+        assert LANCE_CONCEPT_ID_VNP_NRT == "C2780105555-LANCEMODIS"
+        assert LANCE_CONCEPT_ID_VJ1_NRT == "C2781246545-LANCEMODIS"
+        assert LANCE_CONCEPT_ID_VJ1 == "C2631841524-LPCLOUD"
+
+    def test_product_short_names(self):
+        from src.constants.products import (
+            PRODUCT_SHORT_NAME_MOD_NRT,
+            PRODUCT_SHORT_NAME_VNP_NRT,
+            PRODUCT_SHORT_NAME_VJ1_NRT,
+            PRODUCT_SHORT_NAME_VJ1,
+        )
+
+        assert PRODUCT_SHORT_NAME_MOD_NRT == "MOD09GA_NRT"
+        assert PRODUCT_SHORT_NAME_VNP_NRT == "VNP09GA_NRT"
+        assert PRODUCT_SHORT_NAME_VJ1_NRT == "VJ109GA_NRT"
+        assert PRODUCT_SHORT_NAME_VJ1 == "VJ109GA"
 
     def test_all_products_have_sensor(self):
         from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_SENSOR
@@ -120,6 +144,29 @@ class TestProductRegistry:
         _, vnp_id = PRODUCT_TIF_PATTERN["VNP09GA"]
         _, vj1_id = PRODUCT_TIF_PATTERN["VJ109GA"]
         assert vnp_id != vj1_id
+
+    def test_file_extensions(self):
+        from src.constants.products import PRODUCT_FILE_EXTENSION
+
+        assert PRODUCT_FILE_EXTENSION["MOD09GA"] == ".hdf"
+        assert PRODUCT_FILE_EXTENSION["VNP09GA"] == ".h5"
+        assert PRODUCT_FILE_EXTENSION["VJ109GA"] == ".h5"
+
+    def test_all_products_have_file_extension(self):
+        from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
+
+        for product in SUPPORTED_PRODUCTS:
+            assert product in PRODUCT_FILE_EXTENSION
+
+    def test_final_config_subset_of_supported(self):
+        """Final products must be a subset of supported products."""
+        from src.constants.products import (
+            SUPPORTED_PRODUCTS,
+            PRODUCT_LANCE_CONFIG_FINAL,
+        )
+
+        for product in PRODUCT_LANCE_CONFIG_FINAL:
+            assert product in SUPPORTED_PRODUCTS
 
 
 # ---------------------------------------------------------------------------
@@ -154,8 +201,6 @@ class TestGetSensorFromFilename:
 
 
 class TestGetFieldName:
-    """Tests for the positional field name parser."""
-
     # Underscore-heavy MODIS-style: field is at index 2
     @pytest.mark.parametrize(
         "filename,expected",
@@ -236,12 +281,31 @@ class TestGetTileIdFromFilename:
 
 
 class TestGetBitdepthForFieldName:
-    def test_known_field(self):
+    @pytest.mark.parametrize(
+        "field,expected",
+        [
+            ("grnsz", 16),
+            ("GS", 16),
+            ("drfsGS", 16),
+            ("RF", 16),
+            ("DELTAVIS", 8),
+            ("ICE", 8),
+            ("ROCK", 8),
+            ("SHADE", 8),
+            ("SNOW", 8),
+            ("VEG", 8),
+            ("other", 8),
+            ("rms", 8),
+            ("rock", 8),
+            ("shade", 8),
+            ("snow", 8),
+            ("veg", 8),
+        ],
+    )
+    def test_known_fields(self, field, expected):
         from src.util import get_bitdepth_for_field_name
 
-        # grnsz should be defined — adjust expected value to match FIELD_BITDEPTHS
-        result = get_bitdepth_for_field_name("grnsz")
-        assert result in (8, 16)
+        assert get_bitdepth_for_field_name(field) == expected
 
     def test_unknown_field_raises(self):
         from src.util import get_bitdepth_for_field_name
