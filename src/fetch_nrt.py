@@ -10,13 +10,10 @@ import click
 from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
 from src.constants import (
-    VNP09GA_NRT_DIR,
-    VJ109GA_NRT_DIR,
     FILE_PERMISSIONS,
-    LANCE_CONCEPT_ID_VJ1_NRT,
-    LANCE_CONCEPT_ID_VNP_NRT,
-    PRODUCT_SHORT_NAME_VJ1_NRT,
-    PRODUCT_SHORT_NAME_VNP_NRT,
+    SUPPORTED_PRODUCTS,
+    PRODUCT_LANCE_CONFIG,
+    get_nrt_dir,
 )
 
 # Configure logging
@@ -124,48 +121,39 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
 @click.option(
     "-p",
     "--product",
-    type=click.Choice(["VJ1", "VNP", "both"], case_sensitive=False),
-    default="both",
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    multiple=True,
+    default=["VJ109GA"],
     show_default=True,
-    help="Which VIIRS product to download: VJ1 (NOAA-20), VNP (NPP), or both.",
+    help="Product(s) to download. Can be specified multiple times.",
 )
 def get_nrt_data(start_date, end_date, product):
     """
-    Download VIIRS Near Real-Time data for a date range.
+    Download Near Real-Time data for a date range.
 
     Downloads data from NASA LANCE for each date in the range, organizing
     files into date-based subdirectories and setting appropriate permissions
     for shared PetaLibrary access.
 
-    Supports both VJ109GA (NOAA-20/JPSS-1) and VNP09GA (NPP/Suomi) products.
+    Supports various products.
     """
     logger.info(f"Starting NRT download from {start_date.date()} to {end_date.date()}")
 
-    # Determine which products to fetch
-    products_to_fetch = []
-    if product.upper() in ["VJ1", "BOTH"]:
-        products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1_NRT))
-    if product.upper() in ["VNP", "BOTH"]:
-        products_to_fetch.append((PRODUCT_SHORT_NAME_VNP, LANCE_CONCEPT_ID_VNP_NRT))
-
+    products = [p.upper() for p in product]
     total_files = 0
 
-    for short_name, concept_id in products_to_fetch:
+    for prod in products:
+        short_name, concept_id = PRODUCT_LANCE_CONFIG[prod]
+        output_dir = get_nrt_dir(prod)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
         logger.info(f"\n{'='*60}")
         logger.info(f"Downloading {short_name} (Concept ID: {concept_id})")
         logger.info(f"{'='*60}")
-
         product_files = 0
 
-        if "VNP" in short_name:
-            output_dir = Path(VNP09GA_NRT_DIR)
-            output_dir.mkdir(parents=True, exist_ok=True)
-        else:
-            output_dir = Path(VJ109GA_NRT_DIR)
-            output_dir.mkdir(parents=True, exist_ok=True)
-
         for date in date_range(start_date=start_date, end_date=end_date):
-            logger.info(f"Processing {short_name} for {date.strftime('%Y-%m-%d')}")
+            logger.info(f"Processing {prod} for {date.strftime('%Y-%m-%d')}")
 
             dated_output_dir = output_dir / date.strftime("%Y.%m.%d")
             dated_output_dir.mkdir(parents=True, exist_ok=True)
