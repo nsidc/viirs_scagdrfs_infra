@@ -182,7 +182,7 @@ def check_expected_tif_files_with_glob(tif_dir, tile, product):
         product_prefix, product_id = PRODUCT_TIF_PATTERN[product.upper()]
     except KeyError:
         raise ValueError(
-            f"Unknown sensor '{product}'. Expected one of: {list(PRODUCT_TIF_PATTERN)}"
+            f"Unknown product '{product}'. Expected one of: {list(PRODUCT_TIF_PATTERN)}"
         )
 
     expected_total = len(_TIF_FILE_TYPES) * 2  # masked + unmasked
