@@ -1,6 +1,5 @@
 import glob
 import os
-import subprocess
 from pathlib import Path
 
 import click
@@ -8,10 +7,10 @@ import click
 from src.error import ScagDrfsFileError
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs
-from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
+from src.constants.paths import WORK_DIR, DRFS_COMPONENT_DIR
+from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_drfs_idl import run_drfs_idl_via_bash
 from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
-from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
 from src.util import (
     get_bitdepth_for_field_name,
     get_date_from_filename,
@@ -36,7 +35,7 @@ from src.util import (
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    envvar="DRFS_COMPONENT_DIR",
+    default=lambda: DRFS_COMPONENT_DIR,
     show_default=True,
     help="Directory containing necessary DRFS components.",
 )
@@ -48,8 +47,7 @@ from src.util import (
     ),
     default=lambda: WORK_DIR,
     show_default=True,
-    help="Path to working directory where intermediate files are stored. "
-    "Defaults to environment variable WORK_DIR.",
+    help="Path to working directory where intermediate files are stored.",
 )
 @click.option(
     "-s",
@@ -59,9 +57,7 @@ from src.util import (
     ),
     envvar="STAGING_DIR",
     show_default=True,
-    help="Path to staging directory where output files are stored before being"
-    " transferred to the final directory. Defaults to environment variable STAGING_DIR."
-    " Date and tile ID subdirectories will be added (e.g. 2023.10.03/h08v04).",
+    help="Path to staging directory.",
 )
 @click.option(
     "--product",
