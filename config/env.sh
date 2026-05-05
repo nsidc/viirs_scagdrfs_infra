@@ -16,6 +16,7 @@ export PETALIB_STAGING_DIR=/scratch/alpine/${USER}/viirs_scagdrfs/staging
 # data paths
 export VNP09GA_NRT_DIR=${PETALIB_DIR}/VNP09GA/NRT
 export VJ109GA_NRT_DIR=${PETALIB_DIR}/VJ109GA/NRT
+export VJ109GA_DIR=${PETALIB_DIR}/VJ109GA/FIN
 export MOD09GA_NRT_DIR=${PETALIB_DIR}/MOD09GA/NRT
 export WATER_MASK_DIR=${PETALIB_DIR}/post_process_watermasks
 

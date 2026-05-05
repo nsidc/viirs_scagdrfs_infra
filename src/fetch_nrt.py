@@ -13,10 +13,10 @@ from src.constants import (
     VNP09GA_NRT_DIR,
     VJ109GA_NRT_DIR,
     FILE_PERMISSIONS,
-    LANCE_CONCEPT_ID_VJ1,
-    LANCE_CONCEPT_ID_VNP,
-    PRODUCT_SHORT_NAME_VJ1,
-    PRODUCT_SHORT_NAME_VNP,
+    LANCE_CONCEPT_ID_VJ1_NRT,
+    LANCE_CONCEPT_ID_VNP_NRT,
+    PRODUCT_SHORT_NAME_VJ1_NRT,
+    PRODUCT_SHORT_NAME_VNP_NRT,
 )
 
 # Configure logging
@@ -144,9 +144,9 @@ def get_nrt_data(start_date, end_date, product):
     # Determine which products to fetch
     products_to_fetch = []
     if product.upper() in ["VJ1", "BOTH"]:
-        products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1))
+        products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1_NRT))
     if product.upper() in ["VNP", "BOTH"]:
-        products_to_fetch.append((PRODUCT_SHORT_NAME_VNP, LANCE_CONCEPT_ID_VNP))
+        products_to_fetch.append((PRODUCT_SHORT_NAME_VNP, LANCE_CONCEPT_ID_VNP_NRT))
 
     total_files = 0
 
