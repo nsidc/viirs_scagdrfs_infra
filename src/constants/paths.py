@@ -15,6 +15,18 @@ DRFS_COMPONENT_DIR = PETALIB_DIR / "jpl_DRFS_Components"
 
 V0_DIR = Path("/disks/sidads_ftp/pub/DATASETS/MODSCGDRF_NRT_v1.1")
 
+
+# ── Product NRT dirs ───────────────────────────────────────────────────────────
+def get_nrt_dir(product: str) -> Path:
+    """Return the NRT input directory for *product*.
+
+    Follows the standard layout: PETALIB_DIR/<product>/NRT.
+    Override for a specific product by setting <PRODUCT>_NRT_DIR in the environment.
+    """
+    env_var = f"{product.upper()}_NRT_DIR"
+    return Path(os.getenv(env_var, str(PETALIB_DIR / product / "NRT")))
+
+
 # ── Scratch ────────────────────────────────────────────────────────────────────
 WORK_DIR = Path(f"/scratch/alpine/{os.getenv('USER')}/scagdrfs/working")
 
