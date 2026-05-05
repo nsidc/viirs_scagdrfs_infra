@@ -81,29 +81,24 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
         MOD09GA.A2025090.h08v04.061.2025091013655.NRT.hdf
         MOD09GA.A2025090.h08v04.061.2025091013655.NRT
     """
-    print(f"HERE 0", flush=True)
     # NOTE: working_dir should == hdf_file.parent
     filename_prefix = hdf_file.stem
-    print(f"HERE 1", flush=True)
 
     # Get information from the BIP metadata file.
     meta_path = Path(str(hdf_file).replace(hdf_file.suffix, ".bip.meta"))
     meta_content = None
-    print(f"HERE 2", flush=True)
     with meta_path.open() as meta_file:
         meta_content = meta_file.read()
     if meta_content is None:
         raise RuntimeError(
             "Cannot read BIP metadata file: {bip_file}".format(bip_file=meta_path)
         )
-    print(f"HERE 3", flush=True)
     match = re.search("NLINES=(\d+)", meta_content)
     # TODO: this calculation appears to assume square input grids
     nl = match.group(1)
     ns = match.group(1)
     match = re.search("NBANDS=(\d+)", meta_content)
     nb = match.group(1)
-    print(f"HERE 4", flush=True)
     match = re.search("ZONE_NUMBER=h(\d+)v(\d+)", meta_content)
     horizontal = match.group(1)
     vertical = match.group(2)
@@ -115,7 +110,6 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
 
     # NOTE: This directory must end in a slash '/' for IDL purposes
     idl_components_dir = f"{os.environ.get('DRFS_COMPONENT_DIR')}"
-    print(f"HERE 5", flush=True)
     try:
         assert str(idl_components_dir[-1]) == os.sep
     except AssertionError:

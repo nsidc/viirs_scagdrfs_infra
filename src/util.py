@@ -77,6 +77,21 @@ def get_sensor_from_filename(filename):
     return sensor
 
 
+def get_sensor_from_product(product_str):
+    """Determine sensor (MODIS or VIIRS) from a data product name."""
+    product_upper = product_str.upper()
+
+    if product_upper == 'MOD09GA':
+        sensor = "MODIS"
+    elif product_upper in ('VNP09GA', 'VJ109GA'):
+        sensor = "VIIRS"
+    else:
+        raise RuntimeError(f"Cannot determine sensor from product: {product_str}")
+
+    logger.debug("Determined sensor '%s' from product: %s", sensor, product_str)
+    return sensor
+
+
 def get_date_from_filename(filename):
     date_regex = re.compile(r"\S*.A(\d{7}).\S+")
     match = date_regex.search(str(filename))

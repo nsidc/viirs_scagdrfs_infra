@@ -1,0 +1,112 @@
+
+Input files:  These change with each day's products
+
+Surface reflectances
+  MOD09GA (NRT):
+    Example:          MOD09GA.A2026091.h29v13.061.2026092014830.NRT.hdf
+    Template:         <prodID>.A<YYYYDDD>.<tileID>.<MODver>.<timestamp>.NRT.hdf   [Note: hdf4]
+    Source:           https://www.earthdata.nasa.gov/data/catalog/lancemodis-mod09ga-6.1nrt
+    On-supercomputer: /pl/active/daac-production/MOD09GA/NRT/2026.04.01/MOD09GA.A2026091.h29v13.061.2026092014830.NRT.hdf
+    Working location: /scratch/alpine/jeca4282/scagdrfs/working/2026.04.01/h08v05/MOD09GA.A2026091.h08v05.061.2026092010000.NRT.hdf
+
+  VNP09GA
+    Example:          VNP09GA_NRT.A2026072.h29v13.002.2026073061435.h5
+    Template:         <prodName>.A<YYYYDDD>.<tile#>.<ver>.<timestamp>.h5  [Note: HDF5]
+    Source:           https://www.earthdata.nasa.gov/data/catalog/lpcloud-vj109ga-002
+    On-supercomputer: /pl/active/daac-production/VNP09GA/NRT/2026.03.13/VNP09GA_NRT.A2026072.h29v13.002.2026073061435.h5
+    Working location: 
+
+  VJ109GA (NRT)
+    Example:          VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
+    Template:         <prodName>.A<YYYYDDD>.<tile#>.<ver>.<timestamp>.h5  [Note: HDF5]
+    Source:           https://www.earthdata.nasa.gov/data/catalog/lancemodis-vj109ga-nrt-2
+    On-supercomputer: /pl/active/daac-production/VJ109GA/NRT/2026.04.20/VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
+    Working location: /scratch/alpine/scotts/scagdrfs/working/VJ109GA/2026.04.20/h29v13/VJ109GA_NRT.A2026110.h29v13.002.2026111050402.h5
+
+
+
+Ancillary tile files:  These differ by sinusoidal tile
+
+   DEM
+
+   slope, aspect
+
+Ancillary solar files:  These differ by solar angle
+
+   Spectral Lines
+
+   NDGSI
+
+Ancillary files for scag:  These differ by nearest zenith angle (zenith's of 15, 30, 45, 60, 75)
+   /projects/scotts/viirs_scagdrfs_infra/scag/config/VIIRS/<zdir>/  where zdir is z15 z30 z45 z60 or z75
+   Note: the only differences in these files in different directories is that they reference
+         different .sli files.
+   SLI files:
+      VIIRS.zAA.sli
+      VIIRS.zAA.sli.hdr
+        where AA is one of: 15, 30, 45, 60, 75
+   
+   Control files:
+      2em.control
+      2em.loose.control
+      3em.gr.control
+      3em.gr.loose.control
+      3em.grveg.control
+      3em.grveg.loose.control
+      3em.lkice.control
+      3em.lkice.loose.control
+      3em.met.control
+      3em.met.loose.control
+      3em.metveg.control
+      3em.metveg.loose.control
+      3em.till.control
+      3em.till.loose.control
+      3em.veg1.control
+      3em.veg1.loose.control
+      3em.veg2.control
+      3em.veg2.loose.control
+      3em.veg3.control
+      3em.veg3.loose.control
+      3em.veg4.control
+      3em.veg4.loose.control
+      3em.vlc1.control
+      3em.vlc1.loose.control
+      3em.vlc2.control
+      3em.vlc2.loose.control
+      3em.vlc3.control
+      3em.vlc3.loose.control
+      3em.vlcveg.control
+      3em.vlcveg.loose.control
+
+   SCAG models files:  These never change by date, tile, zenithangle
+      2em.models
+      2eminput
+      3em.gr.models
+      3em.grveg.models
+      3em.lkice.models
+      3em.met.models
+      3em.metveg.models
+      3em.till.models
+      3em.veg1.models
+      3em.veg2.models
+      3em.veg3.models
+      3em.veg4.models
+      3em.vlc1.models
+      3em.vlc2.models
+      3em.vlc3.models
+      3em.vlcveg.models
+      3eminput
+      LIB.EMTYPE
+      LIBRARY.GRLUT
+      bands
+      const.2em.loose
+      const.2em.tight
+      const.3em.loose
+      const.tight
+      modprty2
+      modprty3
+
+  
+Ancillary field files:  These differ by intermediate surface classification
+
+   
