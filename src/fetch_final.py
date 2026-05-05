@@ -60,7 +60,7 @@ SUPPORTED_FINAL_PRODUCTS = list(PRODUCT_LANCE_CONFIG_FINAL.keys())
     "--product",
     type=click.Choice(SUPPORTED_FINAL_PRODUCTS, case_sensitive=False),
     multiple=True,
-    default="VJ109GA",
+    default=["VJ109GA"],
     show_default=True,
     help="Which product to download",
 )
