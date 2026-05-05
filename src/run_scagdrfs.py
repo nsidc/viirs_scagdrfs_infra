@@ -128,7 +128,7 @@ def run_scagdrfs(
     force_run_scagdrfs = False  # This should be false for normal Ops operations
 
     product = product.upper()
-    input_dir = get_nrt_dir([product])
+    input_dir = get_nrt_dir(product)
 
     if not no_queue:
         scagdrfs_cluster = setup_scagdrfs_cluster()
