@@ -19,6 +19,7 @@ from src.util import (
     get_list_of_defined_regions,
     get_region_tile_ids,
     check_expected_tif_files_with_glob,
+    get_sensor_from_product,
 )
 
 
@@ -166,7 +167,8 @@ def run_scagdrfs(
             tif_dir = os.path.join(
                 working_dir, product.upper(), day.strftime("%Y.%m.%d"), tile
             )
-            tifCounter = check_expected_tif_files_with_glob(tif_dir, tile)
+            sensor = get_sensor_from_product(product)
+            tifCounter = check_expected_tif_files_with_glob(tif_dir, tile, sensor)
             if tifCounter and not force_run_scagdrfs:
                 print(
                     f"You have all expected tif files in {tif_dir} skipping running {tile} for {day}.\n"

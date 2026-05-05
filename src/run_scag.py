@@ -55,8 +55,7 @@ def setup_scag_cluster():
     "--product",
     "-P",
     type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
-    default="VNP09GA",
-    show_default=True,
+    required=True,
     help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(

@@ -68,8 +68,7 @@ def setup_day_cluster():
     "--product",
     "-P",
     type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
-    default="VNP09GA",
-    show_default=True,
+    required=True,
     help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
@@ -128,6 +127,8 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
     staging_dir = staging_dir / day.strftime("%Y.%m.%d") / tile
     staging_dir.mkdir(parents=True, exist_ok=True)
     tile_params["staging_dir"] = staging_dir
+
+    tile_params["product"] = product
 
     # NOTE: maybe this is NOT the best method to find files. I feel like we can be more exact
     # grab files for day
@@ -243,11 +244,12 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                     tile_params["src_file"],
                     "...\n",
                 )
-                cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {}".format(
+                cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {} -P {}".format(
                     os.environ.get("TOPDIR"),
                     tile_params["bip_meta_file"].with_suffix(""),
                     tile_params["src_file"],
                     tile_params["working_dir"],
+                    tile_params["product"],
                 )
                 print("SCAG command to run: ", cmd_scag, "\n")
 

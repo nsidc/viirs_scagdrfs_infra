@@ -109,7 +109,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     bitdepth_str = str(FIELD_BITDEPTHS["SNOW"])
 
     filename = write_data(
-        working_dir, "SNOW", tile, date.strftime("%Y%m%d"), "Unmask", snow
+        working_dir, "SNOW", tile, date.strftime("%Y%m%d"), "Unmask", snow, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.Unmask", "Unmask.tif"))
     make_tif(
@@ -121,7 +121,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     snow_cw = cw_mask(bip_full_mask, water_mask_data, snow)
     filename = write_data(
-        working_dir, "SNOW", tile, date.strftime("%Y%m%d"), "mask", snow_cw
+        working_dir, "SNOW", tile, date.strftime("%Y%m%d"), "mask", snow_cw, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.mask", "tif"))
     make_tif(
@@ -135,7 +135,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     bitdepth_str = str(FIELD_BITDEPTHS["GS"])
 
     filename = write_data(
-        working_dir, "GS", tile, date.strftime("%Y%m%d"), "Unmask", grnsz
+        working_dir, "GS", tile, date.strftime("%Y%m%d"), "Unmask", grnsz, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.Unmask", "Unmask.tif"))
     make_tif(
@@ -147,7 +147,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     grnsz_cw = cw_mask16(bip_full_mask, water_mask_data, grnsz)
     filename = write_data(
-        working_dir, "GS", tile, date.strftime("%Y%m%d"), "mask", grnsz_cw
+        working_dir, "GS", tile, date.strftime("%Y%m%d"), "mask", grnsz_cw, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.mask", "tif"))
     make_tif(
@@ -164,7 +164,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     other[other < 15] = 0
     other_cw = cw_mask(bip_full_mask, water_mask_data, other)
     filename = write_data(
-        working_dir, "ICE", tile, date.strftime("%Y%m%d"), "mask", other_cw
+        working_dir, "ICE", tile, date.strftime("%Y%m%d"), "mask", other_cw, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.mask", "tif"))
     make_tif(
@@ -175,7 +175,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     )
 
     filename = write_data(
-        working_dir, "ICE", tile, date.strftime("%Y%m%d"), "Unmask", other
+        working_dir, "ICE", tile, date.strftime("%Y%m%d"), "Unmask", other, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.Unmask", "Unmask.tif"))
     make_tif(
@@ -192,7 +192,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     rock[rock < 15] = 0
     rock_cw = cw_mask(bip_full_mask, water_mask_data, rock)
     filename = write_data(
-        working_dir, "ROCK", tile, date.strftime("%Y%m%d"), "mask", rock_cw
+        working_dir, "ROCK", tile, date.strftime("%Y%m%d"), "mask", rock_cw, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.mask", "tif"))
     make_tif(
@@ -203,7 +203,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     )
 
     filename = write_data(
-        working_dir, "ROCK", tile, date.strftime("%Y%m%d"), "Unmask", rock
+        working_dir, "ROCK", tile, date.strftime("%Y%m%d"), "Unmask", rock, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.Unmask", "Unmask.tif"))
     make_tif(
@@ -220,7 +220,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     shade[shade < 15] = 0
     shade_cw = cw_mask(bip_full_mask, water_mask_data, shade)
     filename = write_data(
-        working_dir, "SHADE", tile, date.strftime("%Y%m%d"), "mask", shade_cw
+        working_dir, "SHADE", tile, date.strftime("%Y%m%d"), "mask", shade_cw, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.mask", "tif"))
     make_tif(
@@ -231,7 +231,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     )
 
     filename = write_data(
-        working_dir, "SHADE", tile, date.strftime("%Y%m%d"), "Unmask", shade
+        working_dir, "SHADE", tile, date.strftime("%Y%m%d"), "Unmask", shade, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.Unmask", "Unmask.tif"))
     make_tif(
@@ -248,7 +248,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     veg[veg < 15] = 0
     veg_cw = cw_mask(bip_full_mask, water_mask_data, veg)
     filename = write_data(
-        working_dir, "VEG", tile, date.strftime("%Y%m%d"), "mask", veg_cw
+        working_dir, "VEG", tile, date.strftime("%Y%m%d"), "mask", veg_cw, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.mask", "tif"))
     make_tif(
@@ -259,7 +259,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     )
 
     filename = write_data(
-        working_dir, "VEG", tile, date.strftime("%Y%m%d"), "Unmask", veg
+        working_dir, "VEG", tile, date.strftime("%Y%m%d"), "Unmask", veg, product
     )
     output_tif = os.path.join(working_dir, filename.replace("bin.Unmask", "Unmask.tif"))
     make_tif(
