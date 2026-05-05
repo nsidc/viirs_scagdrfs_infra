@@ -8,6 +8,7 @@ from .paths import (
     WATER_MASK_DIR,
     DRFS_COMPONENT_DIR,
     get_nrt_dir,
+    get_final_dir,
 )
 from .products import (
     SUPPORTED_PRODUCTS,
@@ -41,6 +42,7 @@ __all__ = [
     "WATER_MASK_DIR",
     "DRFS_COMPONENT_DIR",
     "get_nrt_dir",
+    "get_final_dir",
     # products
     "SUPPORTED_PRODUCTS",
     "PRODUCT_LANCE_CONFIG",
