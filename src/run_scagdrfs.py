@@ -128,6 +128,7 @@ def run_scagdrfs(
     force_run_scagdrfs = False  # This should be false for normal Ops operations
 
     product = product.upper()
+    orig_transfer_dir = transfer_dir
     input_dir = get_nrt_dir(product)
 
     if not no_queue:

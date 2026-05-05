@@ -119,7 +119,7 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
     help="End date for VIIRS NRT data download (inclusive).",
 )
 @click.option(
-    "-p",
+    "-P",
     "--product",
     type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
     multiple=True,
