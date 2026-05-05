@@ -32,14 +32,14 @@ def setup_scagdrfs_cluster():
         memory="10GB",
         walltime="03:00:00",
         death_timeout="1200",
-        local_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask')}",
+        local_directory=str(WORK_DIR / "dask"),
         # NOTE: name this based on which subroutine called it
         job_extra_directives=[
             "--qos=normal",
             "--job-name=scagdrfs",
             "--partition=amilan",
         ],
-        log_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask', 'jobqueue-logs')}",
+        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
     # NOTE: This scale should be at least 30 so that run_scag() can
     #       process 30 pic files at a time
