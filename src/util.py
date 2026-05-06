@@ -12,10 +12,11 @@ from typing import Iterator
 import pandas as pd
 
 from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+from src.constants.paths import TOPDIR
+from src.constants.products import PRODUCT_TIF_PATTERN
 
-CONSTANTS_DIR = Path(__file__).parent / "constants"
+CONSTANTS_DIR = TOPDIR / "src" / "constants"
 TILES_CONFIG_PATH = CONSTANTS_DIR / "tiles.ini"
-
 logger = logging.getLogger(__name__)
 
 
@@ -50,11 +51,6 @@ def date_range(*, start_date: dt.date, end_date: dt.date) -> Iterator[dt.date]:
         yield pd_timestamp.date()
 
 
-def datetime_to_date(_ctx, _param, value: dt.datetime) -> dt.date:
-    """Click callback that converts a dt.datetime to dt.date."""
-    return value.date()
-
-
 # ---------------------------------------------------------------------------
 # Filename parsing helpers
 # ---------------------------------------------------------------------------
@@ -77,32 +73,15 @@ def get_sensor_from_filename(filename):
     return sensor
 
 
-def get_sensor_from_product(product_str):
-    """Determine sensor (MODIS or VIIRS) from a data product name."""
-    product_upper = product_str.upper()
-
-    if product_upper == 'MOD09GA':
-        sensor = "MODIS"
-    elif product_upper in ('VNP09GA', 'VJ109GA'):
-        sensor = "VIIRS"
-    else:
-        raise RuntimeError(f"Cannot determine sensor from product: {product_str}")
-
-    logger.debug("Determined sensor '%s' from product: %s", sensor, product_str)
-    return sensor
-
-
 def get_date_from_filename(filename):
-    date_regex = re.compile(r"\S*.A(\d{7}).\S+")
-    match = date_regex.search(str(filename))
+    match = re.search(r"\S*.A(\d{7}).\S+", str(filename))
     if match is None:
         raise RuntimeError(f"Cannot determine date from filename: {filename}")
     return dt.datetime.strptime(match.group(1), "%Y%j")
 
 
 def get_tile_id_from_filename(filename):
-    tile_id_regex = re.compile(r"\S*(h\d{2}v\d{2})\S+")
-    match = tile_id_regex.search(str(filename))
+    match = re.search(r"\S*(h\d{2}v\d{2})\S+", str(filename))
     if match is None:
         raise RuntimeError(f"Cannot determine tile ID from filename: {filename}")
     return match.group(1)
@@ -173,14 +152,6 @@ def get_bitdepth_for_field_name(field_name):
 # TIF file validation
 # ---------------------------------------------------------------------------
 
-# Sensor-specific glob pattern components
-_SENSOR_PATTERN_MAP = {
-    "MODIS": ("MODSCGDRF_NRT", "MOD09GANRT061"),
-    "VIIRS": (
-        "VIRSCGDRF_NRT",
-        "VNP09GANRT061",
-    ),  # TODO: distinguish VNP vs VJ1 if needed
-}
 
 _TIF_FILE_TYPES = [
     "GS",
@@ -195,22 +166,23 @@ _TIF_FILE_TYPES = [
 ]
 
 
-def check_expected_tif_files_with_glob(tif_dir, tile, sensor):
+def check_expected_tif_files_with_glob(tif_dir, tile, product):
     """Check that all expected TIF files (masked + unmasked) exist for a tile.
 
     Args:
         tif_dir: Directory to search.
         tile: MODIS/VIIRS tile ID, e.g. "h08v04".
-        sensor: "MODIS" or "VIIRS".
+        product: Product name, e.g. "VJ109GA".
+
 
     Returns:
         True if all expected files are present, False otherwise.
     """
     try:
-        product_prefix, product_id = _SENSOR_PATTERN_MAP[sensor]
+        product_prefix, product_id = PRODUCT_TIF_PATTERN[product.upper()]
     except KeyError:
         raise ValueError(
-            f"Unknown sensor '{sensor}'. Expected one of: {list(_SENSOR_PATTERN_MAP)}"
+            f"Unknown product '{product}'. Expected one of: {list(PRODUCT_TIF_PATTERN)}"
         )
 
     expected_total = len(_TIF_FILE_TYPES) * 2  # masked + unmasked
@@ -225,10 +197,10 @@ def check_expected_tif_files_with_glob(tif_dir, tile, sensor):
 
     if total_found != expected_total:
         logger.debug(
-            "TIF file check failed for tile %s (sensor=%s): found %d / %d. "
+            "TIF file check failed for tile %s (product=%s): found %d / %d. "
             "Breakdown: %s",
             tile,
-            sensor,
+            product,
             total_found,
             expected_total,
             found_by_type,

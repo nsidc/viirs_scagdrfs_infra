@@ -4,16 +4,21 @@ from .paths import (
     TOPDIR,
     PETALIB_DIR,
     PETALIB_STAGING_DIR,
-    VJ109GA_NRT_DIR,
-    VJ109GA_DIR,
-    VNP09GA_NRT_DIR,
     WORK_DIR,
+    WATER_MASK_DIR,
+    DRFS_COMPONENT_DIR,
+    get_nrt_dir,
+    get_final_dir,
 )
 from .products import (
-    LANCE_CONCEPT_ID_VJ1,
+    SUPPORTED_PRODUCTS,
+    PRODUCT_LANCE_CONFIG,
+    PRODUCT_SENSOR,
+    PRODUCT_TIF_PATTERN,
+    LANCE_CONCEPT_ID_MOD_NRT,
     LANCE_CONCEPT_ID_VJ1_NRT,
     LANCE_CONCEPT_ID_VNP_NRT,
-    PRODUCT_SHORT_NAME_VJ1,
+    PRODUCT_SHORT_NAME_MOD_NRT,
     PRODUCT_SHORT_NAME_VJ1_NRT,
     PRODUCT_SHORT_NAME_VNP_NRT,
     LOCK_TIMEOUT,
@@ -22,7 +27,6 @@ from .products import (
     FILE_PERMISSIONS,
     DIR_PERMISSIONS,
 )
-
 from .field_info import (
     VALID_FIELD_NAMES,
     FIELD_BITDEPTHS,
@@ -30,22 +34,32 @@ from .field_info import (
 )
 
 __all__ = [
+    # paths
     "TOPDIR",
     "PETALIB_DIR",
     "PETALIB_STAGING_DIR",
-    "VJ109GA_NRT_DIR",
-    "VNP09GA_NRT_DIR",
     "WORK_DIR",
-    "LANCE_CONCEPT_ID_VJ1",
+    "WATER_MASK_DIR",
+    "DRFS_COMPONENT_DIR",
+    "get_nrt_dir",
+    "get_final_dir",
+    # products
+    "SUPPORTED_PRODUCTS",
+    "PRODUCT_LANCE_CONFIG",
+    "PRODUCT_SENSOR",
+    "PRODUCT_TIF_PATTERN",
+    "LANCE_CONCEPT_ID_MOD_NRT",
     "LANCE_CONCEPT_ID_VJ1_NRT",
     "LANCE_CONCEPT_ID_VNP_NRT",
-    "PRODUCT_SHORT_NAME_VJ1",
-    "PRODUCT_SHORT_NAME_VNP",
+    "PRODUCT_SHORT_NAME_MOD_NRT",
+    "PRODUCT_SHORT_NAME_VJ1_NRT",
+    "PRODUCT_SHORT_NAME_VNP_NRT",
     "LOCK_TIMEOUT",
     "MAX_RETRIES",
     "TARGET_GROUP_ID",
     "FILE_PERMISSIONS",
     "DIR_PERMISSIONS",
+    # field_info
     "VALID_FIELD_NAMES",
     "FIELD_BITDEPTHS",
     "DTYPE_FOR_BITDEPTH",

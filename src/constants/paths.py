@@ -3,23 +3,51 @@
 from pathlib import Path
 import os
 
-# Get from environment
-TOPDIR = Path(os.getenv("TOPDIR", Path(__file__).parent.parent.parent))
-PETALIB_DIR = Path(os.getenv("PETALIB_DIR", "/pl/active/daac-production"))
-PETALIB_STAGING_DIR = Path(
-    os.getenv("PETALIB_STAGING_DIR", f"{PETALIB_DIR}/scagdrfs/staging")
-)
+# ── Project root ───────────────────────────────────────────────────────────────
+# src/constants/paths.py → src/constants → src → <topdir>
+TOPDIR = Path(__file__).resolve().parent.parent.parent
 
-V0_DIR = Path(os.getenv("V0_DIR", "/disks/sidads_ftp/pub/DATASETS/MODSCGDRF_NRT_v1.1"))
-VJ109GA_NRT_DIR = Path(os.getenv("VJ109GA_NRT_DIR", f"{PETALIB_DIR}/VJ109GA/NRT"))
-VNP09GA_NRT_DIR = Path(os.getenv("VNP09GA_NRT_DIR", f"{PETALIB_DIR}/VJNP09GA/NRT"))
-MOD09GA_NRT_DIR = Path(os.getenv("MOD09GA_NRT_DIR", f"{PETALIB_DIR}/MOD09GA/NRT"))
-VJ109GA_DIR = Path(os.getenv("VJ109GA_DIR", f"{PETALIB_DIR}/VJ109GA/FIN"))
+# ── PetaLibrary ────────────────────────────────────────────────────────────────
+PETALIB_DIR = Path("/pl/active/daac-production")
+PETALIB_STAGING_DIR = Path(f"{PETALIB_DIR}/scagdrfs/staging")
+WATER_MASK_DIR = PETALIB_DIR / "post_process_watermasks"
+DRFS_COMPONENT_DIR = PETALIB_DIR / "jpl_DRFS_Components"
 
-WORK_DIR = Path(
-    os.getenv("WORK_DIR", f"/scratch/alpine/{os.getenv('USER')}/viirs_scagdrfs/working")
-)
+V0_DIR = Path("/disks/sidads_ftp/pub/DATASETS/MODSCGDRF_NRT_v1.1")
+
+
+# ── Product dirs ───────────────────────────────────────────────────────────
+def get_nrt_dir(product: str) -> Path:
+    """Return the NRT input directory for *product*.
+
+    Follows the standard layout: PETALIB_DIR/<product>/NRT.
+    Override for a specific product by setting <PRODUCT>_NRT_DIR in the environment.
+    """
+    product = product.upper()
+    env_var = f"{product}_NRT_DIR"
+    return Path(os.getenv(env_var, str(PETALIB_DIR / product / "NRT")))
+
+
+def get_final_dir(product: str) -> Path:
+    """Return the final (non-NRT) input directory for *product*.
+
+    Follows the standard layout: PETALIB_DIR/<product>/FIN.
+    Override by setting <PRODUCT>_DIR in the environment.
+    """
+    product = product.upper()
+    env_var = f"{product}_DIR"
+    return Path(os.getenv(env_var, str(PETALIB_DIR / product / "FIN")))
+
+
+# ── Scratch ────────────────────────────────────────────────────────────────────
+WORK_DIR = Path(f"/scratch/alpine/{os.getenv('USER')}/scagdrfs/working")
+
+# ── Constants ────────────────────────────────────────────────────────────────────
 CONSTANTS_DIR = Path(os.getenv("CONSTANTS_DIR", TOPDIR / "src" / "constants"))
+
+# ── Create scratch dirs on import ─────────────────────────────────────────────
+for _dir in (WORK_DIR, PETALIB_STAGING_DIR):
+    _dir.mkdir(parents=True, exist_ok=True)
 
 # SSH/Transfer configuration
 V0_USERNAME = os.getenv("V0_USERNAME", os.getenv("USER"))

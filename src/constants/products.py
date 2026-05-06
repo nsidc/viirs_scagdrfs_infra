@@ -17,6 +17,30 @@ PRODUCT_SHORT_NAME_VJ1_NRT = "VJ109GA_NRT"
 PRODUCT_SHORT_NAME_VJ1 = "VJ109GA"
 PRODUCT_SHORT_NAME_MOD_NRT = "MOD09GA_NRT"
 
+PRODUCT_LANCE_CONFIG = {
+    "MOD09GA": (PRODUCT_SHORT_NAME_MOD_NRT, LANCE_CONCEPT_ID_MOD_NRT),
+    "VNP09GA": (PRODUCT_SHORT_NAME_VNP_NRT, LANCE_CONCEPT_ID_VNP_NRT),
+    "VJ109GA": (PRODUCT_SHORT_NAME_VJ1_NRT, LANCE_CONCEPT_ID_VJ1_NRT),
+}
+
+PRODUCT_LANCE_CONFIG_FINAL = {
+    "VJ109GA": (PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1),
+    # MOD09GA and VNP09GA final concept IDs to be added when needed
+}
+
+PRODUCT_SENSOR = {
+    "MOD09GA": "MODIS",
+    "VNP09GA": "VIIRS",
+    "VJ109GA": "VIIRS",
+}
+
+# (output_prefix, product_id) used in TIF filename glob patterns
+PRODUCT_TIF_PATTERN = {
+    "MOD09GA": ("MODSCGDRF_NRT", "MOD09GANRT061"),
+    "VNP09GA": ("VIRSCGDRF_NRT", "VNP09GANRT061"),
+    "VJ109GA": ("VIRSCGDRF_NRT", "VJ109GANRT061"),
+}
+
 # File patterns
 # FIXME: Above, we distinguish between VJ1 and VNP.  Perhaps we should do the same here?
 # This would be a generic pattern for viirs:

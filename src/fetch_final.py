@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This fetched the final `daily surface reflectance` data 
+# This fetched the final `daily surface reflectance` data
 
 import datetime as dt
 from pathlib import Path
@@ -12,17 +12,18 @@ from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
 
 from src.constants import (
-    VJ109GA_DIR,
     FILE_PERMISSIONS,
-    LANCE_CONCEPT_ID_VJ1,
-    PRODUCT_SHORT_NAME_VJ1,
+    get_final_dir,
 )
+from src.constants.products import PRODUCT_LANCE_CONFIG_FINAL
 
 # configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+SUPPORTED_FINAL_PRODUCTS = list(PRODUCT_LANCE_CONFIG_FINAL.keys())
 
 
 @click.command()
@@ -48,29 +49,28 @@ logger = logging.getLogger(__name__)
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    default="VJ109GA_DIR",
-    envvar="VJ109GA_DIR",
-    show_default=True,
-    help="Absolute directory to store  granule files"
-    ". Date subdirectories will be added (e.g. 2023.10.03).",
+    default=None,
+    help="Output directory. Defaults to standard PetaLibrary location for the product.",
 )
 @click.option(
-    "-p",
+    "-P",
     "--product",
-    type=click.Choice(["VJ1"]),
-    default="VJ1",
+    type=click.Choice(SUPPORTED_FINAL_PRODUCTS, case_sensitive=False),
+    multiple=True,
+    default=["VJ109GA"],
     show_default=True,
     help="Which product to download",
 )
 def get_lp_data(start_date, end_date, output_dir, product):
 
-    products_to_fetch = []
-    if product.upper() in "VJ1":
-        products_to_fetch.append((PRODUCT_SHORT_NAME_VJ1, LANCE_CONCEPT_ID_VJ1))
-
+    products = [p.upper() for p in product]
     total_files = 0
 
-    for short_name, concept_id in products_to_fetch:
+    for prod in products:
+        short_name, concept_id = PRODUCT_LANCE_CONFIG_FINAL[prod]
+        prod_output_dir = output_dir if output_dir is not None else get_final_dir(prod)
+        prod_output_dir.mkdir(parents=True, exist_ok=True)
+
         logger.info(f"\n{'='*60}")
         logger.info(f"Downloading {short_name} (Concept ID: {concept_id})")
         logger.info(f"{'='*60}")
@@ -81,13 +81,13 @@ def get_lp_data(start_date, end_date, output_dir, product):
 
             logger.info(f"Processing {short_name} for {date.strftime('%Y-%m-%d')}")
 
-            dated_output_dir = output_dir / date.strftime("%Y.%m.%d")
+            dated_output_dir = prod_output_dir / date.strftime("%Y.%m.%d")
             dated_output_dir.mkdir(parents=True, exist_ok=True)
 
             files = get_data(date, concept_id, dated_output_dir, short_name)
 
             if files:
-                move_granules_to_date_dirs(dated_output_dir, output_dir)
+                move_granules_to_date_dirs(dated_output_dir, prod_output_dir)
                 chmod_data(dated_output_dir)
                 chown_data(dated_output_dir)
                 product_files += len(files)

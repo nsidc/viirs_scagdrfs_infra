@@ -12,6 +12,7 @@ from dask_jobqueue import SLURMCluster
 # from scagdrfs_infra.error import ScagDrfsDateRangeError
 # from scagdrfs_infra.output_to_peta import copy_output_to_peta
 # from scagdrfs_infra.output_to_v0 import copy_output_to_v0
+from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
 from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
 from src.run_a_day import run_a_day
 from src.util import (
@@ -19,7 +20,6 @@ from src.util import (
     get_list_of_defined_regions,
     get_region_tile_ids,
     check_expected_tif_files_with_glob,
-    get_sensor_from_product,
 )
 
 
@@ -32,14 +32,14 @@ def setup_scagdrfs_cluster():
         memory="10GB",
         walltime="03:00:00",
         death_timeout="1200",
-        local_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask')}",
+        local_directory=str(WORK_DIR / "dask"),
         # NOTE: name this based on which subroutine called it
         job_extra_directives=[
             "--qos=normal",
             "--job-name=scagdrfs",
             "--partition=amilan",
         ],
-        log_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask', 'jobqueue-logs')}",
+        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
     # NOTE: This scale should be at least 30 so that run_scag() can
     #       process 30 pic files at a time
@@ -98,21 +98,19 @@ def setup_scagdrfs_cluster():
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    # envvar="PETALIB_TRANSFER_DIR",
-    # TODO: Don't use work_dir for transfer_dir (!)
-    envvar="WORK_DIR",
+    # NOTE: this will change
+    default=lambda: WORK_DIR,
     show_default=True,
     help="Path to data transfer directory where output files are stored before "
-    "being transferred to the final V0 directory. Defaults to environment "
-    "variable PETALIB_TRANSFER_DIR. Date and tile ID subdirectories will be "
+    "being transferred to the final V0 directory."
+    "Date and tile ID subdirectories will be "
     "added (e.g. 2023.10.03/h08v04).",
 )
 @click.option(
     "--no-publish",
     "-p",
     is_flag=True,
-    help="This flag enables or disables copying files to PETA library then moving "
-    "them to nusnow...publishing the outputs. Default is to publish.",
+    help="Skip copying output to PetaLibrary and V0." "Default is to publish.",
 )
 @click.pass_context
 def run_scagdrfs(
@@ -129,30 +127,10 @@ def run_scagdrfs(
     # Forces a run even with 18 tifs should be a click option
     force_run_scagdrfs = False  # This should be false for normal Ops operations
 
-    # if end_date < start_date:
-    #     raise ScagDrfsDateRangeError(
-    #         "The start date of processing: "
-    #         + start_date.strftime("%m/%d/%Y")
-    #         + "  is after the end date: "
-    #         + end_date.strftime("%m/%d/%Y")
-    #     )
-
-    envvar = PRODUCT_INPUT_DIR_ENVVAR[product.upper()]
-    input_dir = Path(os.environ[envvar])
-    working_dir = Path(os.environ["WORK_DIR"])
+    product = product.upper()
     orig_transfer_dir = transfer_dir
+    input_dir = get_nrt_dir(product)
 
-    try:
-        input_dir = Path(os.environ[envvar])
-    except KeyError:
-        raise click.UsageError(
-            f"Environment variable {envvar} is not set for product {product}"
-        )
-
-    try:
-        working_dir = Path(os.environ["WORK_DIR"])
-    except KeyError:
-        raise click.UsageError("Environment variable WORK_DIR is not set")
     if not no_queue:
         scagdrfs_cluster = setup_scagdrfs_cluster()
         scagdrfs_client = Client(scagdrfs_cluster)
@@ -164,50 +142,44 @@ def run_scagdrfs(
         for tile in tile_ids:
             print(f"    run_scagdrfs: tile: {tile}")
             day_input_dir = input_dir / day.strftime("%Y.%m.%d")
-            tif_dir = os.path.join(
-                working_dir, product.upper(), day.strftime("%Y.%m.%d"), tile
-            )
-            sensor = get_sensor_from_product(product)
-            tifCounter = check_expected_tif_files_with_glob(tif_dir, tile, sensor)
-            if tifCounter and not force_run_scagdrfs:
+            tif_dir = WORK_DIR / product / day.strftime("%Y.%m.%d") / tile
+            tif_count = check_expected_tif_files_with_glob(tif_dir, tile, product)
+            if tif_count and not force_run_scagdrfs:
                 print(
-                    f"You have all expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
+                    f"All expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
+                )
+                continue
+
+            print(f"Running SCAGDRFS for {product},day: {day}\n")
+
+            if no_queue:
+                print("    in no_queue...")
+                ctx.invoke(
+                    run_a_day,
+                    day=day,
+                    product=product,
+                    staging_dir=orig_transfer_dir,
+                    tile=tile,
+                    skip=skip,
+                    no_queue=no_queue,
                 )
             else:
-                print(f"Running SCAGDRFS for {product},day: {day}\n")
-                if no_queue:
-                    print("    in no_queue...")
-                    ctx.invoke(
-                        run_a_day,
-                        day=day,
-                        product=product,
-                        staging_dir=orig_transfer_dir,
-                        tile=tile,
-                        skip=skip,
-                        no_queue=no_queue,
-                    )
-                else:
-                    print("    NOT in no_queue...")
-                    cmd = ". {}/scripts/run-a-day.sh -d {} -s {} -t {} -P {}".format(
-                        os.environ.get("TOPDIR"),
-                        day,
-                        orig_transfer_dir,
-                        tile,
-                        product,
-                    )
-                    if skip:
-                        cmd += " -k"
-                    print(f"Running SCAGDRFS for day: {day} with command: \n{cmd}\n")
-                    future = scagdrfs_client.submit(
-                        subprocess.run,
-                        cmd,
-                        shell=True,
-                        capture_output=True,
-                        text=True,
-                        executable="/usr/bin/bash",
-                        pure=False,
-                    )
-                    day_futures.append(future)
+                print("    NOT in no_queue...")
+                cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {transfer_dir} -t {tile} -P {product}"
+
+                if skip:
+                    cmd += " -k"
+                print(f"Running SCAGDRFS for day: {day} with command: \n{cmd}\n")
+                future = scagdrfs_client.submit(
+                    subprocess.run,
+                    cmd,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    executable="/usr/bin/bash",
+                    pure=False,
+                )
+                day_futures.append(future)
     if not no_queue:
         day_results = scagdrfs_client.gather(day_futures)
         for day_result in day_results:

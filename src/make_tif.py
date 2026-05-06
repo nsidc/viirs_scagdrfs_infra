@@ -4,6 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
+from src.constants.paths import WORK_DIR
 from src.util import (
     get_date_from_filename,
     get_filename_stem,
@@ -21,7 +22,7 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     # TODO: Create unique temp files
     temp_file_basename = get_filename_stem(input_file)
     temp_file = os.path.join(
-        (os.environ.get("WORK_DIR")),
+        WORK_DIR,
         get_date_from_filename(bip_info["source_file"]).strftime("%Y.%m.%d"),
         bip_info["tile_id"],
         f"{temp_file_basename}.temptif",

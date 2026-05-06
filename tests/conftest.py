@@ -1,21 +1,17 @@
 """
 Pytest configuration and fixtures for DRFS binary regression tests.
 
-Requires environment variables set in env.sh:
-    PETALIB_DIR   e.g. /pl/active/daac-production
-    # NOTE this should be updates in viirs_scagdrfs_infra but IS FINE For now
-    WORK_DIR   e.g. /scratch/alpine/roma8902/scagdrfs/working
-
-Tile lists are read from scagdrfs_infra/constants/tiles.ini in the repo root.
-
 Golden files are expected at:
     $PETALIB_DIR/drfs_regression/golden/<tile>/
 
 Output files are expected at:
     $WORK_DIR/<YYYY.MM.DD>/<tile>/
 
-Run with:
-    pytest tests/drfs_regression/ -v --date 20260309 --region onetile
+Run unit tests without any flags:
+    pytest tests/
+
+Run regression tests with required flags:
+    pytest tests/ -v --date 20260309 --region onetile
 """
 
 import ast
@@ -27,8 +23,8 @@ from pathlib import Path
 _PETALIB_DIR = os.environ.get("PETALIB_DIR")
 _WORK_DIR = os.environ.get("WORK_DIR")
 
-# tiles.ini lives at the repo root — two levels up from tests/drfs_regression/
-_TILES_INI = Path(__file__).parents[2] / "src" / "constants" / "tiles.ini"
+# tiles.ini lives under src/constants/ — one level up from tests/
+_TILES_INI = Path(__file__).parent.parent / "src" / "constants" / "tiles.ini"
 
 
 def _load_tiles(region: str) -> list[str]:
@@ -50,24 +46,30 @@ def _load_tiles(region: str) -> list[str]:
 def pytest_addoption(parser):
     parser.addoption(
         "--date",
-        required=True,
+        default=None,
         help="Processing date (YYYYMMDD), e.g. 20260309",
     )
     parser.addoption(
         "--region",
-        required=True,
+        default=None,
         help="Region name from tiles.ini, e.g. onetile, western_us",
     )
 
 
 @pytest.fixture(scope="session")
 def date(request) -> str:
-    return request.config.getoption("--date")
+    val = request.config.getoption("--date")
+    if val is None:
+        pytest.skip("--date not provided (regression tests only)")
+    return val
 
 
 @pytest.fixture(scope="session")
 def region(request) -> str:
-    return request.config.getoption("--region")
+    val = request.config.getoption("--region")
+    if val is None:
+        pytest.skip("--region not provided (regression tests only)")
+    return val
 
 
 @pytest.fixture(scope="session")
