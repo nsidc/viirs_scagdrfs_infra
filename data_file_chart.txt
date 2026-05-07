@@ -46,28 +46,10 @@ Data flow: (currently, SCAG only)
           cw_mask16 comes from src.mask_drfs  <-- this is coded inefficiently (loops)
           cw_mask   comes from src.masking    <-- this is coded inefficiently (loops)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          bip_mask: true where 6 bands each exceed their min threshold
+            derived from first 6 bands in .bip file
+          water_mask: water percentage: 0, 15-100, 253(off earth); edge effect: off grid can have values of 25, 50, 75
+            /pl/active/daac-production/post_process_watermasks/MOD44W.A2000055.h29v13.006.2009*.water_pcent.bin
         
         creates .tif files
           "bin.Unmask" --> "Unmask.tif"
