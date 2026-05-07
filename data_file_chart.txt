@@ -103,6 +103,11 @@ Ancillary files for scag:  These differ by nearest zenith angle (zenith's of 15,
       VIIRS.zAA.sli
       VIIRS.zAA.sli.hdr
         where AA is one of: 15, 30, 45, 60, 75
+
+      Note: The SLI files are binary files with 7 bands of info in them
+            and where different lines in the data array refer to different
+            types of snow grain size or other modeled surfaces.
+
    
    Control files:
       2em.control
