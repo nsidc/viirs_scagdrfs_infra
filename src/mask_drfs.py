@@ -31,6 +31,9 @@ def get_data(filename, data_type, error_value):
 
 
 def get_bip_full_mask(working_dir, src_root, file_info):
+    # TODO: This takes working_dir, src_root, and file_info
+    #       instead of simply the .bip file name
+    # NOTE: raw binary file of type uint16
     bip_file = Path(working_dir) / (src_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
     with open(bip_file, "rb") as fbip:
         data = np.fromfile(fbip, dtype=np.uint16)
@@ -59,6 +62,13 @@ def get_bip_full_mask(working_dir, src_root, file_info):
 
 
 def cw_mask16(bfull_mask, water, data):
+    # bfull_mask is a cloud mask; True where all 6 bands exceed their min thresholds
+    # water is 0, 15-100, and 253 (off grid); Note: interpolation errors at -180/180 longitude
+    # So, this sets data to:
+    #  (Note: off-grid / missing seem to be pre-set to 255?)
+    #  First: 250 if cloud,
+    #  then:  253 if water,
+    #  then:  data value
     results = []
     for i in np.arange(2400):
         result = map(cloud16, bfull_mask[i, :], data[i, :])
@@ -82,6 +92,7 @@ def get_file_info_config():
 
 
 def get_water_mask(file_info, tile):
+    # TODO: water_mask_data has errors along -180/180 longitude
     water_mask_path = os.path.join(
         WATER_MASK_DIR,
         (file_info.get("FILE_INFO", "WATER_MASK_REGEX", raw=True) % tile),
@@ -90,6 +101,7 @@ def get_water_mask(file_info, tile):
     with open(water_mask_files[0], "rb") as water_mask_file:
         water_mask_data = np.fromfile(water_mask_file, dtype=np.uint8)
     water_mask_data = water_mask_data.reshape(2400, 2400)
+    print(f'Read water_mask_data from: {water_mask_path=}')
     return water_mask_data
 
 
