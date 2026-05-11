@@ -10,7 +10,7 @@ import numpy as np
 from src.make_tif import make_tif
 from src.mask_drfs import (
     cw_mask16,
-    get_bip_full_mask,
+    get_cloud_mask_6band,
     get_file_info_config,
     get_water_mask,
 )
@@ -85,7 +85,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     file_info = get_file_info_config()
     src_root = src_file.stem
-    bip_full_mask = get_bip_full_mask(working_dir, src_root, file_info)
+    bip_full_mask = get_cloud_mask_6band(working_dir, src_root, file_info)
     water_mask_data = get_water_mask(file_info, tile)
 
     scag_bin_files = np.sort(glob.glob(os.path.join(working_dir, "*.bin")))

@@ -30,7 +30,7 @@ def get_data(filename, data_type, error_value):
     return data
 
 
-def get_bip_full_mask(working_dir, src_root, file_info):
+def get_cloud_mask_6band(working_dir, src_root, file_info):
     bip_file = Path(working_dir) / (src_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
     with open(bip_file, "rb") as fbip:
         data = np.fromfile(fbip, dtype=np.uint16)
@@ -42,20 +42,21 @@ def get_bip_full_mask(working_dir, src_root, file_info):
         print(f"  size of bip_files data: {data.size}")
         raise e
 
-    thresh_b1 = 310
-    thresh_b2 = 310
-    thresh_b3 = 350
-    thresh_b4 = 350
-    thresh_b5 = 300
-    thresh_b6 = 220
+    # Band label for (M)ODIS or (V)IIRS in comment string
+    thresh_b1 = 310  # M: b03  V: M3
+    thresh_b2 = 310  # M: b04  V: M4
+    thresh_b3 = 350  # M: b01  V: M5
+    thresh_b4 = 350  # M: b02  V: I2
+    thresh_b5 = 300  # M: b05  V: M8
+    thresh_b6 = 220  # M: b06  V: I3
     b1m = np.squeeze(data[:, :, 0]) > thresh_b1
     b2m = np.squeeze(data[:, :, 1]) > thresh_b2
     b3m = np.squeeze(data[:, :, 2]) > thresh_b3
     b4m = np.squeeze(data[:, :, 3]) > thresh_b4
     b5m = np.squeeze(data[:, :, 4]) > thresh_b5
     b6m = np.squeeze(data[:, :, 5]) > thresh_b6
-    bip_full_mask = b1m & b2m & b3m & b4m & b5m & b6m
-    return bip_full_mask
+    cloud_mask_6band = b1m & b2m & b3m & b4m & b5m & b6m
+    return cloud_mask_6band
 
 
 def cw_mask16(bfull_mask, water, data):
@@ -174,13 +175,13 @@ def mask_drfs(
     forcing_outfile = Path(working_dir) / forcing_name
     write_outfile(forcing_outfile, forcing_data)
 
-    bip_full_mask = get_bip_full_mask(working_dir, src_root, file_info)
+    cloud_mask_6band = get_cloud_mask_6band(working_dir, src_root, file_info)
 
     # Apply cloud and water masks
     # TODO: Should use BITDEPTH to choose correct cw_mask[16]() routine
-    delta_vis_cw = cw_mask(bip_full_mask, water_mask_data, delta_vis_data)
-    grain_cw = cw_mask16(bip_full_mask, water_mask_data, grain_data)
-    forcing_cw = cw_mask16(bip_full_mask, water_mask_data, forcing_data)
+    delta_vis_cw = cw_mask(cloud_mask_6band, water_mask_data, delta_vis_data)
+    grain_cw = cw_mask16(cloud_mask_6band, water_mask_data, grain_data)
+    forcing_cw = cw_mask16(cloud_mask_6band, water_mask_data, forcing_data)
 
     # Write field output files
     datestring = date.strftime("%Y%m%d")
