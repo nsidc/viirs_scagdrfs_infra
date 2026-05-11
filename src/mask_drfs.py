@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from src.masking import cloud16, cw_mask, h2o16
+from src.masking import cw_mask
 from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
 from src.constants.paths import WATER_MASK_DIR
 from src.constants.products import PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
@@ -57,23 +57,6 @@ def get_cloud_mask_6band(working_dir, src_root, file_info):
     b6m = np.squeeze(data[:, :, 5]) > thresh_b6
     cloud_mask_6band = b1m & b2m & b3m & b4m & b5m & b6m
     return cloud_mask_6band
-
-
-def cw_mask16(cloud_mask_16bit, water_16bit, data):
-    # Mask data:
-    #  where cloud: data => 2500
-    #  where water: data => 2350
-
-    is_cloud = cloud_mask_16bit != 0
-    is_water = water_mask_16bit == 100
-
-    data_cloudmasked = data.copy()
-    data_cloudmasked[is_cloud] = 2500
-
-    data_cloudwater_masked = data_cloudmasked
-    data_cloudwater_masked[is_water] = 2350
-
-    return data_cloudwater_masked
 
 
 def get_file_info_config():
@@ -180,10 +163,9 @@ def mask_drfs(
     cloud_mask_6band = get_cloud_mask_6band(working_dir, src_root, file_info)
 
     # Apply cloud and water masks
-    # TODO: Should use BITDEPTH to choose correct cw_mask[16]() routine
     delta_vis_cw = cw_mask(cloud_mask_6band, water_mask_data, delta_vis_data)
-    grain_cw = cw_mask16(cloud_mask_6band, water_mask_data, grain_data)
-    forcing_cw = cw_mask16(cloud_mask_6band, water_mask_data, forcing_data)
+    grain_cw = cw_mask(cloud_mask_6band, water_mask_data, grain_data)
+    forcing_cw = cw_mask(cloud_mask_6band, water_mask_data, forcing_data)
 
     # Write field output files
     datestring = date.strftime("%Y%m%d")
@@ -216,4 +198,5 @@ def mask_drfs(
     )
     forcing_outfile = Path(working_dir) / forcing_name
     write_outfile(forcing_outfile, forcing_cw)
+
     return "DRFS masks completed"

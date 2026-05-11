@@ -1,49 +1,26 @@
 #!/usr/bin/env python
 
+# TODO: Remove the #!/usr/bin/env python at top of file(s)
+
 import numpy as np
-
-
-def cloud(x, y):
-    if x:
-        return 250
-    else:
-        return y
-
-
-def h2o(x, y):
-    if x == 100:
-        return 235
-    else:
-        return y
-
-
-def cloud16(x, y):
-    if x:
-        return 2500
-    else:
-        return y
-
-
-def h2o16(x, y):
-    if x == 100:
-        return 2350
-    else:
-        return y
 
 
 def calc_cloud_mask(cloud_data):
     # Return boolean cloud mask
+    # Should this be a configurable flag value (or range)?
     return cloud_data != 0
 
 
 def calc_water_mask(water_data):
     # Return boolean water mask
-    return water == 100
+    # Should this be a configurable flag value?
+    return water_data == 100
 
 
 def cw_mask(cloud_data, water_data, data):
     # Apply cloud and water masks
 
+    # TODO: These values should be moved to a configuration file
     if data.dtype == np.uint8:
        cloud_flagval = 250
        water_flagval = 235

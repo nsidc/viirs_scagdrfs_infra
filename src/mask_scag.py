@@ -7,9 +7,11 @@ from pathlib import Path
 
 import numpy as np
 
+# Note: make_tif should be convert_to_geotiff
 from src.make_tif import make_tif
+
+# TODO: We should not be pulling scag-routines from drfs-routines
 from src.mask_drfs import (
-    cw_mask16,
     get_cloud_mask_6band,
     get_file_info_config,
     get_water_mask,
@@ -33,14 +35,9 @@ def get_data(filename):
     bitdepth = get_bitdepth_for_field_name(field_name)
     dtype = DTYPE_FOR_BITDEPTH[bitdepth]
 
-    # with open(filename, "rb") as f:
-    #    dtype = kkk
-    #    if "grnsz" in filename:
-    #        data = np.fromfile(f, dtype=np.uint16)
-    #    else:
-    #        data = np.fromfile(f, dtype=np.uint8)
     data = np.fromfile(filename, dtype)
 
+    # TODO: This 2400x2400 shape results from choosing 500m resolution
     return data.reshape(2400, 2400)
 
 
@@ -97,6 +94,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     # NOTE: This logic is tricky because it looks at both snow and grnsz
     #       and the order that each is modified with flag values matters
     #       ...a LOT.
+    # TODO: These values should be pulled from configuration, not magic numbers here
     grnsz = get_data(scag_bin_files[0])
     snow = get_data(scag_bin_files[5])
     snow[snow < 15] = 0
@@ -145,7 +143,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
         output_file=output_tif,
     )
 
-    grnsz_cw = cw_mask16(cloud_mask, water_mask_data, grnsz)
+    grnsz_cw = cw_mask(cloud_mask, water_mask_data, grnsz)
     filename = write_data(
         working_dir, "GS", tile, date.strftime("%Y%m%d"), "mask", grnsz_cw, product
     )
