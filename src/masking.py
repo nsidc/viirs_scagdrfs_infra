@@ -32,15 +32,15 @@ def h2o16(x, y):
 
 
 def cw_mask(cloud_mask, water, data):
-    results = []
-    for i in np.arange(2400):
-        result = map(cloud, cloud_mask[i, :], data[i, :])
-        results.append(list(result))
-    data_cloud = np.array(results)
-    resultsw = []
-    for i in np.arange(2400):
-        result = map(h2o, water[i, :], data_cloud[i, :])
-        resultsw.append(list(result))
-    data_cw = np.array(resultsw)
-    data_cw = data_cw.astype(np.uint8)
-    return data_cw
+    # Apply cloud and water masks
+
+    is_cloud = cloud_mask != 0
+    is_water = water == 100
+
+    data_cloud_masked = data.copy()
+    data_cloud_masked[is_cloud] = 250
+
+    data_cloudwater_masked = data_cloud_masked
+    data_cloudwater_masked[is_water] = 235
+
+    return data_cloudwater_masked

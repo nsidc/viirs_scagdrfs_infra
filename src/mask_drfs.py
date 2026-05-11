@@ -59,19 +59,21 @@ def get_cloud_mask_6band(working_dir, src_root, file_info):
     return cloud_mask_6band
 
 
-def cw_mask16(bfull_mask, water, data):
-    results = []
-    for i in np.arange(2400):
-        result = map(cloud16, bfull_mask[i, :], data[i, :])
-        results.append(list(result))
-    data_cloud = np.array(results)
-    resultsw = []
-    for i in np.arange(2400):
-        result = map(h2o16, water[i, :], data_cloud[i, :])
-        resultsw.append(list(result))
-    data_cw = np.array(resultsw)
-    data_cw = data_cw.astype(np.uint16)
-    return data_cw
+def cw_mask16(cloud_mask_16bit, water_16bit, data):
+    # Mask data:
+    #  where cloud: data => 2500
+    #  where water: data => 2350
+
+    is_cloud = cloud_mask_16bit != 0
+    is_water = water_mask_16bit == 100
+
+    data_cloudmasked = data.copy()
+    data_cloudmasked[is_cloud] = 2500
+
+    data_cloudwater_masked = data_cloudmasked
+    data_cloudwater_masked[is_water] = 2350
+
+    return data_cloudwater_masked
 
 
 def get_file_info_config():
