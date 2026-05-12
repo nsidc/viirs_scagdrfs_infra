@@ -1,3 +1,61 @@
+Data flow: (currently, SCAG only)
+  ./scripts/run-scagdrfs.sh -s 2026-04-20 -e 2026-04-20 -r onenztile -P vj109ga -p
+
+  ./scripts/run-scagdrfs.sh
+    . .../env.sh
+    . .../activate-viirs-conda.sh
+
+  --> ./src/run_scagdrfs.py
+
+  --> ./scripts/run-a-day.sh
+    . .../env.sh
+
+  --> ./src/run_a_day.py
+    copies surfrefl file (eg VJ190GA_NRT .h5 file)
+    creates .bip and .bip.met file via BIPify.py
+    copies scag ancillary files
+      uses bip_meta_file to get zenith angle
+      uses bip_meta_file to get sensor name
+      copies 32 .control files and .sli and .sli.hdr from: scag_config_dir / sensor / zenith_dir
+      copies 26 .model and similar files from: scag_config_dir / "models"
+
+  --> ./scripts/run-scag.sh 
+  --> ./src/run_scag.py
+     runs /scag/bin/scag executable
+       reads from .bip file
+       reads from .control file
+       reads .sli that is indicated in .control file, eg VIIRS.z15.sli
+       reads from file LIB.EMTYPE  (copied from models/ dir)
+       reads from file LIBRARY.GRLUT  (copied from models/ dir)
+       reads from consts file eg const.tight, const.2em.loose, const.3em.loose, const.2em.tight (copied from models/ dir)
+      Note: SCAG only uses the first six bands (so, not SurfReflect_M11_1)
+
+  --> scag/bin/scag_sort  [after all inputs have been created]
+        reads from .bin files
+
+  --> mask_scag()
+        reads .bin files  Note: one of the .bin files is unused:
+          grnsz: scag_bin_files[0]  .grnsz.bin
+            ice: scag_bin_files[1]  .other.bin
+         UNUSED: scag_bin_files[2]  .rms.bin
+           rock: scag_bin_files[3]  .rock.bin
+          shade: scag_bin_files[4]  .shade.bin
+           snow: scag_bin_files[5]  .snow.bin
+            veg: scag_bin_files[6]  .veg.bin
+        Masking:
+          cw_mask16 comes from src.mask_drfs  <-- this is coded inefficiently (loops)
+          cw_mask   comes from src.masking    <-- this is coded inefficiently (loops)
+
+          bip_mask: true where 6 bands each exceed their min threshold
+            derived from first 6 bands in .bip file
+          water_mask: water percentage: 0, 15-100, 253(off earth); edge effect: off grid can have values of 25, 50, 75
+            /pl/active/daac-production/post_process_watermasks/MOD44W.A2000055.h29v13.006.2009*.water_pcent.bin
+        
+        creates .tif files
+          "bin.Unmask" --> "Unmask.tif"
+          "bin.mask" --> "tif"
+        Note: make_tif() uses cmdline `convert` and `gdal_translate` to create geotiffsscag_bin_files
+
 
 Input files:  These change with each day's products
 
@@ -45,6 +103,11 @@ Ancillary files for scag:  These differ by nearest zenith angle (zenith's of 15,
       VIIRS.zAA.sli
       VIIRS.zAA.sli.hdr
         where AA is one of: 15, 30, 45, 60, 75
+
+      Note: The SLI files are binary files with 7 bands of info in them
+            and where different lines in the data array refer to different
+            types of snow grain size or other modeled surfaces.
+
    
    Control files:
       2em.control
@@ -78,7 +141,7 @@ Ancillary files for scag:  These differ by nearest zenith angle (zenith's of 15,
       3em.vlcveg.control
       3em.vlcveg.loose.control
 
-   SCAG models files:  These never change by date, tile, zenithangle
+   SCAG models files (count=26):  These never change by date, tile, zenithangle
       2em.models
       2eminput
       3em.gr.models
