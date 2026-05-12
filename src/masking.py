@@ -1,46 +1,42 @@
 #!/usr/bin/env python
 
+# TODO: Remove the #!/usr/bin/env python at top of file(s)
+
 import numpy as np
 
 
-def cloud(x, y):
-    if x:
-        return 250
+def calc_cloud_mask(cloud_data):
+    # Return boolean cloud mask
+    # Should this be a configurable flag value (or range)?
+    return cloud_data != 0
+
+
+def calc_water_mask(water_data):
+    # Return boolean water mask
+    # Should this be a configurable flag value?
+    return water_data == 100
+
+
+def cw_mask(cloud_data, water_data, data):
+    # Apply cloud and water masks
+
+    # TODO: These values should be moved to a configuration file
+    if data.dtype == np.uint8:
+       cloud_flagval = 250
+       water_flagval = 235
+    elif data.dtype == np.uint16:
+       cloud_flagval = 2500
+       water_flagval = 2350
     else:
-        return y
+       raise ValueError(f'Cannot determine flag values for data type: {data.dtype}')
 
+    is_cloud = calc_cloud_mask(cloud_data)
+    is_water = calc_water_mask(water_data)
 
-def h2o(x, y):
-    if x == 100:
-        return 235
-    else:
-        return y
+    data_cloud_masked = data.copy()
+    data_cloud_masked[is_cloud] = cloud_flagval
 
+    data_cloudwater_masked = data_cloud_masked
+    data_cloudwater_masked[is_water] = water_flagval
 
-def cloud16(x, y):
-    if x:
-        return 2500
-    else:
-        return y
-
-
-def h2o16(x, y):
-    if x == 100:
-        return 2350
-    else:
-        return y
-
-
-def cw_mask(bfull_mask, water, data):
-    results = []
-    for i in np.arange(2400):
-        result = map(cloud, bfull_mask[i, :], data[i, :])
-        results.append(list(result))
-    data_cloud = np.array(results)
-    resultsw = []
-    for i in np.arange(2400):
-        result = map(h2o, water[i, :], data_cloud[i, :])
-        resultsw.append(list(result))
-    data_cw = np.array(resultsw)
-    data_cw = data_cw.astype(np.uint8)
-    return data_cw
+    return data_cloudwater_masked
