@@ -23,7 +23,7 @@ from src.constants.products import (
     PRODUCT_FILE_EXTENSION,
     SUPPORTED_PRODUCTS,
 )
-from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
+from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -156,8 +156,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
         bip_meta_file = bip_meta_files[0]
         tile_params["bip_meta_file"] = bip_meta_file
-        print("SKIPPING DRFS_COMPONENT_DIR -> component_dir")
-        tile_params["component_dir"] = os.environ.get("DRFS_COMPONENT_DIR")
+        tile_params["component_dir"] = DRFS_COMPONENT_DIR
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
@@ -175,7 +174,10 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
             if no_queue:
                 # TODO: re-DO assign "component_dir"
                 # skip drfs if there are 6 tifs present (masked and unmasked drfs)
-                if product.upper() == "MOD09GA":
+                DRFS_products = ("MOD09GA", "VJ109GA")
+                if product.upper() in DRFS_products:
+                    # TODO: We should check for specific tif file names, not a count
+                    # TODO: If we stop creating .tif files, we need to change this logic
                     if tifCounter0 != 6:
                         print("Running DRFS for ", tile_params["src_file"], "...\n")
                         ctx.invoke(
@@ -185,27 +187,39 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                             staging_dir=tile_params["staging_dir"],
                             component_dir=tile_params["component_dir"],
                         )
+                else:
+                    print(f'Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}')
 
                 # Always run scag
-                ctx.invoke(
-                    run_scag,
-                    bip_file=tile_params["bip_meta_file"].with_suffix(""),
-                    src_file=tile_params["src_file"],
-                    working_dir=tile_params["working_dir"],
-                    product=product,
-                )
+                #SCAG_products = ("MOD09GA", "VJ109GA")
+                SCAG_products = ("VJ109GA",)
+                if product.upper() in SCAG_products:
+                    ctx.invoke(
+                        run_scag,
+                        bip_file=tile_params["bip_meta_file"].with_suffix(""),
+                        src_file=tile_params["src_file"],
+                        working_dir=tile_params["working_dir"],
+                        product=product,
+                    )
+                else:
+                    print(f'Skipping SCAG calculation because {product.upper()=} not in {SCAG_products=}')
 
             # Run DRFS and SCAG in the supercomputer queue
             else:  # this is the "not no_queue" condition; i.e. run on supercomputer with dask
-                if product.upper() == "MOD09GA":
-                    if tifCounter0 != 6:
+                DRFS_products = ("MOD09GA", "VJ109GA")
+                if product.upper() in DRFS_products:
+                    # TODO: We should check for specific tif file names, not a count
+                    # TODO: If we stop creating .tif files, we need to change this logic
+                    # if tifCounter0 != 6:
+                    print(f'Forcing the running of DRFS (ignoring .tif count)')
+                    if True or tifCounter0 != 6:
                         print(
                             "Submitting DRFS run to queue for ",
                             tile_params["src_file"],
                             "...\n",
                         )
                         cmd_drfs = (
-                            ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
+                            ". {}/scripts/run-drfs.sh -h {} -w {} -s {} -c {}".format(
                                 TOPDIR,
                                 tile_params["src_file"],
                                 tile_params["working_dir"],
@@ -231,33 +245,40 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
                         for drfs_result in drfs_results:
                             print("DRFS process result: ", drfs_result, "\n")
+                else:
+                    print(f'Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}')
 
                 # Always run SCAG
-                print(
-                    "Submitting scag run to queue for ",
-                    tile_params["src_file"],
-                    "...\n",
-                )
-                cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {} -P {}".format(
-                    os.environ.get("TOPDIR"),
-                    tile_params["bip_meta_file"].with_suffix(""),
-                    tile_params["src_file"],
-                    tile_params["working_dir"],
-                    tile_params["product"],
-                )
-                print("SCAG command to run: ", cmd_scag, "\n")
-
-                try:
-                    scag_result = subprocess.run(
-                        cmd_scag,
-                        shell=True,
-                        capture_output=True,
-                        text=True,
-                        executable="/usr/bin/bash",
+                #SCAG_products = ("MOD09GA", "VJ109GA")
+                SCAG_products = ("VJ109GA",)
+                if product.upper() in SCAG_products:
+                    print(
+                        "Submitting scag run to queue for ",
+                        tile_params["src_file"],
+                        "...\n",
                     )
-                    print(f"SCAG processing result: {scag_result}")
-                except:
-                    print(f"EXCEPTION running cmd_scag: {cmd_scag}")
+                    cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {} -P {}".format(
+                        os.environ.get("TOPDIR"),
+                        tile_params["bip_meta_file"].with_suffix(""),
+                        tile_params["src_file"],
+                        tile_params["working_dir"],
+                        tile_params["product"],
+                    )
+                    print("SCAG command to run: ", cmd_scag, "\n")
+
+                    try:
+                        scag_result = subprocess.run(
+                            cmd_scag,
+                            shell=True,
+                            capture_output=True,
+                            text=True,
+                            executable="/usr/bin/bash",
+                        )
+                        print(f"SCAG processing result: {scag_result}")
+                    except:
+                        print(f"EXCEPTION running cmd_scag: {cmd_scag}")
+                else:
+                    print(f'Skipping SCAG calculation because {product.upper()=} not in {SCAG_products=}')
 
             # Run a check to see if all the expected tifs exist
             tifCounter = len(glob.glob(os.path.join(working_dir, "*.tif")))

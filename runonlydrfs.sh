@@ -2,6 +2,8 @@
 
 # From Robyn Slack 3/25:  . ./tasks/run-drfs.sh -h /scratch/alpine/roma8902/scagdrfs/working/2026.03.09/h09v05/MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf -w /scratch/alpine/roma8902/scagdrfs/working/2026.03.09/h09v05 -s /pl/active/daac-production/scagdrfs/staging -c /pl/active/daac-production/jpl_DRFS_Components/ How i can isolate and run drfs. This is when I am in /projects/roma8902/scagdrfs_infra with scag conda environment activated
 
+# Note: changing scripts subdir from ./tasks to ./scripts
+
 # Isolate and run DRFS for a single tile/date for testing and validation.
 # Run from /projects/$USER/viirs_scagdrfs_infra with the viirs conda environment activated.
 #
