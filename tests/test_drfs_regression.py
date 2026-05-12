@@ -49,7 +49,7 @@ FILE_CONFIGS: dict[str, dict] = {
         "shape": (2400, 2400),
         "fill_value": 2550,
         "rtol": 1e-3,  # tolerances for IDL->Python comparison;
-        "atol": 1.0,
+        "atol": 1.0, # tighten to rtol=0/atol=0.5 for IDL->IDL
     },
     "drfsGS": {
         "dtype": "uint16",
