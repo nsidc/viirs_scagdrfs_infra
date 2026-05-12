@@ -48,7 +48,7 @@ FILE_CONFIGS: dict[str, dict] = {
         "dtype": "uint16",
         "shape": (2400, 2400),
         "fill_value": 2550,
-        "rtol": 1e-3,
+        "rtol": 1e-3,  # tolerances for IDL->Python comparison;
         "atol": 1.0,
     },
     "drfsGS": {
