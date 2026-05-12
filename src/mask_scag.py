@@ -7,10 +7,12 @@ from pathlib import Path
 
 import numpy as np
 
+# Note: make_tif should be convert_to_geotiff
 from src.make_tif import make_tif
+
+# TODO: We should not be pulling scag-routines from drfs-routines
 from src.mask_drfs import (
-    cw_mask16,
-    get_bip_full_mask,
+    get_cloud_mask_6band,
     get_file_info_config,
     get_water_mask,
 )
@@ -33,14 +35,9 @@ def get_data(filename):
     bitdepth = get_bitdepth_for_field_name(field_name)
     dtype = DTYPE_FOR_BITDEPTH[bitdepth]
 
-    # with open(filename, "rb") as f:
-    #    dtype = kkk
-    #    if "grnsz" in filename:
-    #        data = np.fromfile(f, dtype=np.uint16)
-    #    else:
-    #        data = np.fromfile(f, dtype=np.uint8)
     data = np.fromfile(filename, dtype)
 
+    # TODO: This 2400x2400 shape results from choosing 500m resolution
     return data.reshape(2400, 2400)
 
 
@@ -86,7 +83,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     file_info = get_file_info_config()
     src_root = src_file.stem
     # Note: bip_full_mask only looks at first 6 bands
-    bip_full_mask = get_bip_full_mask(working_dir, src_root, file_info)
+    cloud_mask = get_cloud_mask_6band(working_dir, src_root, file_info)
     water_mask_data = get_water_mask(file_info, tile)
 
     scag_bin_files = np.sort(glob.glob(os.path.join(working_dir, "*.bin")))
@@ -98,9 +95,6 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     # NOTE: This logic is tricky because it looks at both snow and grnsz
     #       and the order that each is modified with flag values matters
     #       ...a LOT.
-
-    # TODO: Oh wow...we are counting on np.sort() to properly sort/alphabetize
-    #       the binary files(!)
     print('binary file indices after np.sort()ing:')
     print(f'  grnsz: {scag_bin_files[0]=}')
     print(f'    ice: {scag_bin_files[1]=}')
@@ -110,6 +104,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     print(f'   snow: {scag_bin_files[5]=}')
     print(f'    veg: {scag_bin_files[6]=}')
 
+    # TODO: These values should be pulled from configuration, not magic numbers here
     grnsz = get_data(scag_bin_files[0])
     snow = get_data(scag_bin_files[5])
     snow[snow < 15] = 0
@@ -132,7 +127,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
         output_file=output_tif,
     )
 
-    snow_cw = cw_mask(bip_full_mask, water_mask_data, snow)
+    snow_cw = cw_mask(cloud_mask, water_mask_data, snow)
     filename = write_data(
         working_dir, "SNOW", tile, date.strftime("%Y%m%d"), "mask", snow_cw, product
     )
@@ -158,7 +153,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
         output_file=output_tif,
     )
 
-    grnsz_cw = cw_mask16(bip_full_mask, water_mask_data, grnsz)
+    grnsz_cw = cw_mask(cloud_mask, water_mask_data, grnsz)
     filename = write_data(
         working_dir, "GS", tile, date.strftime("%Y%m%d"), "mask", grnsz_cw, product
     )
@@ -175,7 +170,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     other = get_data(scag_bin_files[1])
     other[other < 15] = 0
-    other_cw = cw_mask(bip_full_mask, water_mask_data, other)
+    other_cw = cw_mask(cloud_mask, water_mask_data, other)
     filename = write_data(
         working_dir, "ICE", tile, date.strftime("%Y%m%d"), "mask", other_cw, product
     )
@@ -203,7 +198,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     rock = get_data(scag_bin_files[3])
     rock[rock < 15] = 0
-    rock_cw = cw_mask(bip_full_mask, water_mask_data, rock)
+    rock_cw = cw_mask(cloud_mask, water_mask_data, rock)
     filename = write_data(
         working_dir, "ROCK", tile, date.strftime("%Y%m%d"), "mask", rock_cw, product
     )
@@ -231,7 +226,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     shade = get_data(scag_bin_files[4])
     shade[shade < 15] = 0
-    shade_cw = cw_mask(bip_full_mask, water_mask_data, shade)
+    shade_cw = cw_mask(cloud_mask, water_mask_data, shade)
     filename = write_data(
         working_dir, "SHADE", tile, date.strftime("%Y%m%d"), "mask", shade_cw, product
     )
@@ -259,7 +254,7 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
 
     veg = get_data(scag_bin_files[6])
     veg[veg < 15] = 0
-    veg_cw = cw_mask(bip_full_mask, water_mask_data, veg)
+    veg_cw = cw_mask(cloud_mask, water_mask_data, veg)
     filename = write_data(
         working_dir, "VEG", tile, date.strftime("%Y%m%d"), "mask", veg_cw, product
     )

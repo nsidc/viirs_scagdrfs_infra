@@ -24,13 +24,21 @@ File types for tile h09v05:
 Each has two variants:
     *.bin.Unmask  — full unmasked array
     *.bin.mask    — ocean/snow/bad-QA pixels set to fill value
+
+Run with:
+    pytest tests/test_drfs_regression.py --date 20260309 --region onetile
 """
 
+import ast
+import configparser
 import hashlib
-import pytest
-import numpy as np
 from pathlib import Path
 from typing import Optional
+
+import numpy as np
+import pytest
+
+from src.constants.paths import TOPDIR, WORK_DIR, PETALIB_DIR
 
 # ---------------------------------------------------------------------------
 # File type configuration
@@ -41,7 +49,7 @@ FILE_CONFIGS: dict[str, dict] = {
         "shape": (2400, 2400),
         "fill_value": 2550,
         "rtol": 1e-3,  # tolerances for IDL->Python comparison;
-        "atol": 1.0,  # tighten to rtol=0/atol=0.5 for IDL->IDL
+        "atol": 1.0, # tighten to rtol=0/atol=0.5 for IDL->IDL
     },
     "drfsGS": {
         "dtype": "uint16",
@@ -126,6 +134,29 @@ def _stats(arr: np.ndarray, fill_value: Optional[int]) -> dict:
     }
 
 
+def _load_tiles(region: str) -> list[str]:
+    """Read tile list for a region from tiles.ini, preserving key case."""
+    tiles_ini = TOPDIR / "src" / "constants" / "tiles.ini"
+    if not tiles_ini.exists():
+        raise FileNotFoundError(f"tiles.ini not found at {tiles_ini}")
+    cfg_ini = configparser.RawConfigParser()
+    cfg_ini.optionxform = str  # preserve case so ONETILE != onetile
+    cfg_ini.read(tiles_ini)
+    if not cfg_ini.has_section("TILES"):
+        raise ValueError(
+            f"No [TILES] section in {tiles_ini}. "
+            f"Sections found: {cfg_ini.sections()}"
+        )
+    region_upper = region.upper()
+    if not cfg_ini.has_option("TILES", region_upper):
+        available = [k for k in cfg_ini.options("TILES")]
+        raise ValueError(
+            f"Region '{region}' not found in tiles.ini. "
+            f"Available: {', '.join(available)}"
+        )
+    return ast.literal_eval(cfg_ini.get("TILES", region_upper))
+
+
 # ===========================================================================
 # Parametrize
 # ===========================================================================
@@ -133,40 +164,33 @@ def _stats(arr: np.ndarray, fill_value: Optional[int]) -> dict:
 
 def pytest_generate_tests(metafunc):
     """Parametrize over all tile+variant combinations for the given region."""
-    if "tile_variant" in metafunc.fixturenames:
-        import ast, configparser
-        from pathlib import Path
+    if "tile_variant" not in metafunc.fixturenames:
+        return
 
-        # test lives at tests/drfs_regression/ — repo root is two levels up,
-        # tiles.ini is at constants/tiles.ini relative to repo root
-        tiles_ini = (
-            Path(__file__).parents[2] / "scagdrfs_infra" / "constants" / "tiles.ini"
-        )
-        if not tiles_ini.exists():
-            raise FileNotFoundError(
-                f"tiles.ini not found at {tiles_ini}. "
-                f"Check that the path from {Path(__file__)} is correct."
-            )
-        cfg_ini = configparser.ConfigParser()
-        cfg_ini.read(tiles_ini)
-        region = metafunc.config.getoption("--region").upper()
-        date = metafunc.config.getoption("--date")
-        if not cfg_ini.has_section("TILES"):
-            raise ValueError(
-                f"No [TILES] section found in {tiles_ini}. "
-                f"Sections found: {cfg_ini.sections()}"
-            )
-        tiles = ast.literal_eval(cfg_ini.get("TILES", region))
-        combos = [
-            {"tile": tile, **variant}
-            for tile in tiles
-            for variant in _file_variants(tile, date)
-        ]
-        ids = [
-            f"{c['tile']}_{c['file_type']}_{'masked' if c['masked'] else 'unmasked'}"
-            for c in combos
-        ]
-        metafunc.parametrize("tile_variant", combos, ids=ids)
+    region = metafunc.config.getoption("--region")
+    date = metafunc.config.getoption("--date")
+
+    # When regression flags aren't provided, collect 0 tests rather than error
+    if region is None or date is None:
+        metafunc.parametrize("tile_variant", [])
+        return
+
+    tiles = _load_tiles(region)
+    combos = [
+        {"tile": tile, **variant}
+        for tile in tiles
+        for variant in _file_variants(tile, date)
+    ]
+    ids = [
+        f"{c['tile']}_{c['file_type']}_{'masked' if c['masked'] else 'unmasked'}"
+        for c in combos
+    ]
+    metafunc.parametrize("tile_variant", combos, ids=ids)
+
+
+# ===========================================================================
+# Fixtures
+# ===========================================================================
 
 
 @pytest.fixture()
@@ -220,9 +244,9 @@ class TestPixelCloseness:
     """
     Pixel-level closeness for valid (non-fill) pixels.
 
-    This is the primary test for IDL -> Python validation. Checks that every
-    valid pixel in the output is within tolerance of the corresponding golden
-    pixel, and that fill pixels are in the same locations.
+    Primary test for IDL -> Python validation. Checks that every valid pixel
+    in the output is within tolerance of the corresponding golden pixel, and
+    that fill pixels are in the same locations.
     """
 
     def test_valid_pixels_close(self, arrays, cfg):
@@ -233,7 +257,6 @@ class TestPixelCloseness:
         golden_valid = _valid_mask(golden_arr, fill)
         output_valid = _valid_mask(output_arr, fill)
 
-        # First confirm the masks agree — if not, the closeness check is moot
         if not np.array_equal(golden_valid, output_valid):
             n_diff = int((golden_valid != output_valid).sum())
             pytest.fail(
@@ -295,8 +318,8 @@ class TestMaskedPixelCounts:
     """
     Valid and fill pixel counts must match exactly.
 
-    A mismatch here means the Python code is masking different pixels than
-    the IDL code — likely a logic difference in the masking/cleansing step.
+    A mismatch here means the pipeline is masking different pixels than the
+    golden reference — likely a logic difference in the masking step.
     """
 
     def test_valid_pixel_count(self, arrays, cfg):
