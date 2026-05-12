@@ -7,7 +7,7 @@ import click
 from src.error import ScagDrfsFileError
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs
-from src.constants.paths import WORK_DIR, DRFS_COMPONENT_DIR
+from src.constants.paths import WORK_DIR, DRFS_COMPONENT_DIR, TOPDIR
 from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_drfs_idl import run_drfs_idl_via_bash
 from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES

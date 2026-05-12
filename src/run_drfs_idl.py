@@ -1,7 +1,10 @@
-import os
 import re
 import subprocess
 from pathlib import Path
+
+from src.constants.paths import TOPDIR
+
+
 def invoke_idl_drfs(
     component_path,
     filename_prefix,
@@ -16,8 +19,8 @@ def invoke_idl_drfs(
     thresh,
 ):
     """call to system and return the stdout and stderr of that call"""
-    idl_startup_batch = f'{os.environ.get("TOPDIR")}/scripts/drfs_idl_startup.bat'
-    idl_bash_script = f'{os.environ.get("TOPDIR")}/scripts/drfs_bash_commands'
+    idl_startup_batch = f"{TOPDIR}/scripts/drfs_idl_startup.bat"
+    idl_bash_script = f"{TOPDIR}/scripts/drfs_bash_commands"
     # TODO: Consider wrapping this shell command in timeout so that
     #       it doesn't run forever if there is an IDL error.  Perhaps 20min?
     # NOTE: The shell call to idl requires that the config/env.sh script has
@@ -109,13 +112,7 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
     #       MUST include the trailing slash
 
     # NOTE: This directory must end in a slash '/' for IDL purposes
-    idl_components_dir = f"{os.environ.get('DRFS_COMPONENT_DIR')}"
-    try:
-        assert str(idl_components_dir[-1]) == os.sep
-    except AssertionError:
-        raise ValueError(
-            f"idl_components_dir (from env var DRFS_COMPONENT_DIR) must end in slash: {idl_components_dir}"
-        )
+    idl_components_dir = str(component_dir) + "/"
 
     print(f"About to call invoke_idl_drfs() with:")
     print(f"  {idl_components_dir=}")
