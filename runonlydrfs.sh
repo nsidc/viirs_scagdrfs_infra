@@ -51,6 +51,8 @@ fi
 
 if [ ${use_python} -eq 1 ]; then
   echo "Running Python DRFS for ${hdf_ffn}"
+  workdir=${workdir}_py
+  stagedir=${stagedir}_py
   python -m src.run_drfs_python \
     --src-file ${hdf_ffn} \
     --component-dir ${compsdir} \
@@ -58,7 +60,7 @@ if [ ${use_python} -eq 1 ]; then
 else
   if [ ! -d ${stagedir} ]; then
     echo "No such stagedir: ${stagedir}"
-    echo "Perhaps you are running on an interactive node?"
+    echo "Perhaps you are running on a login node?"
     exit 1
   fi
   cmd=". ./scripts/run-drfs.sh -h ${hdf_ffn} -w ${workdir} -s ${stagedir} -c ${compsdir}"
