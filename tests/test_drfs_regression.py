@@ -38,7 +38,7 @@ from typing import Optional
 import numpy as np
 import pytest
 
-from src.constants.paths import TOPDIR
+from src.constants.paths import TOPDIR, WORK_DIR, PETALIB_DIR
 
 # ---------------------------------------------------------------------------
 # File type configuration
