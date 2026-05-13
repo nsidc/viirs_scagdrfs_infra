@@ -205,7 +205,7 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                             "...\n",
                         )
                         cmd_drfs = (
-                            ". {}/tasks/run-drfs.sh -h {} -w {} -s {} -c {}".format(
+                            ". {}/scripts/run-drfs.sh -h {} -w {} -s {} -c {}".format(
                                 TOPDIR,
                                 tile_params["src_file"],
                                 tile_params["working_dir"],
