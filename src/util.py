@@ -197,16 +197,16 @@ def check_expected_tif_files_with_glob(tif_dir, tile, product):
 
     if total_found != expected_total:
         logger.debug(
-            "TIF file check failed for tile %s (product=%s): found %d / %d. "
-            "Breakdown: %s",
+            "TIF file check for tile %s (product=%s): found %d / %d. " "Breakdown: %s",
             tile,
             product,
             total_found,
             expected_total,
             found_by_type,
         )
-
-    return total_found == expected_total
+        return False
+    else:
+        return True
 
 
 # ---------------------------------------------------------------------------
