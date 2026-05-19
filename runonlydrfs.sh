@@ -14,8 +14,8 @@ dotdate=2026.03.09
 tileid=h09v05
 product=MOD09GA
 
-workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${dotdate}/${tileid}
-# workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${product}/${dotdate}/${tileid}
+# workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${dotdate}/${tileid}
+workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${product}/${dotdate}/${tileid}
 hdf_bfn=MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
 hdf_ffn=${workdir}/${hdf_bfn}
 
