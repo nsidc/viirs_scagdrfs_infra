@@ -85,11 +85,9 @@ Options:
                           Format: YYYY-MM-DD or YYYYMMDD
                           Default: yesterday
 
-  -p, --product [VJ1|VNP|both]
-                          Which VIIRS product to download:
-                          - VJ1: NOAA-20 (VJ109GA_NRT)
-                          - VNP: NPP (VNP09GA_NRT)
-                          - both: Download both products (default)
+  -P, --product TEXT      Product(s) to download. Can be specified multiple
+                          times. Choices: MOD09GA, VNP09GA, VJ109GA
+                          Default: VNP09GA, VJ109GA
 
   -h, --help              Show help message and exit
 ```
@@ -97,13 +95,13 @@ Options:
 ## Download Specific Products
 ```bash
 # Download only VJ109GA (NOAA-20)
-./scripts/fetch-nrt.sh --product VJ1
+./scripts/fetch-nrt.sh --product VJ109GA
 
 # Download only VNP09GA (NPP)
-./scripts/fetch-nrt.sh --product VNP
+./scripts/fetch-nrt.sh --product VNP09GA
 
-# Explicitly download both (same as default)
-./scripts/fetch-nrt.sh --product both
+# Download multiple products
+./scripts/fetch-nrt.sh --product VNP09GA --product VJ109GA
 ```
 
 Files are automatically organized by product and date in separate directories:
@@ -197,6 +195,84 @@ Working directories are organized by product under `$WORK_DIR`:
 └── VJ109GA/
     └── 2026.03.11/h08v04/
 ```
+
+
+## Testing
+
+The test suite lives in `tests/` and is split into three categories. `pytest.ini` at the repo root sets `pythonpath = .` so imports resolve correctly from any directory.
+
+### Unit tests
+
+Tests for path derivation, product registry, and utility helpers. No flags required and no filesystem access needed — safe to run anywhere.
+
+```bash
+pytest tests/test_constants_and_util.py
+```
+
+### DRFS regression tests
+
+Compares DRFS binary outputs (`.bin.mask`, `.bin.Unmask`) against golden reference files stored in PetaLibrary. Tests shape, dtype, pixel-level closeness, value statistics, and masked pixel counts. Tolerances are set for IDL-to-Python comparison (`rtol=1e-3`, `atol=1.0`).
+
+Golden files live at:
+```
+/pl/active/daac-production/drfs_regression/golden/<tile>/
+```
+
+```bash
+pytest tests/test_drfs_regression.py \
+  --date 20260309 \
+  --region onetile \
+  --product MOD09GA
+```
+
+To test exact byte reproducibility between two IDL runs, add `-m idl_only`:
+```bash
+pytest tests/test_drfs_regression.py \
+  --date 20260309 \
+  --region onetile \
+  --product MOD09GA \
+  -m idl_only
+```
+
+### SCAG regression tests
+
+Compares SCAG binary outputs against golden reference files. Tests two stages:
+
+- **Stage 1 — Raw SCAG bins** (output of `scag_sort`, before masking): `grnsz`, `other`, `rms`, `rock`, `shade`, `snow`, `veg`
+- **Stage 2 — Masked/unmasked outputs** (output of `mask_scag`): `GS`, `ICE`, `ROCK`, `SHADE`, `SNOW`, `VEG`, each with `.bin.mask` and `.bin.Unmask` variants
+
+Since SCAG is deterministic Python + binary (no IDL), all tests use exact comparison — byte-for-byte hash is a first-class test, not optional.
+
+Golden files live at:
+```
+/pl/active/daac-production/scag_regression/golden/<tile>/
+```
+
+```bash
+pytest tests/test_scag_regression.py \
+  --date 20260518 \
+  --region onenztile \
+  --product VJ109GA
+```
+
+### Running all tests
+
+```bash
+# Unit tests only (no flags, runs anywhere)
+pytest tests/test_constants_and_util.py
+
+# All regression tests
+pytest tests/test_drfs_regression.py --date 20260309 --region onetile --product MOD09GA
+pytest tests/test_scag_regression.py --date 20260518 --region onenztile --product VJ109GA
+```
+
+Available `--region` values are defined in `src/constants/tiles.ini`:
+```
+WESTERN_US, US_ALASKA, NZ_ALPS, AM_ANDES, US, EUR_ALPS,
+CANADA, AS_HIMILAYA, ARCTIC, AM_SOUTH_CENTRAL, US_HAWAII,
+ATLANTIC_ISLES, ONETILE, ONENZTILE
+```
+
 
 ## Troubleshooting
 
