@@ -89,6 +89,12 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
 
     # Get information from the BIP metadata file.
     meta_path = Path(str(hdf_file).replace(hdf_file.suffix, ".bip.meta"))
+
+    # Create the .bip and .bip_meta file if it does not exist
+    if not meta_path.is_file():
+        from scag.scripts.BIPifier import bipify_file
+        bip_path = Path(str(hdf_file).replace(hdf_file.suffix, ".bip"))
+        bipify_file(hdf_file, bip_path)
     meta_content = None
     with meta_path.open() as meta_file:
         meta_content = meta_file.read()
