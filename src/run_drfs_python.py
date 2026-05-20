@@ -73,6 +73,9 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     )
     print("  solar geometry loaded.", flush=True)
 
+    print('DRFS IDL-to-python work stops here')
+    breakpoint()
+
     # --- Preprocess geometry ---
     print("  preprocessing geometry...", flush=True)
     geom = preprocess_geometry(

@@ -31,7 +31,6 @@ def invoke_idl_drfs(
 
     print(f"cmd_idl:\n{cmd_idl}")
 
-    # breakpoint()
     try:
         cmd_idl_result = subprocess.run(
             cmd_idl,
