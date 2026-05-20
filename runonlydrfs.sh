@@ -11,19 +11,6 @@
 #   ./runonlydrfs.sh              # run IDL DRFS (default)
 #   ./runonlydrfs.sh --python     # run Python DRFS
 
-operator_username=$USER
-dotdate=2026.03.09
-tileid=h09v05
-product=MOD09GA
-
-# workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${dotdate}/${tileid}
-workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${product}/${dotdate}/${tileid}
-hdf_bfn=MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
-hdf_ffn=${workdir}/${hdf_bfn}
-
-stagedir=/pl/active/daac-production/scagdrfs/staging
-compsdir=/pl/active/daac-production/jpl_DRFS_Components/
-
 # Parse arguments
 use_python=0
 for arg in "$@"; do
@@ -33,13 +20,29 @@ for arg in "$@"; do
   esac
 done
 
+operator_username=$USER
+dotdate=2026.03.09
+tileid=h09v05
+product=MOD09GA
+
+# workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${dotdate}/${tileid}
+workdir=/scratch/alpine/${operator_username}/scagdrfs/working/${product}/${dotdate}/${tileid}
+stagedir=/pl/active/daac-production/scagdrfs/staging
+compsdir=/pl/active/daac-production/jpl_DRFS_Components/
+hdf_bfn=MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
+
+# Update working directory for python
+# TODO: This is for dev work; can be removed for production
 if [ ${use_python} -eq 1 ]; then
   echo "Changing dirs for use with python"
+
   workdir=${workdir}_py
   echo "workdir is now: $workdir"
+
   stagedir=${stagedir}_py
   echo "stagedir is now: $stagedir"
 fi
+
 
 # Check for existence of directories and input file
 if [ ! -d ${workdir} ]; then
@@ -51,6 +54,9 @@ if [ ! -d ${compsdir} ]; then
   echo "No such compsdir: ${compsdir}"
   exit 1
 fi
+
+# Calculate input (hdf) file name
+hdf_ffn=${workdir}/${hdf_bfn}
 
 if [ ! -f ${hdf_ffn} ]; then
   echo "No such input file: ${hdf_ffn}"
@@ -139,8 +145,6 @@ echo "done"
 
 if [ ${use_python} -eq 1 ]; then
   echo "Running Python DRFS for ${hdf_ffn}"
-  workdir=${workdir}_py
-  stagedir=${stagedir}_py
   python -m src.run_drfs_python \
     --src-file ${hdf_ffn} \
     --component-dir ${compsdir} \

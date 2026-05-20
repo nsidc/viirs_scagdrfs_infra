@@ -34,12 +34,12 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     Returns:
         Status string for logging
     """
-    filename_prefix = src_file.stem
-    print(f"run_drfs_python: processing {filename_prefix}", flush=True)
+    filename_stem = src_file.stem
+    print(f"run_drfs_python: processing {filename_stem}", flush=True)
 
     # --- Parse tile ID ---
     # e.g. MOD09GA.A2026068.h09v05.061... -> h='09', v='05'
-    tile_part = filename_prefix.split(".")[2]  # e.g. 'h09v05'
+    tile_part = filename_stem.split(".")[2]  # e.g. 'h09v05'
     h, v = parse_tile_id(tile_part)
     print(f"  tile: h{h}v{v}", flush=True)
 
@@ -66,8 +66,8 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     #    (in mod_drfs_v1_2.pro)
     # --- Load solar geometry ---
     print("  loading solar geometry...", flush=True)
-    zenith_file = working_dir / f"{filename_prefix}.SolarZenith_1.dat"
-    azimuth_file = working_dir / f"{filename_prefix}.SolarAzimuth_1.dat"
+    zenith_file = working_dir / f"{filename_stem}.SolarZenith_1.dat"
+    azimuth_file = working_dir / f"{filename_stem}.SolarAzimuth_1.dat"
     solarzenith_raw, solarazimuth_raw = load_solar_geometry(
         str(zenith_file), str(azimuth_file)
     )
@@ -86,7 +86,7 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
 
     # --- Load BIP reflectance ---
     print("  loading BIP reflectance...", flush=True)
-    bip_file = working_dir / f"{filename_prefix}.bip"
+    bip_file = working_dir / f"{filename_stem}.bip"
     if not bip_file.exists():
         raise FileNotFoundError(f"BIP file not found: {bip_file}")
     # BIP is (ns, nl, nb) — reshape to (nb, ns, nl) for compute_drfs
@@ -118,10 +118,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     write_drfs_outputs(
         results=results,
         working_dir=working_dir,
-        filename_prefix=filename_prefix,
+        filename_prefix=filename_stem,
     )
 
-    return f"run_drfs_python completed for {filename_prefix}"
+    return f"run_drfs_python completed for {filename_stem}"
 
 
 if __name__ == "__main__":
@@ -132,6 +132,10 @@ if __name__ == "__main__":
     @click.option("--component-dir", required=True, type=click.Path(path_type=Path))
     @click.option("--working-dir", required=True, type=click.Path(path_type=Path))
     def main(src_file, component_dir, working_dir):
+        print(f'Running from run_drfs_python() __main__')
+        print(f'  {src_file=}')
+        print(f'  {component_dir=}')
+        print(f'  {working_dir=}')
         result = run_drfs_python(src_file, component_dir, working_dir)
         print(result)
 
