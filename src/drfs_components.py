@@ -8,75 +8,114 @@ import numpy as np
 ZENITH_VALUES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
 
 
-def load_irradiance_arrays(comps_dir: Path) -> tuple[np.ndarray, np.ndarray]:
+def load_irradiance_arrays(comps_dir: Path, verbose: bool=True) -> tuple[np.ndarray, np.ndarray]:
     """Load direct and diffuse irradiance arrays.
 
     Returns (dir_arr, dif_arr) each shape (216, 14, 19)
     """
-    direct = np.fromfile(comps_dir / "CRB/direct.bin", dtype=np.float32)
-    total = np.fromfile(comps_dir / "CRB/total.bin", dtype=np.float32)
+    fn_direct = comps_dir / "CRB/direct.bin"
+    direct = np.fromfile(fn_direct, dtype=np.float32)
+
+    fn_total = comps_dir / "CRB/total.bin"
+    total = np.fromfile(fn_total, dtype=np.float32)
+
     # IDL reform() uses column-major order, numpy needs order='F' to match
     dir_arr = direct.reshape(216, 14, 19, order="F")
     tot_arr = total.reshape(216, 14, 19, order="F")
     dif_arr = tot_arr - dir_arr
+
+    if verbose:
+        print(f'    Loaded direct irradiance from: {fn_direct}')
+        print(f'    Loaded difuse irradiance from: {fn_total}')
+
     return dir_arr, dif_arr
 
 
-def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
+def load_modis_wavelengths(comps_dir: Path, verbose: bool=True) -> np.ndarray:
     """Load 7 MODIS band wavelengths. Shape: (7,)"""
-    return np.loadtxt(comps_dir / "MODIS.wvl")
+    fn_modis_wavelengths = comps_dir / "MODIS.wvl"
+    modis_wavelengths = np.loadtxt(fn_modis_wavelengths)
+    if verbose:
+        print(f'    Loaded modis_wavelengths from: {fn_modis_wavelengths}')
+
+    return modis_wavelengths
 
 
-def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
+def load_aviris_wavelengths(comps_dir: Path, verbose: bool=True) -> np.ndarray:
     """Load AVIRIS wavelengths. Shape: (2, 216)"""
-    return np.loadtxt(comps_dir / "irrad10nm.wvl").T
+    fn_aviris_wavelengths = comps_dir / "irrad10nm.wvl"
+    aviris_wavelengths = np.loadtxt(fn_aviris_wavelengths).T
+    if verbose:
+        print(f'    Loaded aviris_wavelengths from: {fn_aviris_wavelengths}')
+
+    return aviris_wavelengths
 
 
-def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
+def load_ndgsi_lut(comps_dir: Path, sza: int, verbose: bool=True) -> np.ndarray:
     """Load NDGSI lookup table for a given SZA. Shape: (2, 110)"""
-    return np.loadtxt(comps_dir / f"MODIS.z{sza}.ndgsi").T
+    fn_ndgsi_lut = comps_dir / f"MODIS.z{sza}.ndgsi"
+    ndgsi_lut = np.loadtxt(fn_ndgsi_lut).T
+    if verbose:
+        print(f'    Loaded ndgsi lut for {sza} from: {fn_ndgsi_lut}')
+
+    return ndgsi_lut
 
 
-def load_sli(comps_dir: Path, sza: int) -> np.ndarray:
+def load_sli(comps_dir: Path, sza: int, verbose: bool=True) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
-    path = comps_dir / f"MODIS.z{sza}.sli"
-    data = np.fromfile(path, dtype=np.float32)
-    return data.reshape(7, -1)[:, :110] / 10.0
+    fn_sli = comps_dir / f"MODIS.z{sza}.sli"
+    data = np.fromfile(fn_sli, dtype=np.float32)
+    data = data.reshape(7, -1)[:, :110] / 10.0
+    if verbose:
+        print(f'    Loaded clean snow SLI for {sza} from: {fn_sli}')
+
+    return data
 
 
-def load_all_luts(comps_dir: Path) -> dict:
+def load_all_luts(comps_dir: Path, verbose: bool=True) -> dict:
     """Pre-load all LUTs at startup rather than inside the pixel loop."""
     return {
         sza: {
-            "ndgsi": load_ndgsi_lut(comps_dir, sza),
-            "sli": load_sli(comps_dir, sza),
+            "ndgsi": load_ndgsi_lut(comps_dir, sza, verbose),
+            "sli": load_sli(comps_dir, sza, verbose),
         }
         for sza in ZENITH_VALUES
     }
 
 
-def load_terrain(comps_dir: Path, h: str, v: str) -> tuple[np.ndarray, np.ndarray]:
+def load_terrain(comps_dir: Path, h: str, v: str, verbose: bool=True) -> tuple[np.ndarray, np.ndarray]:
     """Load slope and aspect arrays for a tile.
 
     Returns (slope, aspect) each shape (2400, 2400)
     """
-    pattern = list((comps_dir / "DEM").glob(f"terrain_*_h{h}v{v}.bsq"))
-    if len(pattern) != 1:
+    terrain_files = list((comps_dir / "DEM").glob(f"terrain_*_h{h}v{v}.bsq"))
+    if len(terrain_files) != 1:
         raise RuntimeError(
-            f"Expected 1 terrain file for h{h}v{v}, found {len(pattern)}: {pattern}"
+            f"Expected 1 terrain file for h{h}v{v}, found {len(terrain_files)}: {terrain_files}"
         )
-    data = np.fromfile(pattern[0], dtype=np.float32).reshape(2400, 2400, 2)
-    return data[:, :, 0], data[:, :, 1]
+    fn_dem = terrain_files[0]
+    data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2400, 2400, 2)
+    slope = data[:, :, 0]
+    aspect = data[:, :, 1]
+    if verbose:
+        print(f'    Loaded terrain slope and aspect for h{h}v{v} from: {terrain_files[0]}')
+
+    return slope, aspect
 
 
-def load_dem(comps_dir: Path, h: str, v: str) -> np.ndarray:
+def load_dem(comps_dir: Path, h: str, v: str, verbose: bool=True) -> np.ndarray:
     """Load DEM elevation in meters. Shape: (2400, 2400)"""
-    pattern = list((comps_dir / "DEM").glob(f"dem_*_h{h}v{v}.bsq"))
-    if len(pattern) != 1:
+    dem_files = list((comps_dir / "DEM").glob(f"dem_*_h{h}v{v}.bsq"))
+    if len(dem_files) != 1:
         raise RuntimeError(
-            f"Expected 1 DEM file for h{h}v{v}, found {len(pattern)}: {pattern}"
+            f"Expected 1 DEM file for h{h}v{v}, found {len(dem_files)}: {dem_files}"
         )
-    return np.fromfile(pattern[0], dtype=np.int16).reshape(2400, 2400)
+    dem_file = dem_files[0]
+    dem_data = np.fromfile(dem_file, dtype=np.int16).reshape(2400, 2400)
+    if verbose:
+        print(f'    Loaded DEM data for h{h}v{v} from: {dem_file}')
+
+    return dem_data
 
 
 def parse_tile_id(tile: str) -> tuple[str, str]:
