@@ -33,6 +33,14 @@ for arg in "$@"; do
   esac
 done
 
+if [ ${use_python} -eq 1 ]; then
+  echo "Changing dirs for use with python"
+  workdir=${workdir}_py
+  echo "workdir is now: $workdir"
+  stagedir=${stagedir}_py
+  echo "stagedir is now: $stagedir"
+fi
+
 # Check for existence of directories and input file
 if [ ! -d ${workdir} ]; then
   echo "No such workdir: ${workdir}"
@@ -48,6 +56,86 @@ if [ ! -f ${hdf_ffn} ]; then
   echo "No such input file: ${hdf_ffn}"
   exit 1
 fi
+
+# These are the files in the working directory after DRFS has run:
+# These are the input files, and are expected to be there:
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.bip
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.bip.meta
+
+# These are created by hdf_solar():
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.SolarZenith_1.dat
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.SolarAzimuth_1.dat
+# ${datprefix}.${solar}.dat
+
+# These are created by the mod_drfs_v_1_2() IDL code
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.deltavis.dat
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.forcing.dat
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.drfs.grnsz.dat
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.forcing.cleanse.dat
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.deltavis.cleanse.dat
+#   MOD09GA.A2026068.h09v05.061.2026069014006.NRT.drfs.grnsz.cleanse.dat
+# ${datprefix}.${dat}.dat
+
+# These are created (in python) by mask_drfs():
+#   MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.bin.Unmask
+#   MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.bin.Unmask
+#   MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.bin.Unmask
+#   MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.bin.mask
+#   MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.bin.mask
+#   MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.bin.mask
+# ${prodname}_${drfsvar}_${tileproddatever}.bin.${mask}
+
+# These are created (in python) by mask_tif():
+#   MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.Unmask.tif
+#   MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.Unmask.tif
+#   MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.Unmask.tif
+#   MODSCGDRF_NRT_RF_h09v05_MOD09GANRT061_20260309_V01.1.tif
+#   MODSCGDRF_NRT_DELTAVIS_h09v05_MOD09GANRT061_20260309_V01.1.tif
+#   MODSCGDRF_NRT_drfsGS_h09v05_MOD09GANRT061_20260309_V01.1.tif
+# ${prodname}_${drfsvar}_${tileproddatever}.${tifext}
+
+# Filename components:
+prodname=MODSCGDRF_NRT
+prodsrc=MOD09GA
+tileproddatever=h09v05_MOD09GANRT061_20260309_V01.1
+datprefix=MOD09GA.A2026068.h09v05.061.2026069014006.NRT
+dats=(deltavis forcing drfs.grnsz forcing.cleanse deltavis.cleanse drfs.grnsz.cleanse)
+drfsvars=(drfsGS DELTAVIS RF)
+solars=(SolarZenith_1 SolarAzimuth_1)
+
+# Remove generated files
+echo -n "Removing intermediate and output files..."
+for solar in ${solars[@]}; do
+  # echo $solar
+  fn=${workdir}/${datprefix}.${solar}.dat
+  rm -f $fn
+done
+
+for dat in ${dats[@]}; do
+  # echo $dat
+  fn=${workdir}/${datprefix}.${dat}.dat
+  rm -f $fn
+done
+
+for mask in mask Unmask; do
+  for drfsvar in ${drfsvars[@]}; do 
+    #echo "$drfsvar $mask"
+    # ${prodname}_${drfsvar}_${tileproddatever}.bin.${mask}
+    fn=${workdir}/${prodname}_${drfsvar}_${tileproddatever}.bin.${mask}
+    rm -f $fn
+  done
+done
+
+for tifext in tif Unmask.tif; do
+  for drfsvar in ${drfsvars[@]}; do 
+    # echo "$drfsvar $tifext"
+    fn=${workdir}/${prodname}_${drfsvar}_${tileproddatever}.${tifext}
+    rm -f $fn
+  done
+done
+  
+echo "done"
 
 if [ ${use_python} -eq 1 ]; then
   echo "Running Python DRFS for ${hdf_ffn}"
