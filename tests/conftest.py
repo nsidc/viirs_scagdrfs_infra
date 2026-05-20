@@ -91,10 +91,8 @@ def tiles(region) -> list[str]:
 
 @pytest.fixture()
 def golden_dir_for():
-    """Returns a callable: tile -> golden Path."""
-
-    def _get(tile: str) -> Path:
-        path = _PETALIB_DIR / "drfs_regression" / "golden" / tile
+    def _get(tile: str, subdir: str = "drfs_regression/golden") -> Path:
+        path = _PETALIB_DIR / subdir / tile
         if not path.exists():
             pytest.skip(f"Golden directory not found: {path}")
         return path
