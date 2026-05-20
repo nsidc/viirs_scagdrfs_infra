@@ -68,6 +68,7 @@ def get_file_info_config():
 
 
 def get_water_mask(file_info, tile):
+    # TODO: water_mask_data has errors along -180/180 longitude
     water_mask_path = os.path.join(
         WATER_MASK_DIR,
         (file_info.get("FILE_INFO", "WATER_MASK_REGEX", raw=True) % tile),
@@ -76,6 +77,7 @@ def get_water_mask(file_info, tile):
     with open(water_mask_files[0], "rb") as water_mask_file:
         water_mask_data = np.fromfile(water_mask_file, dtype=np.uint8)
     water_mask_data = water_mask_data.reshape(2400, 2400)
+    print(f'Read water_mask_data from: {water_mask_path=}')
     return water_mask_data
 
 

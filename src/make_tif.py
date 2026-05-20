@@ -21,12 +21,11 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
 
     # TODO: Create unique temp files
     temp_file_basename = get_filename_stem(input_file)
-    temp_file = os.path.join(
-        WORK_DIR,
-        get_date_from_filename(bip_info["source_file"]).strftime("%Y.%m.%d"),
-        bip_info["tile_id"],
-        f"{temp_file_basename}.temptif",
-    )
+    try:
+        # This assumes input_file is a string
+        temp_file = input_file.parent / f"{temp_file_basename}.temptif"
+    except AttributeError:
+        temp_file = Path(input_file).parent / f"{temp_file_basename}.temptif"
 
     # TODO: convert can use tif:<filename> to force an image format
     cmd = (
