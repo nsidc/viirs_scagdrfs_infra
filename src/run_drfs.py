@@ -81,6 +81,9 @@ def run_drfs(src_file, component_dir, working_dir, staging_dir, product):
     IDL_output = run_drfs_idl_via_bash(src_file, component_dir, working_dir)
     print(f"IDL_output for file {src_file}:\n{IDL_output}", flush=True)
 
+    print('Stopping DRFS run before masking')
+    return
+
     mask_drfs(
         tile_id=tile,
         date=day,

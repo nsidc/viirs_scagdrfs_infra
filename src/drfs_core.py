@@ -192,6 +192,10 @@ def compute_drfs(
 
         for idx in range(len(rows)):
             i, j = rows[idx], cols[idx]
+            # There is a py where(sza_mask): ii,jj = i=626 j=1000
+            # ...that probably corresponds to IDL's:
+            # ii,jj:     1000     626
+            print(f'py where(sza_mask): ii,jj = {i=} {j=}')
             ndgsi_ij = ndgsi[i, j]
             sz = solarzenith_deg[i, j]
             elev_ij = elev_km[i, j]
@@ -261,6 +265,7 @@ def compute_drfs(
                     cosine_illumination_angle=cia_ij,
                     dir_arr=dir_arr,
                     dif_arr=dif_arr,
+                    verbose=(i==626 and j==1000),
                 )
 
                 # Deltavis and forcing

@@ -94,9 +94,10 @@ def load_terrain(comps_dir: Path, h: str, v: str, verbose: bool=True) -> tuple[n
             f"Expected 1 terrain file for h{h}v{v}, found {len(terrain_files)}: {terrain_files}"
         )
     fn_dem = terrain_files[0]
-    data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2400, 2400, 2)
-    slope = data[:, :, 0]
-    aspect = data[:, :, 1]
+    #data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2400, 2400, 2)
+    data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2, 2400, 2400)
+    slope = data[0, :, :]
+    aspect = data[1, :, :]
     if verbose:
         print(f'    Loaded terrain slope and aspect for h{h}v{v} from: {terrain_files[0]}')
 

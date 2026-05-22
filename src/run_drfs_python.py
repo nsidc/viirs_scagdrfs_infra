@@ -73,9 +73,6 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     )
     print("  solar geometry loaded.", flush=True)
 
-    print('DRFS IDL-to-python work stops here')
-    breakpoint()
-
     # --- Preprocess geometry ---
     print("  preprocessing geometry...", flush=True)
     geom = preprocess_geometry(
@@ -99,19 +96,33 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
 
     # --- Compute DRFS ---
     print("  computing DRFS...", flush=True)
+    rfl.tofile('py_rfl_float32_7x2400x2400.dat')
+    geom['solarzenith_deg'].tofile('py_solarzenith_deg_float64_2400x2400.dat')
+    geom['solarzenith_int'].tofile('py_solarzenith_int_int32_2400x2400.dat')
+    geom['cosine_illumination_angle'].tofile('py_cosillang_float64_2400x2400.dat')
+    geom['elev_km'].tofile('py_elev_km_int32_2400x2400.dat')
+    modis_wvl.tofile('py_modis_wvl_7.dat')
+    aviris_wvl.tofile('py_aviris_wvl_2_216.dat')
+    print('only writing one lut...')
+    luts[30]['sli'].tofile('py_lut_30_sli_float32_7x110.dat')
+    luts[30]['ndgsi'].tofile('py_ndgsi_30_sli_float64_2x110.dat')
+    dir_arr.tofile('py_dir_arr_float32_216x214x19.dat')
+    dif_arr.tofile('py_dif_arr_float32_216x214x19.dat')
+    print('Wrote py_<lots>.dat')
+    breakpoint()
     results = compute_drfs(
-        rfl=rfl,
-        solarzenith_deg=geom["solarzenith_deg"],
-        solarzenith_int=geom["solarzenith_int"],
-        cosine_illumination_angle=geom["cosine_illumination_angle"],
-        elev_km=geom["elev_km"],
-        modis_wvl=modis_wvl,
-        aviris_wvl=aviris_wvl,
-        luts=luts,
-        dir_arr=dir_arr,
-        dif_arr=dif_arr,
-        h=h,
-        v=v,
+        rfl=rfl,  # (7, 2400, 2400)
+        solarzenith_deg=geom["solarzenith_deg"],  # (2400, 2400)
+        solarzenith_int=geom["solarzenith_int"],  # (2400, 2400)
+        cosine_illumination_angle=geom["cosine_illumination_angle"],  # (2400, 2400)
+        elev_km=geom["elev_km"],  # (2400, 2400)
+        modis_wvl=modis_wvl,  # (7,)
+        aviris_wvl=aviris_wvl,  # (2, 216)
+        luts=luts,  # keys: 15-75 by 5
+        dir_arr=dir_arr,  # (216, 14, 19)
+        dif_arr=dif_arr,  # (216, 14, 19)
+        h=h,  # '09'
+        v=v,  # '05'
         thresh=1,
     )
     print("  DRFS computation complete.", flush=True)

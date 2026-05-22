@@ -13,12 +13,20 @@
 
 # Parse arguments
 use_python=0
+use_IDL=0
 for arg in "$@"; do
   case $arg in
     --python) use_python=1 ;;
+    --IDL) use_IDL=1 ;;
     *) echo "Unknown argument: $arg"; exit 1 ;;
   esac
 done
+
+idl_plus_python=$(( $use_python + $use_IDL ))
+if [ "$idl_plus_python" != 1 ]; then
+  echo "Must explicitly specify exactly one of: --python or --IDL"
+  exit
+fi
 
 operator_username=$USER
 dotdate=2026.03.09

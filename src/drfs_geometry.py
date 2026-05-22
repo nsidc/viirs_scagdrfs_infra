@@ -34,6 +34,18 @@ def preprocess_geometry(
             cosine_illumination_angle: shape (2400, 2400)
             elev_km: Elevation in km (int), shape (2400, 2400)
     """
+    print(f'{solarzenith.shape=}')
+    print(f'{solarazimuth.shape=}')
+    print(f'{slope.shape=}')
+    print(f'{aspect.shape=}')
+    print(f'{dem.shape=}')
+
+    solarzenith.tofile(f'solarzenith_{solarzenith.dtype}_2400x2400.dat')
+    solarazimuth.tofile(f'solarazimuth{solarazimuth.dtype}_2400x2400.dat')
+    slope.tofile(f'slope{slope.dtype}_2400x2400.dat')
+    aspect.tofile(f'aspect{aspect.dtype}_2400x2400.dat')
+    dem.tofile(f'dem{dem.dtype}_2400x2400.dat')
+
     deg_to_rad = np.pi / 180.0
 
     # Scale raw integer files to degrees
@@ -86,8 +98,6 @@ def load_solar_geometry(
     Returns:
         (solarzenith, solarazimuth) each shape (ns, nl) as int16
     """
-    print('This fails because the files that were written earlier dont have NRT in filename')
-    breakpoint()
     solarzenith = np.fromfile(zenithfile, dtype=np.int16).reshape(ns, nl)
     solarazimuth = np.fromfile(azimuthfile, dtype=np.int16).reshape(ns, nl)
     if verbose:

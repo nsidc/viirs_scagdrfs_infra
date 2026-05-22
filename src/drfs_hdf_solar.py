@@ -42,11 +42,6 @@ def extract_hdf_solar_fields(hdf_filename: str):
       written to raw .dat files.  
     These data are not scaled by the scaling factor.
     """
-    #hdf_base_dirandfilename = hdf_filename.replace('.hdf', '')
-    hdf_base_dirandfilename = hdf_filename.with_suffix('')
-
-    print(f'{hdf_base_dirandfilename=}')
-
     solar_hdf_varnames = [
         'SolarZenith_1',
         'SolarAzimuth_1',
@@ -83,7 +78,8 @@ def extract_hdf_solar_fields(hdf_filename: str):
     #  ...which we can save
 
     for hdf_varname in solar_hdf_varnames:
-        solar_dat_output_filename = hdf_base_dirandfilename.with_suffix(f'.{hdf_varname}.dat')
+        # Note: this replaces the ".hdf" with ".<var>.dat"
+        solar_dat_output_filename = hdf_filename.with_suffix(f'.{hdf_varname}.dat')
 
         hdf_arrs[hdf_varname].tofile(solar_dat_output_filename)
         print(f'  Wrote: {solar_dat_output_filename}', flush=True)

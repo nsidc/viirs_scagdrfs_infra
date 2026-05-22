@@ -43,7 +43,7 @@ def _find_bounding_index(array, value):
 
 
 def find_irspec(
-    sza: float, elev: float, dir_arr: np.ndarray, dif_arr: np.ndarray
+    sza: float, elev: float, dir_arr: np.ndarray, dif_arr: np.ndarray, verbose:bool=False
 ) -> np.ndarray:
     """Return weighted average direct and diffuse irradiance spectra
     for a given solar zenith angle and elevation.
@@ -71,6 +71,13 @@ def find_irspec(
     dif_min = dif_arr[:, z_sub, e_sub]
     dif_max = dif_arr[:, z_sub + 1, e_sub + 1]
 
+    if verbose:
+        print('in find_irspec()')
+        dir_min.tofile(f'py_dir_min_{dir_min.shape}.dat')
+        dir_max.tofile(f'py_dir_max_{dir_max.shape}.dat')
+        dif_min.tofile(f'py_dif_min_{dif_min.shape}.dat')
+        dif_max.tofile(f'py_dif_max_{dif_max.shape}.dat')
+
     direct_out = z_weight * (dir_max - dir_min) + dir_min
     diffuse_out = z_weight * (dif_max - dif_min) + dif_min
 
@@ -83,6 +90,7 @@ def compute_irradiance(
     cosine_illumination_angle: float,
     dir_arr: np.ndarray,
     dif_arr: np.ndarray,
+    verbose: bool=False,
 ) -> np.ndarray:
     """Compute terrain- and geometry-corrected spectral irradiance.
 
@@ -97,7 +105,7 @@ def compute_irradiance(
         Corrected irradiance spectrum, shape (216,)
     """
     result = find_irspec(
-        sza=solar_zenith_angle, elev=elev, dir_arr=dir_arr, dif_arr=dif_arr
+        sza=solar_zenith_angle, elev=elev, dir_arr=dir_arr, dif_arr=dif_arr, verbose=verbose
     )
     direct_input = result[0, :]
     diffuse_input = result[1, :]
