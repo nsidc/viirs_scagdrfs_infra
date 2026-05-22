@@ -6,6 +6,7 @@ import re
 import shutil
 from pathlib import Path
 
+from src.constants.paths import TOPDIR
 from src.util import get_sensor_from_filename
 
 
@@ -47,7 +48,7 @@ def get_zenith_degree(bip_meta_file, sun_zenith):
 
 def copy_spectral_library(sensor, working_dir, zenith_degree):
     # copy files
-    scag_config_dir = Path(os.environ.get("SCAG_CONFIG_DIR"))
+    scag_config_dir = TOPDIR / "scag" / "config"
     model_path = scag_config_dir / "models"
     zenith_dir = "z" + str(zenith_degree)
     zenith_path = scag_config_dir / sensor / zenith_dir
