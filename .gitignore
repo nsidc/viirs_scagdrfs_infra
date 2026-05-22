@@ -3,7 +3,6 @@ pathdef.m
 .nfs*
 slurm*
 scag/
-scagdrfs_jpl/
 __pycache__/
 outlog.txt
 */drfs_idl_startup.bat
