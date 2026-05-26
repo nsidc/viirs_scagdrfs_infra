@@ -48,14 +48,13 @@ mamba env create -f environment.yml
 ./scripts/activate-viirs-conda.sh
 ```
 
-### placeholder
-Clone and buid scag c code
+### 4. Clone and buid scag C code
 
 ```bash
 ./scripts/clone_and_build.sh
 ```
 
-### 3. Configure Earthdata credentials
+### 5. Configure Earthdata credentials
 
 Create a `.netrc` file in your home directory for authentication:
 ```bash
@@ -114,6 +113,7 @@ Options:
 Files are automatically organized by product and date in separate directories:
 
 **VJ109GA (NOAA-20) files:**
+**NRT**
 ```
 /pl/active/daac-production/VJ109GA/NRT/
 ├── 2026.02.01/
@@ -124,6 +124,14 @@ Files are automatically organized by product and date in separate directories:
 │   └── ...
 └── 2026.02.03/
 ```
+**FINAL**
+```
+/pl/active/daac-production/VJ109GA/FIN/
+├── 2026.02.01/
+│   ├── VJ109GA_NRT.A2026032.h08v04.002.2026033012345.h5
+│   ├── VJ109GA_NRT.A2026032.h09v04.002.2026033012346.h5
+│   └── ...
+├── 2026.02.02/
 
 **VNP09GA (NPP) files:**
 ```

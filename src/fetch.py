@@ -3,9 +3,18 @@
 
 import os
 from pathlib import Path
+import sys
 
-import earthaccess
-from filelock import SoftFileLock, Timeout
+try:
+    import earthaccess
+    from filelock import SoftFileLock, Timeout
+except ModuleNotFoundError as e:
+    print(
+        f"ERROR: {e}\n"
+        "Make sure you're running in the 'viirs' conda environment:\n"
+        "  conda activate viirs"
+    )
+    sys.exit(1)
 
 from src.util import (
     get_region_tile_ids,
@@ -98,6 +107,12 @@ def get_data(date, concept_id, dated_output_dir, short_name):
             f"ERROR: Could not acquire lock on {lockfile_path} within {LOCK_TIMEOUT} seconds."
         )
         print("If the directory is free, please remove the lock file and try again.")
+        return []
+    except PermissionError:
+        print(
+            f"INFO: Cannot write lock file to {dated_output_dir} — "
+            "data for this date was likely already downloaded by another user. Skipping."
+        )
         return []
 
 
