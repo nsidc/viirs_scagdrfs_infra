@@ -4,8 +4,16 @@
 import os
 from pathlib import Path
 
-import earthaccess
-from filelock import SoftFileLock, Timeout
+try:
+    import earthaccess
+    from filelock import SoftFileLock, Timeout
+except ModuleNotFoundError as e:
+    print(
+        f"ERROR: {e}\n"
+        "Make sure you're running in the 'viirs' conda environment:\n"
+        "  conda activate viirs"
+    )
+    sys.exit(1)
 
 from src.util import (
     get_region_tile_ids,
