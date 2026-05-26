@@ -330,6 +330,7 @@ def create_netcdf(day: dt.date, tif_dir: Path, tile_id: str):
     )
     add_geospatial_info(tile_id, nc_dataset)
     add_time_info(day, nc_dataset)
+    # TODO: CHANGE this whole thing
     nc_dataset.software_repository = "https://github.com/nsidc/scagdrfs_infra"
     nc_dataset.software_version_id = (
         open(os.path.join(os.environ["TOPDIR"], "VERSION"), "r").read().rstrip()
