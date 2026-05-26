@@ -60,6 +60,8 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     band.SetNoDataValue(nodata)
     band.WriteArray(data)
 
+    # TODO: This would be a good place to add colormap / colortable information to the geotiffs
+
     band.FlushCache()
     ds.FlushCache()
     ds = None  # closes and finalizes the file
