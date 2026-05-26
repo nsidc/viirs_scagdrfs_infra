@@ -48,6 +48,13 @@ mamba env create -f environment.yml
 ./scripts/activate-viirs-conda.sh
 ```
 
+### placeholder
+Clone and buid scag c code
+
+```bash
+./scripts/clone_and_build.sh
+```
+
 ### 3. Configure Earthdata credentials
 
 Create a `.netrc` file in your home directory for authentication:
