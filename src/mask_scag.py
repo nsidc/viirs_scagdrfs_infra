@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import datetime as dt
 import glob as glob
 import os
@@ -95,14 +93,14 @@ def mask_scag(date: dt.date, working_dir: Path, tile: str, product: str):
     # NOTE: This logic is tricky because it looks at both snow and grnsz
     #       and the order that each is modified with flag values matters
     #       ...a LOT.
-    print('binary file indices after np.sort()ing:')
-    print(f'  grnsz: {scag_bin_files[0]=}')
-    print(f'    ice: {scag_bin_files[1]=}')
-    print(f' UNUSED: {scag_bin_files[2]=}')
-    print(f'   rock: {scag_bin_files[3]=}')
-    print(f'  shade: {scag_bin_files[4]=}')
-    print(f'   snow: {scag_bin_files[5]=}')
-    print(f'    veg: {scag_bin_files[6]=}')
+    print("binary file indices after np.sort()ing:")
+    print(f"  grnsz: {scag_bin_files[0]=}")
+    print(f"    ice: {scag_bin_files[1]=}")
+    print(f" UNUSED: {scag_bin_files[2]=}")
+    print(f"   rock: {scag_bin_files[3]=}")
+    print(f"  shade: {scag_bin_files[4]=}")
+    print(f"   snow: {scag_bin_files[5]=}")
+    print(f"    veg: {scag_bin_files[6]=}")
 
     # TODO: These values should be pulled from configuration, not magic numbers here
     grnsz = get_data(scag_bin_files[0])
