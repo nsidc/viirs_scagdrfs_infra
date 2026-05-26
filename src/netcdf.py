@@ -20,6 +20,9 @@ from src.modis_tile_ncattrs import (
 from src.util.paths import TOPDIR
 
 PACKAGE_DIR = Path(__file__).parent
+# TODO: This (and other things) will need to be fixed.
+#       For instance, the analogous modscgdrf templates/ dir
+#       is in scagdrfs_infra/scagdrfs_infra/templates/
 TEMPLATE_DIR = PACKAGE_DIR / "templates"
 FILE_PART_TO_VAR = {
     "deltavis": "DRFS_DELTAVIS_PART",
