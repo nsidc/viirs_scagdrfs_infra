@@ -17,6 +17,7 @@ from src.modis_tile_ncattrs import (
     get_xy_minmax,
     look_up_latlon_minmax,
 )
+from src.util.paths import TOPDIR
 
 PACKAGE_DIR = Path(__file__).parent
 TEMPLATE_DIR = PACKAGE_DIR / "templates"
@@ -64,7 +65,7 @@ def global_scagdrfs_attrs():
 def get_file_info():
     # parser = SafeConfigParser(os.environ)
     parser = configparser.ConfigParser(os.environ)
-    parser.read(os.path.join(os.environ.get("SCAGDRFS_CONSTANTS_DIR"), "file_info.ini"))
+    parser.read(os.path.join(f"{TOPDIR}", "constants", "file_info.ini"))
     return parser
 
 
