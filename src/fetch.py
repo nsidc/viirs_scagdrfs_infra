@@ -99,6 +99,12 @@ def get_data(date, concept_id, dated_output_dir, short_name):
         )
         print("If the directory is free, please remove the lock file and try again.")
         return []
+    except PermissionError:
+        print(
+            f"INFO: Cannot write lock file to {dated_output_dir} — "
+            "data for this date was likely already downloaded by another user. Skipping."
+        )
+        return []
 
 
 def chmod_data(dated_output_dir):
