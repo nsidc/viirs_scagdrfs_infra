@@ -4,8 +4,17 @@
 import datetime as dt
 from pathlib import Path
 import logging
+import sys
 
-import click
+try:
+    import click
+except ModuleNotFoundError as e:
+    print(
+        f"ERROR: {e}\n"
+        "Make sure you're running in the 'viirs' conda environment:\n"
+        "  conda activate viirs"
+    )
+    sys.exit(1)
 
 from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
@@ -121,7 +130,7 @@ def move_granules_to_date_dirs(dated_output_dir, base_output_dir):
 @click.option(
     "-P",
     "--product",
-    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
+    type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=True),
     multiple=True,
     default=["VJ109GA"],
     show_default=True,
