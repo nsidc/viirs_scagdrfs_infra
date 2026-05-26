@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import numpy as np
 from pathlib import Path
@@ -21,10 +19,10 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     if depth == "8":
         nodata = 255
         dtype = np.uint8
-        glad_dtype = glad.GDT_Byte
+        gdal_dtype = gdal.GDT_Byte
 
     bip_info = get_info_from_bip_file(meta_file)
-    num_sample = int(bip_info["num_samples"])
+    num_samples = int(bip_info["num_samples"])
     num_lines = int(bip_info["num_lines"])
 
     # Read raw binary grayscale data
