@@ -30,6 +30,9 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     data = raw.reshape((num_lines, num_samples))
 
     # Compute geotransform from corner coordinates
+    # TODO: These values are derived from the tileID.
+    #       We should pull directly from lookup using tileID as index,
+    #       rather than indirectly relying on the .bip.meta file.
     ul_x = float(bip_info["ul_corner_x"])
     ul_y = float(bip_info["ul_corner_y"])
     lr_x = float(bip_info["lr_corner_x"])
