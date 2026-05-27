@@ -133,6 +133,7 @@ Files are automatically organized by product and date in separate directories:
 │   ├── VJ109GA_NRT.A2026032.h09v04.002.2026033012346.h5
 │   └── ...
 ├── 2026.02.02/
+```
 
 **VNP09GA (NPP) files:**
 
