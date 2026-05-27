@@ -437,7 +437,7 @@ class Landsat(Strategy):
         return meta
 
 
-class BIPifier:
+class BIPifier_drfs:
     """BIPifier class
 
     Converts various satellite data products
@@ -592,17 +592,19 @@ def get_data_source(input_filename: str):
     return data_source
 
 
-def bipify_file(input_file, output_file):
+def bipify_file_drfs(input_file, output_file):
     data_source = get_data_source(str(input_file))
 
-    bf = BIPifier(infile=input_file, data_source=data_source)
-    bf.load().BIPify()
+    bf = BIPifier_drfs(infile=input_file, data_source=data_source)
+    bf.load().BIPify_for_DRFS()
     bf.write_BIP(output_file)
+    print(f'just wrote BIP file: {output_file}')
+    breakpoint()
     # bf.write_GeoTIF(args.outfile.with_suffix(".tif"))
 
 
 def parse_arguments():
-    parser = ArgumentParser(description="BIPifier")
+    parser = ArgumentParser(description="BIPifier_drfs")
 
     # TODO: https://docs.python.org/3/library/argparse.html#filetype-objects
     parser.add_argument(
@@ -624,7 +626,7 @@ def parse_arguments():
 if __name__ == "__main__":
     """Executed from the command line"""
     args = parse_arguments()
-    bipify_file(args.infile, args.outfile)
+    bipify_file_drfs(args.infile, args.outfile)
 
 else:
     """Executed on import"""
