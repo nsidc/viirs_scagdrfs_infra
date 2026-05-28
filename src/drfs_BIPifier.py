@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 
 
-MAX_INT16 = 2 ** 8 - 1
+MAX_INT16 = 2 ** 15 - 1
 
 meta = pd.Series(
     dtype=np.float32,
@@ -487,38 +487,57 @@ class BIPifier_drfs:
 
         """
         self._BIPdata = self._indata.transpose(1, 2, 0)
+        # self._BIPdata.tofile('py_rawbip.dat')
 
-        # The BIP'ified data is manually scaled by a factor of 1000 and
-        #    converted to unsigned short ints
-        tmp = self._BIPdata * 1e3 + 0.5
-        data_isnan = np.isnan(tmp)
-        n_isnan = np.sum(np.where(data_isnan, 1, 0))
-        print(f'Number of NaN values: {n_isnan}')
-        if tmp.min() < -10:
-            print(f'WARNING: Unexpectedly low reflectance value: {tmp.min()}')
+        # Note: I have verified that the difference between these refls and those in IDL
+        #  is that these have the in-hdf-file value of -28672 replaced with np.nan
+        #  and the scaling factor of 1e-5 has been applied.
+
+        # # Original method
+        # # The BIP'ified data is manually scaled by a factor of 1000 and
+        # #    converted to unsigned short ints
+        # tmp = self._BIPdata * 1e3 + 0.5
+        # data_isnan = np.isnan(tmp)
+        # n_isnan = np.sum(np.where(data_isnan, 1, 0))
+        # print(f'Number of NaN values: {n_isnan}')
+        ## if tmp.min() < -10:
+        #    print(f'WARNING: Unexpectedly low reflectance value: {tmp.min()}')
+
+        # Method intended to *exactly* reproduce DRFS conversion to .bip
+        # Re-create the original, in-file values
+        refls_scaled = self._BIPdata.copy()
+        BIPdata_is_NaN = np.isnan(self._BIPdata)
+        refls_scaled[BIPdata_is_NaN] = -2.8672
+        refls_int_vals = np.around(refls_scaled * 10000, decimals=0)
+        refls_int_vals.tofile('py_bip_as_intvals.dat')
+        refls_scaled_1000 = refls_int_vals * 0.1 + 0.5
+        refls_scaled_1000 = refls_scaled_1000.astype(np.int16)
+        tmp = refls_scaled_1000
+        tmp.tofile('py_drfs_bip.dat')
 
         if tmp.max() > MAX_INT16:
             print(f'WARNING: Unexpectedly high reflectnace value(s): {tmp.max()}')
             print('   Clipping to {MAX_INT16}')
             tmp[tmp > MAX_INT16] = MAX_INT16
 
-        # Here, we explicitly set NaN values to -2866 because this is what the
-        #  original DRFS IDL code did
-        if n_isnan > 0:
-            NaN_bip_value_DRFS = -2866
-            print('  Note: explicitly setting these NaN values to {NaN_bip_value_DRFS=}')
-            tmp[np.isnan(tmp)] = NaN_bip_value_DRFS
-            data_as_int16 = tmp.astype(np.int16)
-            nan_as_int16 = np.unique(data_as_int16[data_isnan])
-            print(f'unique int16 values that were originally NaNs: {nan_as_int16}')
+        ## # Here, we explicitly set NaN values to -2866 because this is what the
+        ## #  original DRFS IDL code did
+        ## if n_isnan > 0:
+        ##     NaN_bip_value_DRFS = -2866
+        ##     print('  Note: explicitly setting these NaN values to {NaN_bip_value_DRFS=}')
+        ##     tmp[np.isnan(tmp)] = NaN_bip_value_DRFS
+        ##     data_as_int16 = tmp.astype(np.int16)
+        ##     nan_as_int16 = np.unique(data_as_int16[data_isnan])
+        ##     print(f'unique int16 values that were originally NaNs: {nan_as_int16}')
 
-        # We have found that after scaling by 1000, the data should
-        #   have a maximum value of about 1600.
-        max_data_value = data_as_int16.max()
-        if max_data_value > 2000:
-            raise ValueError(f'_BIPdata should not be higher than 2000: {max_data_value}')
+        ## # We have found that after scaling by 1000, the data should
+        ## #   have a maximum value of about 1600.
+        ## max_data_value = data_as_int16.max()
+        ## if max_data_value > 2000:
+        ##     raise ValueError(f'_BIPdata should not be higher than 2000: {max_data_value}')
 
-        self._BIPdata = data_as_int16
+        # self._BIPdata = data_as_int16
+        self._BIPdata = tmp
 
         return self
 
