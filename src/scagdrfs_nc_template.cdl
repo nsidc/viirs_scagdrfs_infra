@@ -1,0 +1,349 @@
+// CDL template for SCAGDRFS netCDF output.
+// Placeholders in {curly_braces} are substituted at file-creation time.
+//
+// Per-product placeholders:
+//   {title}             - Full human-readable product title
+//   {source}            - Source dataset DOI URL (e.g. https://doi.org/10.5067/...)
+//   {platform}          - Platform name (e.g. "Terra", "Suomi-NPP", "NOAA-20")
+//   {platform_vocab}    - Platform GCMD keyword (e.g. "Terra", "Suomi NPP")
+//   {instrument}        - Instrument name (e.g. "MODIS > Moderate-Resolution Imaging Spectroradiometer")
+//   {instrument_vocab}  - Instrument GCMD keyword
+//   {summary}           - Abstract paragraph
+//   {comment}           - Short provenance comment
+//   {citation}          - Full citation string
+//   {doi}               - DOI string only (e.g. "10.5067/XXXXXXX")
+//   {product_version}   - Version string (e.g. "v1.1", "v1.0")
+//   {source_id}         - Source product short name used in filenames
+//                         (e.g. "MOD09GANRT061", "VNP09GANRT02", "VJ109GANRT02")
+//
+// Runtime placeholders (filled per-tile/per-day by create_netcdf):
+//   {geospatial_bounds}         - WKT polygon string
+//   {geospatial_lat_min}        - float
+//   {geospatial_lat_max}        - float
+//   {geospatial_lon_min}        - float
+//   {geospatial_lon_max}        - float
+//   {GeoTransform}              - GDAL GeoTransform string
+//   {time_coverage_start}       - "YYYY-MM-DD 00:00:00"
+//   {time_coverage_end}         - "YYYY-MM-DD 23:59:59"
+//   {date_created}              - "YYYY-MM-DD"
+//   {date_modified}             - "YYYY-MM-DD"
+//   {software_version_id}       - read from VERSION file at runtime
+
+netcdf scagdrfs_template {
+
+dimensions:
+    x = 2400 ;
+    y = 2400 ;
+    time = UNLIMITED ;
+
+variables:
+
+    // ----------------------------------------------------------------
+    // Coordinate variables
+    // ----------------------------------------------------------------
+
+    double time(time) ;
+        time:standard_name = "time" ;
+        time:calendar = "standard" ;
+        time:coverage_content_type = "coordinate" ;
+        time:long_name = "ANSI date" ;
+        time:units = "days since 2000-01-01" ;
+        time:axis = "T" ;
+
+    double x(x) ;
+        x:standard_name = "projection_x_coordinate" ;
+        x:coverage_content_type = "coordinate" ;
+        x:long_name = "x" ;
+        x:units = "meters" ;
+        x:axis = "X" ;
+
+    double y(y) ;
+        y:standard_name = "projection_y_coordinate" ;
+        y:coverage_content_type = "coordinate" ;
+        y:long_name = "y" ;
+        y:units = "meters" ;
+        y:axis = "Y" ;
+
+    // ----------------------------------------------------------------
+    // CRS
+    // ----------------------------------------------------------------
+
+    char crs ;
+        crs:grid_mapping_name = "sinusoidal" ;
+        crs:false_easting = 0. ;
+        crs:false_northing = 0. ;
+        crs:long_name = "MODIS Sinusoidal projection definition" ;
+        crs:semi_major_axis = 6371007.181 ;
+        crs:semi_minor_axis = 6371007.181 ;
+        crs:crs_wkt = "PROJCS[\"Sinusoidal\", GEOGCS[\"GCS_unnamed ellipse\", DATUM[\"D_unknown\", SPHEROID[\"Unknown\",6371007.181,0]], PRIMEM[\"Greenwich\",0], UNIT[\"Degree\",0.017453292519943295]], PROJECTION[\"Sinusoidal\"], PARAMETER[\"central_meridian\",0], PARAMETER[\"false_easting\",0], PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1]]" ;
+        crs:GeoTransform = "{GeoTransform}" ;
+
+    // ----------------------------------------------------------------
+    // SCAG variables
+    // ----------------------------------------------------------------
+
+    ubyte snow_fraction(time, y, x) ;
+        snow_fraction:_FillValue = 255UB ;
+        snow_fraction:long_name = "SCAG viewable snow fraction" ;
+        snow_fraction:standard_name = "snow_area_fraction_viewable_from_above" ;
+        snow_fraction:units = "1" ;
+        snow_fraction:valid_range = 0UB, 100UB ;
+        snow_fraction:grid_mapping = "crs" ;
+        snow_fraction:add_offset = 0.f ;
+        snow_fraction:scale_factor = 0.01f ;
+        snow_fraction:ancillary_variables = "SCAG_data_mask" ;
+
+    ubyte unmasked_snow_fraction(time, y, x) ;
+        unmasked_snow_fraction:_FillValue = 255UB ;
+        unmasked_snow_fraction:long_name = "Unmasked SCAG viewable snow fraction" ;
+        unmasked_snow_fraction:standard_name = "snow_area_fraction_viewable_from_above" ;
+        unmasked_snow_fraction:units = "1" ;
+        unmasked_snow_fraction:valid_range = 0UB, 100UB ;
+        unmasked_snow_fraction:grid_mapping = "crs" ;
+        unmasked_snow_fraction:add_offset = 0.f ;
+        unmasked_snow_fraction:scale_factor = 0.01f ;
+
+    ushort grain_size(time, y, x) ;
+        grain_size:_FillValue = 65535US ;
+        grain_size:long_name = "SCAG grain size" ;
+        grain_size:standard_name = "snow_grain_size" ;
+        grain_size:units = "m" ;
+        grain_size:valid_range = 10US, 1100US ;
+        grain_size:comment = "Optical snow grain size based on SCAG spectral mixture analysis" ;
+        grain_size:grid_mapping = "crs" ;
+        grain_size:add_offset = 0.f ;
+        grain_size:scale_factor = 1.e-06f ;
+        grain_size:ancillary_variables = "SCAG_data_mask" ;
+
+    ushort unmasked_grain_size(time, y, x) ;
+        unmasked_grain_size:_FillValue = 65535US ;
+        unmasked_grain_size:long_name = "Unmasked SCAG grain size" ;
+        unmasked_grain_size:standard_name = "snow_grain_size" ;
+        unmasked_grain_size:units = "m" ;
+        unmasked_grain_size:valid_range = 10US, 1100US ;
+        unmasked_grain_size:comment = "Unmasked optical snow grain size based on SCAG spectral mixture analysis" ;
+        unmasked_grain_size:grid_mapping = "crs" ;
+        unmasked_grain_size:add_offset = 0.f ;
+        unmasked_grain_size:scale_factor = 1.e-06f ;
+
+    ubyte veg_fraction(time, y, x) ;
+        veg_fraction:_FillValue = 255UB ;
+        veg_fraction:long_name = "SCAG vegetation fraction" ;
+        veg_fraction:standard_name = "vegetation_area_fraction" ;
+        veg_fraction:units = "1" ;
+        veg_fraction:valid_range = 0UB, 100UB ;
+        veg_fraction:grid_mapping = "crs" ;
+        veg_fraction:add_offset = 0.f ;
+        veg_fraction:scale_factor = 0.01f ;
+        veg_fraction:ancillary_variables = "SCAG_data_mask" ;
+
+    ubyte unmasked_veg_fraction(time, y, x) ;
+        unmasked_veg_fraction:_FillValue = 255UB ;
+        unmasked_veg_fraction:long_name = "Unmasked SCAG vegetation fraction" ;
+        unmasked_veg_fraction:standard_name = "vegetation_area_fraction" ;
+        unmasked_veg_fraction:units = "1" ;
+        unmasked_veg_fraction:valid_range = 0UB, 100UB ;
+        unmasked_veg_fraction:grid_mapping = "crs" ;
+        unmasked_veg_fraction:add_offset = 0.f ;
+        unmasked_veg_fraction:scale_factor = 0.01f ;
+
+    ubyte rock_fraction(time, y, x) ;
+        rock_fraction:_FillValue = 255UB ;
+        rock_fraction:long_name = "SCAG viewable rock fraction" ;
+        rock_fraction:units = "1" ;
+        rock_fraction:valid_range = 0UB, 100UB ;
+        rock_fraction:grid_mapping = "crs" ;
+        rock_fraction:add_offset = 0.f ;
+        rock_fraction:scale_factor = 0.01f ;
+        rock_fraction:ancillary_variables = "SCAG_data_mask" ;
+
+    ubyte unmasked_rock_fraction(time, y, x) ;
+        unmasked_rock_fraction:_FillValue = 255UB ;
+        unmasked_rock_fraction:long_name = "Unmasked SCAG viewable rock fraction" ;
+        unmasked_rock_fraction:units = "1" ;
+        unmasked_rock_fraction:valid_range = 0UB, 100UB ;
+        unmasked_rock_fraction:grid_mapping = "crs" ;
+        unmasked_rock_fraction:add_offset = 0.f ;
+        unmasked_rock_fraction:scale_factor = 0.01f ;
+
+    ubyte ice_fraction(time, y, x) ;
+        ice_fraction:_FillValue = 255UB ;
+        ice_fraction:long_name = "SCAG ice fraction" ;
+        ice_fraction:standard_name = "land_ice_area_fraction" ;
+        ice_fraction:units = "1" ;
+        ice_fraction:valid_range = 0UB, 100UB ;
+        ice_fraction:grid_mapping = "crs" ;
+        ice_fraction:add_offset = 0.f ;
+        ice_fraction:scale_factor = 0.01f ;
+        ice_fraction:ancillary_variables = "SCAG_data_mask" ;
+
+    ubyte unmasked_ice_fraction(time, y, x) ;
+        unmasked_ice_fraction:_FillValue = 255UB ;
+        unmasked_ice_fraction:long_name = "Unmasked SCAG ice fraction" ;
+        unmasked_ice_fraction:standard_name = "land_ice_area_fraction" ;
+        unmasked_ice_fraction:units = "1" ;
+        unmasked_ice_fraction:valid_range = 0UB, 100UB ;
+        unmasked_ice_fraction:grid_mapping = "crs" ;
+        unmasked_ice_fraction:add_offset = 0.f ;
+        unmasked_ice_fraction:scale_factor = 0.01f ;
+
+    ubyte shade_fraction(time, y, x) ;
+        shade_fraction:_FillValue = 255UB ;
+        shade_fraction:long_name = "SCAG viewable shade fraction" ;
+        shade_fraction:units = "1" ;
+        shade_fraction:valid_range = 0UB, 100UB ;
+        shade_fraction:grid_mapping = "crs" ;
+        shade_fraction:add_offset = 0.f ;
+        shade_fraction:scale_factor = 0.01f ;
+        shade_fraction:ancillary_variables = "SCAG_data_mask" ;
+
+    ubyte unmasked_shade_fraction(time, y, x) ;
+        unmasked_shade_fraction:_FillValue = 255UB ;
+        unmasked_shade_fraction:long_name = "Unmasked SCAG viewable shade fraction" ;
+        unmasked_shade_fraction:units = "1" ;
+        unmasked_shade_fraction:valid_range = 0UB, 100UB ;
+        unmasked_shade_fraction:grid_mapping = "crs" ;
+        unmasked_shade_fraction:add_offset = 0.f ;
+        unmasked_shade_fraction:scale_factor = 0.01f ;
+
+    ubyte SCAG_data_mask(time, y, x) ;
+        SCAG_data_mask:_FillValue = 0UB ;
+        SCAG_data_mask:long_name = "flag values for masked SCAG data" ;
+        SCAG_data_mask:standard_name = "status_flag" ;
+        SCAG_data_mask:units = "1" ;
+        SCAG_data_mask:valid_range = 235UB, 255UB ;
+        SCAG_data_mask:grid_mapping = "crs" ;
+        SCAG_data_mask:flag_values = 235UB, 245UB, 250UB, 255UB ;
+        SCAG_data_mask:flag_meanings = "value_not_calculated snow_area_fraction_viewable_from_above_less_than_0.15 cloud no_input_data" ;
+
+    // ----------------------------------------------------------------
+    // DRFS variables
+    // ----------------------------------------------------------------
+
+    ushort radiative_forcing(time, y, x) ;
+        radiative_forcing:_FillValue = 65535US ;
+        radiative_forcing:long_name = "DRFS radiative forcing on snow" ;
+        radiative_forcing:standard_name = "surface_downward_heat_flux_in_snow" ;
+        radiative_forcing:units = "W m-2" ;
+        radiative_forcing:valid_range = 0US, 500US ;
+        radiative_forcing:comment = "Additional energy absorbed by the snowpack from light-absorbing impurities assuming a clear sky" ;
+        radiative_forcing:grid_mapping = "crs" ;
+        radiative_forcing:ancillary_variables = "DRFS_data_mask" ;
+
+    ushort unmasked_radiative_forcing(time, y, x) ;
+        unmasked_radiative_forcing:_FillValue = 65535US ;
+        unmasked_radiative_forcing:long_name = "Unmasked DRFS radiative forcing on snow" ;
+        unmasked_radiative_forcing:standard_name = "surface_downward_heat_flux_in_snow" ;
+        unmasked_radiative_forcing:units = "W m-2" ;
+        unmasked_radiative_forcing:valid_range = 0US, 500US ;
+        unmasked_radiative_forcing:comment = "Unmasked, additional energy absorbed by the snowpack from light-absorbing impurities assuming a clear sky" ;
+        unmasked_radiative_forcing:grid_mapping = "crs" ;
+
+    ushort drfs_grnsz(time, y, x) ;
+        drfs_grnsz:_FillValue = 65535US ;
+        drfs_grnsz:long_name = "DRFS grain size" ;
+        drfs_grnsz:standard_name = "snow_grain_size" ;
+        drfs_grnsz:units = "m" ;
+        drfs_grnsz:valid_range = 10US, 1100US ;
+        drfs_grnsz:add_offset = 0.f ;
+        drfs_grnsz:scale_factor = 1.e-06f ;
+        drfs_grnsz:comment = "Optical snow grain size based on DRFS normalized difference grain size index" ;
+        drfs_grnsz:grid_mapping = "crs" ;
+        drfs_grnsz:ancillary_variables = "DRFS_data_mask" ;
+
+    ushort unmasked_drfs_grnsz(time, y, x) ;
+        unmasked_drfs_grnsz:_FillValue = 65535US ;
+        unmasked_drfs_grnsz:long_name = "Unmasked DRFS grain size" ;
+        unmasked_drfs_grnsz:standard_name = "snow_grain_size" ;
+        unmasked_drfs_grnsz:units = "m" ;
+        unmasked_drfs_grnsz:valid_range = 10US, 1100US ;
+        unmasked_drfs_grnsz:add_offset = 0.f ;
+        unmasked_drfs_grnsz:scale_factor = 1.e-06f ;
+        unmasked_drfs_grnsz:comment = "Unmasked, optical snow grain size based on DRFS normalized difference grain size index" ;
+        unmasked_drfs_grnsz:grid_mapping = "crs" ;
+
+    ubyte deltavis(time, y, x) ;
+        deltavis:_FillValue = 255UB ;
+        deltavis:long_name = "DRFS decrease in snow albedo from light absorbing particles" ;
+        deltavis:units = "1" ;
+        deltavis:valid_range = 0UB, 99UB ;
+        deltavis:add_offset = 0.f ;
+        deltavis:scale_factor = 0.01f ;
+        deltavis:comment = "Also known as snow darkening. Difference between observed visible broadband (0.350-0.876 micrometer) albedo and clean snow albedo estimated from DRFS grain size" ;
+        deltavis:grid_mapping = "crs" ;
+        deltavis:ancillary_variables = "DRFS_data_mask" ;
+
+    ubyte unmasked_deltavis(time, y, x) ;
+        unmasked_deltavis:_FillValue = 255UB ;
+        unmasked_deltavis:long_name = "Unmasked DRFS decrease in snow albedo from light absorbing particles" ;
+        unmasked_deltavis:units = "1" ;
+        unmasked_deltavis:valid_range = 0UB, 99UB ;
+        unmasked_deltavis:add_offset = 0.f ;
+        unmasked_deltavis:scale_factor = 0.01f ;
+        unmasked_deltavis:comment = "Also known as snow darkening. Unmasked difference between observed visible broadband (0.350-0.876 micrometer) albedo and clean snow albedo estimated from DRFS grain size" ;
+        unmasked_deltavis:grid_mapping = "crs" ;
+
+    ubyte DRFS_data_mask(time, y, x) ;
+        DRFS_data_mask:_FillValue = 0UB ;
+        DRFS_data_mask:long_name = "flag values for masked DRFS data" ;
+        DRFS_data_mask:standard_name = "status_flag" ;
+        DRFS_data_mask:units = "1" ;
+        DRFS_data_mask:valid_range = 235UB, 255UB ;
+        DRFS_data_mask:grid_mapping = "crs" ;
+        DRFS_data_mask:flag_values = 235UB, 250UB, 255UB ;
+        DRFS_data_mask:flag_meanings = "value_not_calculated cloud no_input_data" ;
+
+// ----------------------------------------------------------------
+// Global attributes
+// ----------------------------------------------------------------
+
+// --- Product-varying (placeholders) ---
+:title = "{title}" ;
+:source = "{source}" ;
+:platform = "{platform}" ;
+:platform_vocabulary = "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20" ;
+:instrument = "{instrument}" ;
+:instrument_vocabulary = "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20" ;
+:summary = "{summary}" ;
+:comment = "{comment}" ;
+:citation = "{citation}" ;
+:id = "{doi}" ;
+:metadata_link = "https://doi.org/{doi}" ;
+:product_version = "{product_version}" ;
+
+// --- Static ---
+:Conventions = "CF-1.11, ACDD-1.3" ;
+:standard_name_vocabulary = "CF Standard Name Table (v86, 04 September 2024)" ;
+:references = "Painter, T.H., Rittger, K., McKenzie, C., Slaughter, P., Davis, R.E., & Dozier, J. (2009). Retrieval of subpixel snow-covered area, grain size, and albedo from MODIS. Remote Sensing of Environment, 113, 868-879, doi: 10.1016/j.rse.2009.01.001. Painter, T.H., Bryant, A.C., & Skiles, S.M. (2012). Radiative forcing by light absorbing impurities in snow from MODIS surface reflectance data. Geophysical Research Letters, 39, L17502, doi: 10.1029/2012gl052457" ;
+:publisher_institution = "National Snow and Ice Data Center/Cooperative Institute for Research in Environmental Sciences/University of Colorado at Boulder/Boulder, CO" ;
+:publisher_name = "NASA National Snow and Ice Data Center Distributed Active Archive Center" ;
+:publisher_type = "institution" ;
+:publisher_url = "https://nsidc.org/daac" ;
+:publisher_email = "nsidc@nsidc.org" ;
+:program = "NASA Earth Science Data and Information System (ESDIS)" ;
+:keywords = "EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW FRACTION, EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > LAND ICE FRACTION, EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW GRAIN SIZE, EARTH SCIENCE > BIOSPHERE > VEGETATION > VEGETATION FRACTION, EARTH SCIENCE > LAND SURFACE > LAND USE/LAND COVER > ROCK FRACTION, EARTH SCIENCE > LAND SURFACE > LAND USE/LAND COVER > SHADE FRACTION, EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW RADIATIVE FORCING, EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW GRAIN SIZE, EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > VISIBLE SNOW DARKENING" ;
+:keywords_vocabulary = "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20" ;
+:license = "Access Constraint: These data are freely, openly, and fully accessible; Use Constraint: These data are freely, openly, and fully available to use without restrictions, provided that you cite the data according to the recommended citation included here. creator_name: NASA National Snow and Ice Data Center Distributed Active Archive Center" ;
+:contributor_name = "Karl Rittger, Mary J. Brodzik, Molly A. Hardman, Hannah Wilcox, Donna J. Scott, Robyn Marowitz, Jessica Calme, Sebastien J. P. Lenard, Ken Mankoff, Annie Burgess" ;
+:contributor_role = "principal_investigator, science_programmer, science_programmer, software_developer, project_lead, software_developer, data_manager, postdoc_researcher, science_programmer, researcher" ;
+:cdm_data_type = "Grid" ;
+:geospatial_bounds_crs = "EPSG:4326" ;
+:geospatial_lat_units = "degrees_north" ;
+:geospatial_lon_units = "degrees_east" ;
+:time_coverage_resolution = "P1D" ;
+:time_coverage_duration = "P1D" ;
+:software_repository = "https://github.com/nsidc/scagdrfs_infra" ;
+
+// --- Runtime (filled by create_netcdf) ---
+:geospatial_bounds = "{geospatial_bounds}" ;
+:geospatial_lat_min = {geospatial_lat_min} ;
+:geospatial_lat_max = {geospatial_lat_max} ;
+:geospatial_lon_min = {geospatial_lon_min} ;
+:geospatial_lon_max = {geospatial_lon_max} ;
+:time_coverage_start = "{time_coverage_start}" ;
+:time_coverage_end = "{time_coverage_end}" ;
+:date_created = "{date_created}" ;
+:date_modified = "{date_modified}" ;
+:software_version_id = "{software_version_id}" ;
+
+}
