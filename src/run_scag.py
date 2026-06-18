@@ -152,6 +152,7 @@ def run_scag(bip_file, src_file, working_dir, product):
         day=get_date_from_filename(src_file),
         tif_dir=working_dir,
         tile_id=bip_info["tile_id"],
+        product=product,
     )
 
 
