@@ -15,7 +15,7 @@ from src.modis_tile_ncattrs import (
     get_xy_minmax,
     look_up_latlon_minmax,
 )
-from src.util.paths import TOPDIR
+from src.constants.paths import TOPDIR
 
 PACKAGE_DIR = Path(__file__).parent
 TEMPLATE_DIR = PACKAGE_DIR / "templates"
