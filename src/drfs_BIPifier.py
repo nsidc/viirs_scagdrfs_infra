@@ -206,18 +206,12 @@ class VIIRS(Strategy):
                     else:
                         raise ValueError('Do not know how to handle {band_name}')
 
-                    n_unique_values = np.unique(data_nbands_500m[i, :, :]).shape[0]
-                    print(f'num unique values for {band_name=}: {n_unique_values}')
-
-        print('we should have data_nbands_500m(7, 2400, 2400) here (!)', flush=True)
-
         # TODO: Now, we need to ensure that the resized data fields have the same
         #       original-data as the native 500m data fields
 
         print('WARNING: tiles at edge-of-earth might have NaN mismatch')
         print('  between native 500m and rescaled-1km data fields', flush=True)
 
-        # return resized_data
         return data_nbands_500m
 
 
@@ -487,21 +481,10 @@ class BIPifier_drfs:
 
         """
         self._BIPdata = self._indata.transpose(1, 2, 0)
-        # self._BIPdata.tofile('py_rawbip.dat')
 
         # Note: I have verified that the difference between these refls and those in IDL
         #  is that these have the in-hdf-file value of -28672 replaced with np.nan
         #  and the scaling factor of 1e-5 has been applied.
-
-        # # Original method
-        # # The BIP'ified data is manually scaled by a factor of 1000 and
-        # #    converted to unsigned short ints
-        # tmp = self._BIPdata * 1e3 + 0.5
-        # data_isnan = np.isnan(tmp)
-        # n_isnan = np.sum(np.where(data_isnan, 1, 0))
-        # print(f'Number of NaN values: {n_isnan}')
-        ## if tmp.min() < -10:
-        #    print(f'WARNING: Unexpectedly low reflectance value: {tmp.min()}')
 
         # Method intended to *exactly* reproduce DRFS conversion to .bip
         # Re-create the original, in-file values
@@ -509,34 +492,15 @@ class BIPifier_drfs:
         BIPdata_is_NaN = np.isnan(self._BIPdata)
         refls_scaled[BIPdata_is_NaN] = -2.8672
         refls_int_vals = np.around(refls_scaled * 10000, decimals=0)
-        refls_int_vals.tofile('py_bip_as_intvals.dat')
         refls_scaled_1000 = refls_int_vals * 0.1 + 0.5
         refls_scaled_1000 = refls_scaled_1000.astype(np.int16)
         tmp = refls_scaled_1000
-        tmp.tofile('py_drfs_bip.dat')
 
         if tmp.max() > MAX_INT16:
             print(f'WARNING: Unexpectedly high reflectnace value(s): {tmp.max()}')
             print('   Clipping to {MAX_INT16}')
             tmp[tmp > MAX_INT16] = MAX_INT16
 
-        ## # Here, we explicitly set NaN values to -2866 because this is what the
-        ## #  original DRFS IDL code did
-        ## if n_isnan > 0:
-        ##     NaN_bip_value_DRFS = -2866
-        ##     print('  Note: explicitly setting these NaN values to {NaN_bip_value_DRFS=}')
-        ##     tmp[np.isnan(tmp)] = NaN_bip_value_DRFS
-        ##     data_as_int16 = tmp.astype(np.int16)
-        ##     nan_as_int16 = np.unique(data_as_int16[data_isnan])
-        ##     print(f'unique int16 values that were originally NaNs: {nan_as_int16}')
-
-        ## # We have found that after scaling by 1000, the data should
-        ## #   have a maximum value of about 1600.
-        ## max_data_value = data_as_int16.max()
-        ## if max_data_value > 2000:
-        ##     raise ValueError(f'_BIPdata should not be higher than 2000: {max_data_value}')
-
-        # self._BIPdata = data_as_int16
         self._BIPdata = tmp
 
         return self
@@ -617,9 +581,6 @@ def bipify_file_drfs(input_file, output_file):
     bf = BIPifier_drfs(infile=input_file, data_source=data_source)
     bf.load().BIPify_for_DRFS()
     bf.write_BIP(output_file)
-    print(f'just wrote BIP file: {output_file}')
-    breakpoint()
-    # bf.write_GeoTIF(args.outfile.with_suffix(".tif"))
 
 
 def parse_arguments():
