@@ -86,11 +86,6 @@ function extract_modis_reflectance, filename, bip, $
   ;; Subset the data arrays
   bip = bip[ *, colstart:colend, rowstart:rowend ]
 
-  openw, 19, 'ohmygod.dat'
-  writeu, 19, bip
-  close, 19
-  print,'Wrote bip to: ohmygod.dat'
-
   if do_write_bip then begin
       openw, lun, bip_filename, /get_lun
       writeu, lun, bip
