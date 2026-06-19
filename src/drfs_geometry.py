@@ -34,18 +34,6 @@ def preprocess_geometry(
             cosine_illumination_angle: shape (2400, 2400)
             elev_km: Elevation in km (int), shape (2400, 2400)
     """
-    print(f'{solarzenith.shape=}')
-    print(f'{solarazimuth.shape=}')
-    print(f'{slope.shape=}')
-    print(f'{aspect.shape=}')
-    print(f'{dem.shape=}')
-
-    solarzenith.tofile(f'solarzenith_{solarzenith.dtype}_2400x2400.dat')
-    solarazimuth.tofile(f'solarazimuth{solarazimuth.dtype}_2400x2400.dat')
-    slope.tofile(f'slope{slope.dtype}_2400x2400.dat')
-    aspect.tofile(f'aspect{aspect.dtype}_2400x2400.dat')
-    dem.tofile(f'dem{dem.dtype}_2400x2400.dat')
-
     deg_to_rad = np.pi / 180.0
 
     # Scale raw integer files to degrees
