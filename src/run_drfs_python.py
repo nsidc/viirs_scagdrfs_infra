@@ -4,7 +4,6 @@ Replaces run_drfs_idl_via_bash() with pure Python/numpy.
 Kept separate from run_drfs.py until validated against IDL golden outputs.
 """
 
-import os
 from pathlib import Path
 
 import numpy as np
@@ -27,12 +26,8 @@ from src.drfs_BIPifier import bipify_file_drfs
 def create_bip_file_drfs(src_file, bip_file_drfs):
     """Create the DRFS version of the .bip file.
     Unlike SCAG, this allows negative integer values"""
-    print(f'{src_file=}')
-    print(f'{bip_file_drfs=}')
-    print('  in create_bip_file_drfs()')
-
     bipify_file_drfs(src_file, bip_file_drfs)
-    breakpoint()
+
 
 def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> str:
     """Run DRFS processing using Python/numpy instead of IDL.
@@ -96,33 +91,19 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
         aspect=aspect,
         dem=dem,
     )
-    print("  geometry preprocessed.", flush=True)
 
     # --- Load BIP reflectance ---
     print("  loading BIP reflectance...", flush=True)
     if not bip_file_drfs.exists():
         raise FileNotFoundError(f"BIP file not found: {bip_file_drfs}")
     # BIP is (ns, nl, nb) — reshape to (nb, ns, nl) for compute_drfs
-    bip_raw = np.fromfile(bip_file, dtype=np.uint16).reshape(2400, 2400, 7)
-    rfl = bip_raw.transpose(2, 0, 1).astype(np.float32) / 1000.0
+    bip_raw = np.fromfile(bip_file_drfs, dtype=np.int16).reshape(2400, 2400, 7)
+
+    rfl = np.divide(bip_raw, 1000.0, dtype=np.float32)
     print("  BIP loaded.", flush=True)
 
     # --- Compute DRFS ---
-    print("  computing DRFS...", flush=True)
-    rfl.tofile('py_rfl_float32_7x2400x2400.dat')
-    geom['solarzenith_deg'].tofile('py_solarzenith_deg_float64_2400x2400.dat')
-    geom['solarzenith_int'].tofile('py_solarzenith_int_int32_2400x2400.dat')
-    geom['cosine_illumination_angle'].tofile('py_cosillang_float64_2400x2400.dat')
-    geom['elev_km'].tofile('py_elev_km_int32_2400x2400.dat')
-    modis_wvl.tofile('py_modis_wvl_7.dat')
-    aviris_wvl.tofile('py_aviris_wvl_2_216.dat')
-    print('only writing one lut...')
-    luts[30]['sli'].tofile('py_lut_30_sli_float32_7x110.dat')
-    luts[30]['ndgsi'].tofile('py_ndgsi_30_sli_float64_2x110.dat')
-    dir_arr.tofile('py_dir_arr_float32_216x214x19.dat')
-    dif_arr.tofile('py_dif_arr_float32_216x214x19.dat')
-    print('Wrote py_<lots>.dat')
-    breakpoint()
+    print('Calling compute_drfs()...', flush=True)
     results = compute_drfs(
         rfl=rfl,  # (7, 2400, 2400)
         solarzenith_deg=geom["solarzenith_deg"],  # (2400, 2400)
@@ -159,7 +140,7 @@ if __name__ == "__main__":
     @click.option("--component-dir", required=True, type=click.Path(path_type=Path))
     @click.option("--working-dir", required=True, type=click.Path(path_type=Path))
     def main(src_file, component_dir, working_dir):
-        print(f'Running from run_drfs_python() __main__')
+        print('Running from run_drfs_python() __main__')
         print(f'  {src_file=}')
         print(f'  {component_dir=}')
         print(f'  {working_dir=}')
