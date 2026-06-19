@@ -5,10 +5,8 @@ Translates MOD09GA_FORCE_WEIGHT_v1_2 from IDL to numpy.
 
 import numpy as np
 from pathlib import Path
-from scipy.interpolate import CubicSpline
 
 from src.find_irspec_v1_2 import compute_irradiance
-from src.drfs_components import load_all_luts
 
 FLAG = -9999.99
 ZENITH_VALUES = np.array([15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75])
@@ -36,6 +34,9 @@ def _vegetation_mask(b1, b2, b3, b4, b5, b6, h, v, thresh):
     """Apply vegetation mask, returning masked copies of band arrays.
 
     Mirrors the vegetation masking logic in MOD09GA_FORCE_WEIGHT_v1_2.
+
+    TODO: The tower-masking aspect of this code (at SASP, SBSP, GMSP)
+          is never triggered because h, v are '09', '05', not '9', '5'
     """
     b1, b2, b3, b4, b5, b6 = [b.copy() for b in [b1, b2, b3, b4, b5, b6]]
 
@@ -48,6 +49,8 @@ def _vegetation_mask(b1, b2, b3, b4, b5, b6, h, v, thresh):
         b3_thresh = ((b4 - b2) / 2) + b2
         veg_mask = b3 < b3_thresh
 
+        # TODO: In python, h and v are '09' and '05'
+        #       so maybe this condition is never satisfied?
         if h == "9" and v == "5":
             # Preserve tower locations
             tower_mask = np.zeros((2400, 2400), dtype=bool)
@@ -60,6 +63,94 @@ def _vegetation_mask(b1, b2, b3, b4, b5, b6, h, v, thresh):
             band[veg_mask] = FLAG
 
     return b1, b2, b3, b4, b5, b6
+
+
+def IDL_Spline(X, Y, T, sigma = 1.0):
+    """Reproduce IDL's spline() function"""
+    # Source - https://stackoverflow.com/a/64266640
+    # Posted by Swike
+    # Retrieved 2026-06-18, License - CC BY-SA 4.0
+    n = min(len(X), len(Y))
+    if n <= 2:
+        print('X and Y must be arrays of 3 or more elements.')
+    if sigma != 1.0:
+        sigma = min(sigma, 0.001)
+    yp = np.zeros(2*n)
+    delx1 = X[1]-X[0]
+    dx1 = (Y[1]-Y[0])/delx1
+    nm1 = n-1
+    # nmp = n+1
+    delx2 = X[2]-X[1]
+    delx12 = X[2]-X[0]
+    c1 = -(delx12+delx1)/(delx12*delx1)
+    c2 = delx12/(delx1*delx2)
+    c3 = -delx1/(delx12*delx2)
+    slpp1 = c1*Y[0]+c2*Y[1]+c3*Y[2]
+    deln = X[nm1]-X[nm1-1]
+    delnm1 = X[nm1-1]-X[nm1-2]
+    delnn = X[nm1]-X[nm1-2]
+    c1 = (delnn+deln)/(delnn*deln)
+    c2 = -delnn/(deln*delnm1)
+    c3 = deln/(delnn*delnm1)
+    slppn = c3*Y[nm1-2]+c2*Y[nm1-1]+c1*Y[nm1]
+    sigmap = sigma*nm1/(X[nm1]-X[0])
+    dels = sigmap*delx1
+    exps = np.exp(dels)
+    sinhs = 0.5*(exps-1/exps)
+    sinhin = 1/(delx1*sinhs)
+    diag1 = sinhin*(dels*0.5*(exps+1/exps)-sinhs)
+    diagin = 1/diag1
+    yp[0] = diagin*(dx1-slpp1)
+    spdiag = sinhin*(sinhs-dels)
+    yp[n] = diagin*spdiag
+    delx2 = X[1:]-X[:-1]
+    dx2 = (Y[1:]-Y[:-1])/delx2
+    dels = sigmap*delx2
+    exps = np.exp(dels)
+    sinhs = 0.5*(exps-1/exps)
+    sinhin = 1/(delx2*sinhs)
+    diag2 = sinhin*(dels*(0.5*(exps+1/exps))-sinhs)
+    diag2 = np.concatenate([np.array([0]), diag2[:-1]+diag2[1:]])
+    dx2nm1 = dx2[nm1-1]
+    dx2 = np.concatenate([np.array([0]), dx2[1:]-dx2[:-1]])
+    spdiag = sinhin*(sinhs-dels)
+    for i in range(1, nm1):
+        diagin = 1/(diag2[i]-spdiag[i-1]*yp[i+n-1])
+        yp[i] = diagin*(dx2[i]-spdiag[i-1]*yp[i-1])
+        yp[i+n] = diagin*spdiag[i]
+    diagin = 1/(diag1-spdiag[nm1-1]*yp[n+nm1-1])
+    yp[nm1] = diagin*(slppn-dx2nm1-spdiag[nm1-1]*yp[nm1-1])
+    for i in range(n-2, -1, -1):
+        yp[i] = yp[i]-yp[i+n]*yp[i+1]
+    m = len(T)
+    subs = np.repeat(nm1, m)
+    s = X[nm1]-X[0]
+    sigmap = sigma*nm1/s
+    j = 0
+    for i in range(1, nm1+1):
+        while T[j] < X[i]:
+            subs[j] = i
+            j += 1
+            if j == m:
+                break
+        if j == m:
+            break
+    subs1 = subs-1
+    del1 = T-X[subs1]
+    del2 = X[subs]-T
+    dels = X[subs]-X[subs1]
+    exps1 = np.exp(sigmap*del1)
+    sinhd1 = 0.5*(exps1-1/exps1)
+    exps = np.exp(sigmap*del2)
+    sinhd2 = 0.5*(exps-1/exps)
+    exps = exps1*exps
+    sinhs = 0.5*(exps-1/exps)
+    spl = (yp[subs]*sinhd1+yp[subs1]*sinhd2)/sinhs+((Y[subs]-yp[subs])*del1+(Y[subs1]-yp[subs1])*del2)/dels
+    if m == 1:
+        return spl[0]
+    else:
+        return spl
+
 
 
 def compute_drfs(
@@ -102,14 +193,19 @@ def compute_drfs(
         dict with keys: ndgsi, ndsi, snow, grnsz, cumwts, deltavis, forcing
         each shape (2400, 2400)
     """
+    # Note: Verified that dir_arr(216, 14, 19) and dif_arr(216, 14, 19)
+    #       are the same in python and IDL
+
     # Scale reflectances from integer (x1000) to float
     # rfl comes in as BIP (ns, nl, nb) from IDL — reshape to (nb, ns, nl)
-    b1 = rfl[0, :, :] * 1.0
-    b2 = rfl[1, :, :] * 1.0
-    b3 = rfl[2, :, :] * 1.0
-    b4 = rfl[3, :, :] * 1.0
-    b5 = rfl[4, :, :] * 1.0
-    b6 = rfl[5, :, :] * 1.0
+    # Note: The IDL calculations are done on un-scaled TB fields,
+    #       so here, we cause the b1-b6 fields to be scaled-by-1000 values
+    b1 = np.round(rfl[:, :, 0] * 1000.)
+    b2 = np.round(rfl[:, :, 1] * 1000.)
+    b3 = np.round(rfl[:, :, 2] * 1000.)
+    b4 = np.round(rfl[:, :, 3] * 1000.)
+    b5 = np.round(rfl[:, :, 4] * 1000.)
+    b6 = np.round(rfl[:, :, 5] * 1000.)
 
     # Initialize output arrays with FLAG
     ndsi = np.full((ns, nl), FLAG, dtype=np.float32)
@@ -123,8 +219,12 @@ def compute_drfs(
     # Apply vegetation mask
     b1, b2, b3, b4, b5, b6 = _vegetation_mask(b1, b2, b3, b4, b5, b6, h, v, thresh)
 
+    # Note: confirmed that here, b1 (after veg) is same as IDL
+
     # Find valid pixels (b4 > 0 and b5 > 0)
+    # Note: confirmed that this is the same as the 'pos' array in IDL
     valid_mask = (b4 > 0) & (b5 > 0)
+
     if not np.any(valid_mask):
         print("NO SNOW FOUND, RETURNING FLAGGED BUNDLE")
         return {
@@ -138,6 +238,7 @@ def compute_drfs(
         }
 
     # Compute NDSI where valid
+    # Note: confirmed that array ndsi is the same as the IDL version
     ndsi[valid_mask] = (b2[valid_mask] - b6[valid_mask]) / (
         b2[valid_mask] + b6[valid_mask]
     )
@@ -159,6 +260,8 @@ def compute_drfs(
     snow[valid_mask] = 0.0
     snow[snow_mask] = 1.0
 
+    # Note: Confirmed that array snow array is same to IDL
+
     # Compute NDGSI where valid
     ndgsi[valid_mask] = (b4[valid_mask] - b5[valid_mask]) / (
         b4[valid_mask] + b5[valid_mask]
@@ -167,6 +270,8 @@ def compute_drfs(
     ndgsi[snow == 0.0] = FLAG
     cumwts[snow == 0.0] = FLAG
 
+    # Note: Confirmed that array ndgsi is same as IDL
+
     # AVIRIS wavelengths — first row, first 51 bands for VIS
     avi_wvl = aviris_wvl[0, :] * 1000  # convert um to nm
 
@@ -174,10 +279,13 @@ def compute_drfs(
     nearest_sza = _find_nearest_sza(solarzenith_int)
 
     print("Starting radiative forcing computation...")
+    print('check nearest_sza...')
 
     # Process per unique SZA to minimize LUT lookups
     for sza_val in ZENITH_VALUES:
-        sza_mask = (nearest_sza == sza_val) & (ndgsi != FLAG)
+        sza_mask = (nearest_sza == sza_val) & ~np.isclose(ndgsi, FLAG)
+        print(f'  num grid cells with sza: {sza_val}  {np.sum(np.where(sza_mask, 1, 0))}')
+
         if not np.any(sza_mask):
             continue
 
@@ -190,24 +298,27 @@ def compute_drfs(
         # Get pixel indices for this SZA
         rows, cols = np.where(sza_mask)
 
+        # Note: i and j correspondence in Python and IDL
+        #     i,j =>    5, 1070  in python
+        #     i,j => 1070,    5  in IDL
         for idx in range(len(rows)):
             i, j = rows[idx], cols[idx]
-            # There is a py where(sza_mask): ii,jj = i=626 j=1000
-            # ...that probably corresponds to IDL's:
-            # ii,jj:     1000     626
-            print(f'py where(sza_mask): ii,jj = {i=} {j=}')
+
             ndgsi_ij = ndgsi[i, j]
             sz = solarzenith_deg[i, j]
             elev_ij = elev_km[i, j]
             cia_ij = cosine_illumination_angle[i, j]
 
             # Grain size LUT lookup — mirrors IDL logic
+            # SS confirmed that the following three conditions are called the same number of times
+            # in IDL and python
+            # confirmed  array grnsz is same as IDL except machine precision
             if ndgsi_ij > ndgsi_vals[109]:
                 grnsz[i, j] = (
                     grsz_vals[109]
-                    + (
-                        (ndgsi_ij - ndgsi_vals[109])
-                        / (ndgsi_vals[109] - ndgsi_vals[108])
+                    + np.float32(
+                        np.float32(ndgsi_ij - ndgsi_vals[109])
+                        / np.float32(ndgsi_vals[109] - ndgsi_vals[108])
                     )
                     * 10.0
                 )
@@ -223,7 +334,7 @@ def compute_drfs(
 
                 grnsz[i, j] = (
                     grsz_vals[lutlow]
-                    + (
+                    + np.float32(
                         (ndgsi_ij - ndgsi_vals[lutlow])
                         / (ndgsi_vals[luthigh] - ndgsi_vals[lutlow])
                     )
@@ -235,13 +346,6 @@ def compute_drfs(
                     (ndgsi_ij - ndgsi_vals[lutlow])
                     / (ndgsi_vals[luthigh] - ndgsi_vals[lutlow])
                 ) * (sli_lut[:, lutlow] - sli_lut[:, luthigh])
-
-                if i == 0 and j == 1871:
-                    print(f"DEBUG pixel (0,1871):")
-                    print(f"  ndgsi_ij: {ndgsi_ij}")
-                    print(f"  cleanspec: {cleanspec}")
-                    print(f"  sza_val: {sza_val}")
-                    print(f"  lutlow: {lutlow} luthigh: {luthigh}")
 
                 # Spectral ratio and weights
                 rfl_pixel = np.array(
@@ -255,8 +359,10 @@ def compute_drfs(
                 weights = cleanspec[0:4] - rfl_scaled[0:4] * specratio
 
                 # Spline interpolation from MODIS to AVIRIS wavelengths
-                cs = CubicSpline(modis_wvl[0:4], weights)
-                splineweights = cs(avi_wvl[0:51]) / 10000
+                # This was the original conversion, using scipy.interpolate.CubicSpline()
+                # cs = CubicSpline(modis_wvl[0:4], weights)
+                # splineweights = cs(avi_wvl[0:51]) / 10000
+                splineweights = IDL_Spline(modis_wvl[0:4], weights, avi_wvl[0:51]) / 10000
 
                 # Compute irradiance
                 irrad = compute_irradiance(
@@ -265,7 +371,7 @@ def compute_drfs(
                     cosine_illumination_angle=cia_ij,
                     dir_arr=dir_arr,
                     dif_arr=dif_arr,
-                    verbose=(i==626 and j==1000),
+                    verbose=False,
                 )
 
                 # Deltavis and forcing
@@ -277,33 +383,9 @@ def compute_drfs(
                     ) * 100
                 forcing[i, j] = np.sum(splineweights * irrad_vis)
 
-                if i == 0 and j == 1871:
-                    print(f"  rfl_scaled: {rfl_scaled[:4]}")
-                    print(f"  specratio: {specratio:.6f}")
-                    print(f"  weights: {weights}")
-                    print(f"  splineweights[0:5]: {splineweights[0:5]}")
-                    print(f"  irrad_vis[0:5]: {irrad_vis[0:5]}")
-                    print(f"  total_irrad: {total_irrad:.4f}")
-                    print(
-                        f"  deltavis: {(np.sum(splineweights * irrad_vis) / total_irrad) * 100:.4f}"
-                    )
-
-                    print(
-                        f"avi_wvl[0]: {avi_wvl[0]} avi_wvl[50]: {avi_wvl[50]}"
-                    )  # should be 350-850nm
-                    print(f"irrad[0:5]: {irrad[0:5]}")
-                    print(f"irrad[50:55]: {irrad[50:55]}")
-                    print(f"irrad[100:105]: {irrad[100:105]}")
-                    print(f"irrad[200:205]: {irrad[200:205]}")
-                    print("Radiative forcing computation complete.")
-
-                    print(f"aviris_wvl shape: {aviris_wvl.shape}")
-                    print(
-                        f"aviris_wvl[0, 0:5]: {aviris_wvl[0, 0:5]}"
-                    )  # first row first 5
-                    print(
-                        f"aviris_wvl[1, 0:5]: {aviris_wvl[1, 0:5]}"
-                    )  # second row first 5
+    # confirmed  array cumwts is same as IDL except machine precision
+    # confirmed  array deltavis is same as IDL except machine precision
+    # confirmed  array forcing is same as IDL except machine precision
 
     return {
         "ndgsi": ndgsi,
