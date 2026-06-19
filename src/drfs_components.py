@@ -64,12 +64,16 @@ def load_ndgsi_lut(comps_dir: Path, sza: int, verbose: bool=True) -> np.ndarray:
 def load_sli(comps_dir: Path, sza: int, verbose: bool=True) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
     fn_sli = comps_dir / f"MODIS.z{sza}.sli"
-    data = np.fromfile(fn_sli, dtype=np.float32)
-    data = data.reshape(7, -1)[:, :110] / 10.0
+
+    data_raw = np.fromfile(fn_sli, dtype=np.float32)
+    data_first_7x110 = data_raw[:7*110]
+    data_110x7 = data_first_7x110.reshape(110, 7)
+    data_7x110 = np.swapaxes(data_110x7, 0, 1)
+
     if verbose:
         print(f'    Loaded clean snow SLI for {sza} from: {fn_sli}')
 
-    return data
+    return data_7x110
 
 
 def load_all_luts(comps_dir: Path, verbose: bool=True) -> dict:
@@ -93,8 +97,7 @@ def load_terrain(comps_dir: Path, h: str, v: str, verbose: bool=True) -> tuple[n
         raise RuntimeError(
             f"Expected 1 terrain file for h{h}v{v}, found {len(terrain_files)}: {terrain_files}"
         )
-    fn_dem = terrain_files[0]
-    #data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2400, 2400, 2)
+    # fn_dem = terrain_files[0]
     data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2, 2400, 2400)
     slope = data[0, :, :]
     aspect = data[1, :, :]
