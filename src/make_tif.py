@@ -12,6 +12,8 @@ from src.util import (
 
 
 def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
+
+    make_tif_string = ''
     nodata = 2550
     dtype = np.uint16
     gdal_dtype = gdal.GDT_UInt16
@@ -44,7 +46,17 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
 
     # Parse the projection string into an OGC WKT SRS
     srs = osr.SpatialReference()
-    srs.SetFromUserInput(bip_info["proj_string"])  # accepts PROJ4, EPSG:, WKT, etc.
+
+    # FIXME: The bip_info["proj_string"] is yielding a bizarre string,
+    #        so am hardcoding the MODIS sinusoidal projection here.
+    #   The bip_info string value is:
+    #     bip_info["proj_string"]=\\\'"+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"\\\'
+    #   The hardcoded replacement value here is:
+    #     "+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+
+    modis_sinu_proj_string = "+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+    # srs.SetFromUserInput(bip_info["proj_string"])  # accepts PROJ4, EPSG:, WKT, etc.
+    srs.SetFromUserInput(modis_sinu_proj_string)  # accepts PROJ4, EPSG:, WKT, etc.
 
     # Write GeoTIFF with DEFLATE compression
     driver = gdal.GetDriverByName("GTiff")
@@ -68,3 +80,5 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     band.FlushCache()
     ds.FlushCache()
     ds = None  # closes and finalizes the file
+
+    return make_tif_string
