@@ -81,7 +81,7 @@ def get_static_nc_attrs() -> dict:
 
 def get_file_info():
     parser = configparser.ConfigParser(os.environ)
-    parser.read(os.path.join(f"{TOPDIR}", "constants", "file_info.ini"))
+    parser.read(os.path.join(f"{TOPDIR}", "src", "constants", "file_info.ini"))
     return parser
 
 
@@ -186,22 +186,26 @@ def fill_data_masks(nc_dataset):
     nc_var[:] = np.array(scag_data_mask[:])
 
 
-def find_variable_files(day, tif_dir, tile, file_info):
+def find_variable_files(day, tif_dir, tile, file_info, prefix, source_id):
     masked_template = file_info.get("FILE_INFO", "MASKED_TIF_BASENAME", raw=True)
     unmasked_template = file_info.get("FILE_INFO", "UNMASKED_TIF_BASENAME", raw=True)
     masked_var_files = {}
     unmasked_var_files = {}
     for nc_var_name, file_part in FILE_PART_TO_VAR.items():
         masked_filename = masked_template % (
+            prefix,
             file_info.get("FILE_INFO", file_part),
             tile,
+            source_id,
             day.strftime("%Y%m%d"),
             file_info.get("FILE_INFO", "TIF_VERSIONS"),
         )
         masked_list = list(tif_dir.rglob(masked_filename))
         unmasked_filename = unmasked_template % (
+            prefix,
             file_info.get("FILE_INFO", file_part),
             tile,
+            source_id,
             day.strftime("%Y%m%d"),
             file_info.get("FILE_INFO", "TIF_VERSIONS"),
         )
@@ -315,11 +319,16 @@ def create_netcdf(
         tile_id,
         product_attrs["source_id"],
         day.strftime("%Y%m%d"),
-        file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
+        product_attrs["nc_filename_version"],
     )
     nc_filepath = Path(os.path.join(tif_dir, nc_filename))
     masked_var_files, unmasked_var_files = find_variable_files(
-        day, tif_dir, tile_id, file_info
+        day,
+        tif_dir,
+        tile_id,
+        file_info,
+        PRODUCT_OUTPUT_PREFIX[product.upper()],
+        product_attrs["source_id"],
     )
 
     # Load attribute sources
@@ -337,7 +346,7 @@ def create_netcdf(
     for key, value in static_attrs.items():
         setattr(nc_dataset, key, value)
     for key, value in product_attrs.items():
-        if key == "source_id":
+        if key in ("source_id", "nc_filename_version"):
             continue
         if key == "doi":
             nc_dataset.id = value
