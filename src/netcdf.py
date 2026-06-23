@@ -80,7 +80,7 @@ def get_static_nc_attrs() -> dict:
 
 def get_file_info():
     parser = configparser.ConfigParser(os.environ)
-    parser.read(os.path.join(f"{TOPDIR}", "constants", "file_info.ini"))
+    parser.read(os.path.join(f"{TOPDIR}", "src", "constants", "file_info.ini"))
     return parser
 
 
