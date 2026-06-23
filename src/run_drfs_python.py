@@ -6,6 +6,8 @@ Kept separate from run_drfs.py until validated against IDL golden outputs.
 
 from pathlib import Path
 
+import os
+import glob
 import numpy as np
 
 from src.drfs_components import (
@@ -22,6 +24,14 @@ from src.drfs_core import compute_drfs, write_drfs_outputs
 from src.drfs_hdf_solar import extract_hdf_solar_fields
 from src.drfs_BIPifier import bipify_file_drfs
 from src.moddrfs_cleanse import moddrfs_cleanse
+from src.make_tif import make_tif
+from src.mask_drfs import mask_drfs
+from src.util import (
+    get_bitdepth_for_field_name,
+    get_date_from_filename,
+    get_field_name,
+    get_tile_id_from_filename,
+)
 
 
 def create_bip_file_drfs(src_file, bip_file_drfs):
@@ -137,7 +147,94 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     return f"run_drfs_python completed for {filename_stem}"
 
 
+def create_drfs_geotiffs(
+    src_file,
+    product,
+    working_dir,
+    staging_dir,
+    component_dir,
+):
+    """This  routine runs the DRFS algorithm, cleanses the resulting .dat files,
+    masks the data fields, and creates geotiffs of both the masked and unmasked
+    fields
+    """
+    date = get_date_from_filename(src_file)
+    tile_id = get_tile_id_from_filename(src_file)
+
+    # Create .dat and .cleanse.dat files
+    result_drfs = run_drfs_python(src_file, component_dir, working_dir)
+
+    # Create .mask and .Unmask files
+    result_mask = mask_drfs(
+        tile_id=tile_id,
+        date=date,
+        src_file=src_file,
+        working_dir=working_dir,
+        staging_dir=staging_dir,
+        product=product,
+    )
+
+    # Get the bip.meta filename
+    bip_files = list(working_dir.glob("**/*.bip.meta"))
+    bip_files = [f for f in bip_files if 'drfs.bip' not in f.stem]
+
+    if len(bip_files) != 1:
+        raise RuntimeError(
+            "Found either zero or multiple BIP "
+            "metadata files in working directory: " + str(working_dir)
+        )
+    bip_meta_file = bip_files[0]
+    result_bip_meta_file = f'bip meta filename: {bip_meta_file}'
+    print(f'{result_bip_meta_file=}')
+
+    # Create geotiffs for the unmasked fields
+    result_unmasked_geotiffs = ''
+    for unmask_file in glob.glob(os.path.join(working_dir, "*.Unmask")):
+        field_name = get_field_name(unmask_file)
+        bit_depth = get_bitdepth_for_field_name(field_name)
+        output_tif = os.path.join(
+            staging_dir, unmask_file.replace("bin.Unmask", "Unmask.tif")
+        )
+        geotiff_creation_string = f"Generating tif for:\n  unmask_file: {unmask_file}\n  field_name: {field_name}\n  bit_depth: {bit_depth}\n  output_tif: {output_tif}"
+        # print(geotiff_creation_string, flush=True)
+        result_make_tif = make_tif(
+            meta_file=bip_meta_file,
+            input_file=unmask_file,
+            depth=str(bit_depth),
+            output_file=output_tif,
+        )
+        geotiff_creation_string += result_make_tif
+        result_unmasked_geotiffs += f'{geotiff_creation_string}\n'
+
+    # Create geotiffs for the masked fields
+    result_masked_geotiffs = ''
+    for mask_file in glob.glob(os.path.join(working_dir, "*.mask")):
+        field_name = get_field_name(mask_file)
+        bit_depth = get_bitdepth_for_field_name(field_name)
+        output_tif = os.path.join(staging_dir, mask_file.replace("bin.mask", "tif"))
+        geotiff_creation_string = f"Generating tif for:\n  mask_file: {mask_file}\n  field_name: {field_name}\n  bit_depth: {bit_depth}\n  output_tif: {output_tif}"
+        # print(geotiff_creation_string, flush=True)
+        result_make_tif = make_tif(
+            meta_file=bip_meta_file,
+            input_file=mask_file,
+            depth=str(bit_depth),
+            output_file=output_tif,
+        )
+        geotiff_creation_string += result_make_tif
+        result_unmasked_geotiffs += f'{geotiff_creation_string}\n'
+
+    final_result = (
+        result_drfs,
+        result_mask,
+        result_bip_meta_file,
+        result_unmasked_geotiffs,
+        result_masked_geotiffs,
+    )
+    return final_result
+
+
 if __name__ == "__main__":
+    # Note: This only runs the code that creates the primary .dat files
     import click
 
     @click.command()

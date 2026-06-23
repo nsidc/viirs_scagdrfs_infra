@@ -25,7 +25,8 @@ from src.constants.products import (
 )
 # from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
 from src.constants.paths import WORK_DIR, get_nrt_dir, DRFS_COMPONENT_DIR
-from src.run_drfs_python import run_drfs_python
+# from src.run_drfs_python import run_drfs_python
+from src.run_drfs_python import create_drfs_geotiffs
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -220,10 +221,12 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                             "...\n",
                         )
 
-                        drfs_result = run_drfs_python(
+                        drfs_result = create_drfs_geotiffs(
                             tile_params["src_file"],
-                            tile_params["component_dir"],
+                            tile_params["product"],
                             tile_params["working_dir"],
+                            tile_params["staging_dir"],
+                            tile_params["component_dir"],
                         )
                         print(f'{drfs_result=}')
                 else:
