@@ -3,7 +3,12 @@
 This is adapted from moddrfs_cleanse.pro (IDL)
 
 IDL API:
-   pro moddrfs_cleanse,prefix=prefix,ns=ns,nl=nl,mod09ga=mod09ga, threshold=threshold
+   pro moddrfs_cleanse,
+         prefix=prefix,
+         ns=ns,
+         nl=nl,
+         mod09ga=mod09ga,
+         threshold=threshold
 
 IDL routine docstring:
      Input
@@ -21,10 +26,12 @@ Example template usage:
   Output filename template:  prefix + '.forcing.cleanse.dat'
 """
 
-# TODO: This could be refactored if necessary, but would be best done in conjuction
-#       with refactoring SCAG data variables which are likely to be "cleanse"d similarly.
+# TODO: This could be refactored if necessary, but would be best done
+#       while refactoring SCAG data variables which are likely to be
+#       "cleanse"d similarly.
 
 import numpy as np
+from pathlib import Path
 
 
 VAR_LIMITS = {
@@ -61,13 +68,18 @@ def moddrfs_cleanse(prefix, ns, nl, nbands=7):
     output_fns = {}
     dat_arrays = {}
     for drfs_var in drfs_vars:
-        input_fns[drfs_var] = prefix + '.' + drfs_var + '.dat'
-        output_fns[drfs_var] = prefix + '.' + drfs_var + '.cleanse.dat'
-        dat_arrays[drfs_var] = np.fromfile(input_fns[drfs_var], dtype=np.float32).reshape(nl, ns)
+        # input_fns[drfs_var] = prefix + '.' + drfs_var + '.dat'
+        # output_fns[drfs_var] = prefix + '.' + drfs_var + '.cleanse.dat'
+        input_fns[drfs_var] = Path(f'{prefix}.{drfs_var}.dat')
+        output_fns[drfs_var] = Path(f'{prefix}.{drfs_var}.cleanse.dat')
+        dat_arrays[drfs_var] = np.fromfile(
+                input_fns[drfs_var], dtype=np.float32).reshape(nl, ns)
 
     # Compute where input is missing from drfs.bip file
-    # NOTE: Here, we use the DRFS BIP file instead of re-calculating the BIP arrays
-    bip_fn = prefix + '.drfs.bip'
+    # NOTE: Here, we use the DRFS BIP file instead of
+    #       re-calculating the BIP arrays
+    # bip_fn = prefix + '.drfs.bip'
+    bip_fn = Path(f'{prefix}.drfs.bip')
     bip = np.fromfile(bip_fn, dtype=np.int16).reshape(nl, ns, nbands)
     is_bip_missing = bip == DRFS_BIP_MISSINGVAL
     is_bip_mask = np.sum(is_bip_missing.astype(np.uint8), axis=2) > 0
@@ -81,7 +93,8 @@ def moddrfs_cleanse(prefix, ns, nl, nbands=7):
     dat_arrays[drfs_var][data > max_val] = max_val
     dat_arrays[drfs_var][is_bip_mask] = np.nan
 
-    # For forcing: set missing to NaN, <errval to NaN, errval to thres to 0, max to max+err to max,
+    # For forcing: set missing to NaN,
+    #   <errval to NaN, errval to thres to 0, max to max+err to max,
     # >max_err to NaN <thresh to 0;
     drfs_var = 'forcing'
     data = dat_arrays[drfs_var]
@@ -89,9 +102,12 @@ def moddrfs_cleanse(prefix, ns, nl, nbands=7):
     max_val = VAR_LIMITS[drfs_var]['max']
     err_val = VAR_LIMITS[drfs_var]['error_val']
     dat_arrays[drfs_var][data < (min_val - err_val)] = np.nan
-    dat_arrays[drfs_var][(data >= (min_val - err_val)) & (data < min_val)] = 0.0
-    dat_arrays[drfs_var][(data > max_val) & (data <= (max_val + err_val))] = max_val
-    dat_arrays[drfs_var][data >= (max_val + err_val)] = np.nan
+    dat_arrays[drfs_var][
+            (data >= (min_val - err_val)) & (data < min_val)] = 0.0
+    dat_arrays[drfs_var][
+            (data > max_val) & (data <= (max_val + err_val))] = max_val
+    dat_arrays[drfs_var][
+            data >= (max_val + err_val)] = np.nan
     dat_arrays[drfs_var][is_bip_mask] = np.nan
 
     # For deltavis: set missing to NaN, <min to NaN; >max to NaNax
@@ -113,7 +129,7 @@ def moddrfs_cleanse(prefix, ns, nl, nbands=7):
 if __name__ == '__main__':
     import sys
 
-    prefix = sys.argv[1]
+    prefix = Path(sys.argv[1])
 
     moddrfs_cleanse(
         prefix,
