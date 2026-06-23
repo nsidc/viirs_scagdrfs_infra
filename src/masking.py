@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-# TODO: Remove the #!/usr/bin/env python at top of file(s)
-
 import numpy as np
 
 
@@ -22,13 +18,13 @@ def cw_mask(cloud_data, water_data, data):
 
     # TODO: These values should be moved to a configuration file
     if data.dtype == np.uint8:
-       cloud_flagval = 250
-       water_flagval = 235
+        cloud_flagval = 250
+        water_flagval = 235
     elif data.dtype == np.uint16:
-       cloud_flagval = 2500
-       water_flagval = 2350
+        cloud_flagval = 2500
+        water_flagval = 2350
     else:
-       raise ValueError(f'Cannot determine flag values for data type: {data.dtype}')
+        raise ValueError(f"Cannot determine flag values for data type: {data.dtype}")
 
     is_cloud = calc_cloud_mask(cloud_data)
     is_water = calc_water_mask(water_data)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import configparser
 import datetime as dt
 import glob
@@ -77,7 +75,7 @@ def get_water_mask(file_info, tile):
     with open(water_mask_files[0], "rb") as water_mask_file:
         water_mask_data = np.fromfile(water_mask_file, dtype=np.uint8)
     water_mask_data = water_mask_data.reshape(2400, 2400)
-    print(f'Read water_mask_data from: {water_mask_path=}')
+    print(f"Read water_mask_data from: {water_mask_path=}")
     return water_mask_data
 
 

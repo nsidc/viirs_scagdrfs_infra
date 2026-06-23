@@ -166,8 +166,25 @@ END
 ; :Keywords:
 ;    THRESHOLD=threshold : in, optional, float, default 0.15
 ;      all "fraction" values below this threshold will be set to 0.0
+;    SNOW_FRACTION=snow_fraction : in/out, optional,  fltarr
+;      snow_fraction scag output data 
+;    VEGETATION_FRACTION=vegetation_fraction : in/out, optional,  fltarr
+;      vegetation_fraction scag output data 
+;    ROCK_FRACTION=rock_fraction : in/out, optional,  fltarr
+;      rock_fraction scag output data 
+;    OTHER_FRACTION=other_fraction : in/out, optional,  fltarr
+;      other_fraction scag output data 
+;    SHADE_FRACTION=shade_fraction : in/out, optional,  fltarr
+;      shade_fraction scag output data 
 ;    GRAIN_SIZE=grain_size : in/out, optional,  fltarr
 ;      grain_size scag output data
+;    RMS=rms : in/out, optional,  fltarr
+;      rms scag output data 
+;    QUALITY=quality : in/out, optional,  fltarr
+;      quality scag output data 
+;    QUALITY_BITS=quality_bits : in/out, optional,  fltarr
+;      quality_bits scag output data
+;    TODO - Add in better docs to explain the DRFS inputs
 ;    FORCING=forcing : in/out, optional, fltarr
 ;      forcing data from DRFS
 ;    DELTAVIS=deltavis : in/out, optional, fltarr
@@ -192,7 +209,15 @@ END
 ;-
 function cleanse_scag, mod09ga_file, $
                        THRESHOLD=threshold, $
+                       SNOW_FRACTION=snow_fraction, $
+                       VEGETATION_FRACTION=vegetation_fraction, $
+                       ROCK_FRACTION=rock_fraction, $
+                       OTHER_FRACTION=other_fraction, $
+                       SHADE_FRACTION=shade_fraction, $
                        GRAIN_SIZE=grain_size, $
+                       RMS=rms, $
+                       QUALITY=quality, $
+                       QUALITY_BITS=quality_bits, $
                        FORCING=forcing, $
                        DELTAVIS=deltavis, $
                        VERBOSE=do_verbose
@@ -246,14 +271,38 @@ function cleanse_scag, mod09ga_file, $
              + " bip locations with at least one undefined reflectance in " $
              + mod09ga_file
   endif
+  
   ;; for any layer that is input:
   ;;   set NaNs to match .bip undefined
   ;;   for fraction and grain_size layers, do range-of-values checks
+  if 0 lt n_elements( snow_fraction ) then $
+     reset_scag_data, snow_fraction, undef_idx, undef_count, $
+                      /rov, threshold=threshold, max_value=max_fraction
+  if 0 lt n_elements( vegetation_fraction ) then $
+     reset_scag_data, vegetation_fraction, undef_idx, undef_count, $
+                      /rov, threshold=threshold, max_value=max_fraction
+  if 0 lt n_elements( rock_fraction ) then $
+     reset_scag_data, rock_fraction, undef_idx, undef_count, $
+                      /rov, threshold=threshold, max_value=max_fraction
+  if 0 lt n_elements( other_fraction ) then $
+     reset_scag_data, other_fraction, undef_idx, undef_count, $
+                      /rov, threshold=threshold, max_value=max_fraction
+  if 0 lt n_elements( shade_fraction ) then $
+     reset_scag_data, shade_fraction, undef_idx, undef_count, $
+                      /rov, threshold=threshold, max_value=max_fraction
 
   ;; grain_size ROVs are different from fraction ROVs
   if 0 lt n_elements( grain_size ) then $
      reset_scag_data, grain_size, undef_idx, undef_count, $
                       /rov, threshold=min_grain_size, max_value=max_grain_size
+
+  ;; the rest of scag's output shouldn't have /rov done, just NaNs
+  if 0 lt n_elements( rms ) then $
+     reset_scag_data, rms, undef_idx, undef_count
+  if 0 lt n_elements( quality ) then $
+     reset_scag_data, quality, undef_idx, undef_count
+  if 0 lt n_elements( quality_bits ) then $
+     reset_scag_data, quality_bits, undef_idx, undef_count
 
   ;; forcing data SHOULD have /rov, /err, and NaNs
   if 0 lt n_elements( forcing ) then $

@@ -48,7 +48,13 @@ mamba env create -f environment.yml
 ./scripts/activate-viirs-conda.sh
 ```
 
-### 3. Configure Earthdata credentials
+### 4. Clone and buid scag C code
+
+```bash
+./scripts/clone_and_build.sh
+```
+
+### 5. Configure Earthdata credentials
 
 Create a `.netrc` file in your home directory for authentication:
 ```bash
@@ -107,6 +113,7 @@ Options:
 Files are automatically organized by product and date in separate directories:
 
 **VJ109GA (NOAA-20) files:**
+**NRT**
 ```
 /pl/active/daac-production/VJ109GA/NRT/
 ├── 2026.02.01/
@@ -117,8 +124,19 @@ Files are automatically organized by product and date in separate directories:
 │   └── ...
 └── 2026.02.03/
 ```
+**FINAL**
+
+```
+/pl/active/daac-production/VJ109GA/FIN/
+├── 2026.02.01/
+│   ├── VJ109GA_NRT.A2026032.h08v04.002.2026033012345.h5
+│   ├── VJ109GA_NRT.A2026032.h09v04.002.2026033012346.h5
+│   └── ...
+├── 2026.02.02/
+```
 
 **VNP09GA (NPP) files:**
+
 ```
 /pl/active/daac-production/VNP09GA/NRT/
 ├── 2026.02.01/
@@ -135,19 +153,20 @@ Files are automatically organized by product and date in separate directories:
 The files needed to run DRFS have been copied to this repository.  There are several requirements to be able to run DRFS in standalone mode:
 
 - Be in the `scag` conda environment:
-  - ```conda activate scag```
+  - `conda activate scag`
 - Run `. config/env.sh`
 - Generate the `drfs_idl_startup.bat` file by running the generation script:
   - From "root" repo directory, run:
-    - ``` ./scripts/gen_drfs_idl_startup.sh ./scripts/drfs_idl_startup.bat```
+    - `./scripts/gen_drfs_idl_startup.sh ./scripts/drfs_idl_startup.bat`
   - NOTE: This only needs to be run the first time you set up the environment
 - Run the `./scripts/run-drfs.sh` script
   - A script has been written with hardcoded values for that work for development
   - NOTE: this procedure requires that the MODIS .hdf file and the corresponding .bip and .bip_meta files already exist
   - From the "root" repo directory, run:
-    - ```./runonlydrfs.sh```
+    - `./runonlydrfs.sh`
 - This creates .dat, .bin, .mask, .tif output files.  The .tif files match exactly the .tif files created via `scagdrfs_infra`.  For the default values and operator_name `scotts`, the output files are:
-```
+
+```bash
 ls -lrt /scratch/alpine/scotts/scagdrfs/working/2026.03.09/h09v05
 total 373249
 -rwxrwxr-x 1 scotts scottsgrp 80572911 Mar 10 02:03 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
@@ -176,6 +195,7 @@ total 373249
 ```
 
 ### Running SCAGDRFS processing
+
 ```bash
 ./scripts/run-scagdrfs.sh --product VNP09GA --start-date 2026-03-11
 
