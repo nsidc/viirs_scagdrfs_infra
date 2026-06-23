@@ -58,7 +58,7 @@ def get_scag_vars():
 
 
 def get_product_nc_attrs(product: str) -> dict:
-    """Return per-product global attribute values from product_nc_attrs.yml.
+    """Return per-product global attribute values from product_nc_attributes.yml.
 
     Args:
         product: One of 'MOD09GA', 'VNP09GA', 'VJ109GA'.
@@ -76,7 +76,7 @@ def get_product_nc_attrs(product: str) -> dict:
 
 def get_static_nc_attrs() -> dict:
     """Return static global attributes shared across all products."""
-    return _load_yaml_config(TEMPLATE_DIR / "global_attrs.yml")
+    return _load_yaml_config(TEMPLATE_DIR / "global_attributes.yml")
 
 
 def get_file_info():

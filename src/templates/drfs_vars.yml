@@ -1,0 +1,164 @@
+# ushort RFgap(time,y,x)
+radiative_forcing:
+  datatype: u2
+  long_name: MODDRFS radiative forcing on snow
+  standard_name: surface_downward_heat_flux_in_snow
+  units: W m-2
+  _FillValue: 65535
+  valid_range:
+    datatype: u2
+    values:
+      - 0
+      - 500
+  comment: >-
+    Additional energy absorbed by the snowpack from light-absorbing impurities
+    assuming a clear sky
+  grid_mapping: crs
+  ancillary_variables: DRFS_data_mask
+
+# ushort unmasked_RFgap(time,y,x)
+unmasked_radiative_forcing:
+  datatype: u2
+  long_name: Unmasked MODDRFS radiative forcing on snow
+  standard_name: surface_downward_heat_flux_in_snow
+  units: W m-2
+  _FillValue: 65535
+  valid_range:
+    datatype: u2
+    values:
+      - 0
+      - 500
+  comment: >-
+    Unmasked, additional energy absorbed by the snowpack from light-absorbing
+    impurities assuming a clear sky
+  grid_mapping: crs
+
+# ushort drfs_grnsz(time,y,x)
+drfs_grnsz:
+  datatype: u2
+  long_name: MODDRFS grain size
+  standard_name: snow_grain_size
+  units: m
+  _FillValue: 65535
+  valid_range:
+    datatype: u2
+    values:
+      - 10
+      - 1100
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.000001
+  comment: >-
+    Optical snow grain size based on MODDRFS normalized difference grain size
+    index
+  grid_mapping: crs
+  ancillary_variables: DRFS_data_mask
+
+# ushort unmasked_drfs_grnsz(time,y,x)
+unmasked_drfs_grnsz:
+  datatype: u2
+  long_name: Unmasked MODDRFS grain size
+  standard_name: snow_grain_size
+  units: m
+  _FillValue: 65535
+  valid_range:
+    datatype: u2
+    values:
+      - 10
+      - 1100
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.000001
+  comment: >-
+    Unmasked, optical snow grain size based on MODDRFS normalized difference
+    grain size index
+  grid_mapping: crs
+
+# ubyte deltavis(time,y,x)
+deltavis:
+  datatype: u1
+  long_name: MODDRFS decrease in snow albedo from light absorbing particles
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 99
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  comment: >-
+    Also known as snow darkening. Difference between observed visible broadband
+    (0.350-0.876 micrometer) albedo and clean snow albedo estimated from MODDRFS
+    grain size
+  grid_mapping: crs
+  ancillary_variables: DRFS_data_mask
+
+# ubyte unmasked_deltavis(time,y,x)
+unmasked_deltavis:
+  datatype: u1
+  long_name: >-
+    Unmasked MODDRFS decrease in snow albedo from light absorbing particles
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 99
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  comment: >-
+    Also known as snow darkening. Unmasked difference between observed visible
+    broadband (0.350-0.876 micrometer) albedo and clean snow albedo estimated
+    from MODDRFS grain size
+  grid_mapping: crs
+
+# Note: Examination of currently published NRT data suggests that the
+# mask-values are the same for all of these variables.
+# In order to preserve the flag values -- because only a single "_FillValue" is
+# permitted in data fields per CF conventions -- suggest using a separate "flag"
+# field to provide these values
+
+# ubyte DRFS_data_mask(time, y, x)
+DRFS_data_mask:
+  datatype: u1
+  long_name: flag values for masked DRFS data
+  standard_name: status_flag
+  units: '1'
+  _FillValue: 0
+  valid_range:
+    datatype: u1
+    values:
+      - 235
+      - 255
+  grid_mapping: crs
+  flag_values:
+    datatype: u1
+    values:
+      - 235
+      - 250
+      - 255
+  flag_meanings: value_not_calculated cloud no_input_data
