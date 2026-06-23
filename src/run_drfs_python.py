@@ -21,6 +21,7 @@ from src.drfs_geometry import preprocess_geometry, load_solar_geometry
 from src.drfs_core import compute_drfs, write_drfs_outputs
 from src.drfs_hdf_solar import extract_hdf_solar_fields
 from src.drfs_BIPifier import bipify_file_drfs
+from src.moddrfs_cleanse import moddrfs_cleanse
 
 
 def create_bip_file_drfs(src_file, bip_file_drfs):
@@ -128,6 +129,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
         working_dir=working_dir,
         filename_prefix=filename_stem,
     )
+
+    # --- Cleanse the .dat files ---
+    full_filename_prefix = Path(working_dir, filename_stem)
+    moddrfs_cleanse(full_filename_prefix, 2400, 2400)
 
     return f"run_drfs_python completed for {filename_stem}"
 
