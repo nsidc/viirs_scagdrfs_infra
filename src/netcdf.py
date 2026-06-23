@@ -15,6 +15,7 @@ from src.modis_tile_ncattrs import (
     get_xy_minmax,
     look_up_latlon_minmax,
 )
+from src.constants.products import PRODUCT_OUTPUT_PREFIX
 from src.constants.paths import TOPDIR
 
 PACKAGE_DIR = Path(__file__).parent
@@ -69,7 +70,7 @@ def get_product_nc_attrs(product: str) -> dict:
         raise ValueError(
             f"Unknown product '{product}'. Must be one of {VALID_PRODUCTS}"
         )
-    all_attrs = _load_yaml_config(TEMPLATE_DIR / "product_nc_attrs.yml")
+    all_attrs = _load_yaml_config(TEMPLATE_DIR / "product_nc_attributes.yml")
     return all_attrs[product]
 
 
@@ -80,7 +81,7 @@ def get_static_nc_attrs() -> dict:
 
 def get_file_info():
     parser = configparser.ConfigParser(os.environ)
-    parser.read(os.path.join(f"{TOPDIR}", "src", "constants", "file_info.ini"))
+    parser.read(os.path.join(f"{TOPDIR}", "constants", "file_info.ini"))
     return parser
 
 
@@ -308,8 +309,11 @@ def create_netcdf(
         )
 
     file_info = get_file_info()
+    product_attrs = get_product_nc_attrs(product)
     nc_filename = file_info.get("FILE_INFO", "NC_BASENAME", raw=True) % (
+        PRODUCT_OUTPUT_PREFIX[product.upper()],
         tile_id,
+        product_attrs["source_id"],
         day.strftime("%Y%m%d"),
         file_info.get("FILE_INFO", "SCAGDRFS_VERSION"),
     )
@@ -320,7 +324,6 @@ def create_netcdf(
 
     # Load attribute sources
     static_attrs = get_static_nc_attrs()
-    product_attrs = get_product_nc_attrs(product)
     crs_info = get_crs_info()
     scag_vars = get_scag_vars()
     drfs_vars = get_drfs_vars()
@@ -328,10 +331,18 @@ def create_netcdf(
 
     nc_dataset = nc.Dataset(str(nc_filepath), "w", format="NETCDF4")
 
-    # Apply static global attributes first, then overlay product-specific ones
+    # Apply static global attributes first, then overlay product-specific ones.
+    # Skip 'source_id', which is filename-construction metadata, not a NetCDF
+    # global attribute in its own right.
     for key, value in static_attrs.items():
         setattr(nc_dataset, key, value)
     for key, value in product_attrs.items():
+        if key == "source_id":
+            continue
+        if key == "doi":
+            nc_dataset.id = value
+            nc_dataset.metadata_link = f"https://doi.org/{value}"
+            continue
         setattr(nc_dataset, key, value)
 
     # Dimensions
