@@ -76,7 +76,7 @@ def get_product_nc_attrs(product: str) -> dict:
 
 def get_static_nc_attrs() -> dict:
     """Return static global attributes shared across all products."""
-    return _load_yaml_config(TEMPLATE_DIR / "global_attributes.yml")
+    return _load_yaml_config(TEMPLATE_DIR / "global_attrs.yml")
 
 
 def get_file_info():
