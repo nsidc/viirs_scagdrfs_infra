@@ -7,10 +7,11 @@ import click
 from src.error import ScagDrfsFileError
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs
-from src.constants.paths import WORK_DIR, DRFS_COMPONENT_DIR, TOPDIR
+# from src.constants.paths import WORK_DIR, DRFS_COMPONENT_DIR, TOPDIR
+from src.constants.paths import WORK_DIR, DRFS_COMPONENT_DIR
 from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_drfs_idl import run_drfs_idl_via_bash
-from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+# from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
 from src.util import (
     get_bitdepth_for_field_name,
     get_date_from_filename,
@@ -69,20 +70,19 @@ from src.util import (
 )
 def run_drfs(src_file, component_dir, working_dir, staging_dir, product):
     """Process the DRFS files: DELTAVIS, drfsGS, RF"""
+    raise RuntimeError('ERROR: running run_drfs() which does IDL')
+
     day = get_date_from_filename(src_file)
     tile = get_tile_id_from_filename(src_file)
 
     print(f"about to run_drfs() for {day=} and {tile=}", flush=True)
-    print(f"Executing run_drfs_idl_via_bash() with:")
+    print("Executing run_drfs_idl_via_bash() with:")
     print(f"  {src_file=}")
     print(f"  {component_dir=}")
     print(f"  {working_dir=}")
-    print(f"  ...", flush=True)
+    print("  ...", flush=True)
     IDL_output = run_drfs_idl_via_bash(src_file, component_dir, working_dir)
     print(f"IDL_output for file {src_file}:\n{IDL_output}", flush=True)
-
-    print('Stopping DRFS run before masking')
-    return
 
     mask_drfs(
         tile_id=tile,
@@ -133,7 +133,7 @@ def run_drfs(src_file, component_dir, working_dir, staging_dir, product):
             output_file=output_tif,
         )
 
-    print(f"Finished in run_drfs()")
+    print("Finished in run_drfs()")
 
 
 if __name__ == "__main__":
