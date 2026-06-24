@@ -26,6 +26,7 @@ MOD09GA:
   product_version: "v1.1"
   source_id: "MOD09GANRT061"
   nc_filename_version: "V01.1"
+  software_version_id: "0.0.1"
 
 VNP09GA:
   title: "Near Real-Time VIIRS/Suomi-NPP L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
@@ -51,6 +52,7 @@ VNP09GA:
   product_version: "v1.0"
   source_id: "VNP09GANRT02"
   nc_filename_version: "V01.0"
+  software_version_id: "0.0.1"
 
 VJ109GA:
   title: "Near Real-Time VIIRS/NOAA-20 L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
@@ -76,3 +78,4 @@ VJ109GA:
   product_version: "v1.0"
   source_id: "VJ109GANRT02"
   nc_filename_version: "V01.0"
+  software_version_id: "0.0.1"

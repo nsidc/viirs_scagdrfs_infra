@@ -346,7 +346,12 @@ def create_netcdf(
     for key, value in static_attrs.items():
         setattr(nc_dataset, key, value)
     for key, value in product_attrs.items():
-        if key in ("source_id", "nc_filename_version"):
+        if key in (
+            "source_id",
+            "tif_source_id",
+            "nc_filename_version",
+            "software_version_id",
+        ):
             continue
         if key == "doi":
             nc_dataset.id = value
@@ -371,10 +376,8 @@ def create_netcdf(
     # Runtime attributes
     add_geospatial_info(tile_id, nc_dataset)
     add_time_info(day, nc_dataset)
-    nc_dataset.software_repository = "https://github.com/nsidc/scagdrfs_infra"
-    nc_dataset.software_version_id = (
-        open(os.path.join(os.environ["TOPDIR"], "VERSION"), "r").read().rstrip()
-    )
+    nc_dataset.software_repository = "https://github.com/nsidc/viirs_scagdrfs_infra"
+    nc_dataset.software_version_id = product_attrs["software_version_id"]
 
     # Science variables
     create_nc_variable(
