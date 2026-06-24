@@ -143,9 +143,9 @@ def create_nc_variable(nc_dataset, var_dict, dimensions, masked_tifs, unmasked_t
                         attr_value = np.array(value, dtype=datatype)
             nc_var.setncattr(attr, attr_value)
         tif_file = None
-        if var_name.startswith("unmasked_") and len(unmasked_tifs) > 0:
+        if var_name.startswith("unmasked_") and var_name in unmasked_tifs:
             tif_file = str(unmasked_tifs[var_name])
-        elif var_name in masked_tifs.keys() and len(masked_tifs) > 0:
+        elif var_name in masked_tifs.keys() and var_name in masked_tifs:
             tif_file = str(masked_tifs[var_name])
         if tif_file is not None:
             ds = rs.open(tif_file)
