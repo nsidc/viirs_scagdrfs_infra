@@ -31,7 +31,6 @@ def invoke_idl_drfs(
 
     print(f"cmd_idl:\n{cmd_idl}")
 
-    # breakpoint()
     try:
         cmd_idl_result = subprocess.run(
             cmd_idl,
@@ -95,6 +94,10 @@ def run_drfs_idl_via_bash(hdf_file, component_dir, working_dir):
         from scag.scripts.BIPifier import bipify_file
         bip_path = Path(str(hdf_file).replace(hdf_file.suffix, ".bip"))
         bipify_file(hdf_file, bip_path)
+
+    # Verify .bip file
+    # print(f'Should have written: {bip_path=}')
+    # breakpoint()
     meta_content = None
     with meta_path.open() as meta_file:
         meta_content = meta_file.read()

@@ -73,7 +73,7 @@ def preprocess_geometry(
 
 
 def load_solar_geometry(
-    zenithfile: str, azimuthfile: str, ns: int = 2400, nl: int = 2400
+    zenithfile: str, azimuthfile: str, ns: int = 2400, nl: int = 2400, verbose: bool=True
 ) -> tuple:
     """Load raw solar zenith and azimuth binary files.
 
@@ -88,4 +88,7 @@ def load_solar_geometry(
     """
     solarzenith = np.fromfile(zenithfile, dtype=np.int16).reshape(ns, nl)
     solarazimuth = np.fromfile(azimuthfile, dtype=np.int16).reshape(ns, nl)
+    if verbose:
+        print(f'    Loaded solar zenith array from: {zenithfile}')
+        print(f'    Loaded solar azimuth array from: {azimuthfile}')
     return solarzenith, solarazimuth
