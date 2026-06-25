@@ -10,7 +10,7 @@ from dask_jobqueue import SLURMCluster
 
 from src.mask_scag import mask_scag
 
-# from scagdrfs_infra.netcdf import create_netcdf
+from src.netcdf import create_netcdf
 from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
 from src.constants.paths import WORK_DIR, TOPDIR
 from src.util import get_date_from_filename, get_info_from_bip_file
@@ -19,7 +19,7 @@ from src.util import get_date_from_filename, get_info_from_bip_file
 # TODO: This function is not used:  setup_scag_cluster()
 def setup_scag_cluster():
     # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
-    print(f'Setting up scag_cluster at {dt.datetime.now()}')
+    print(f"Setting up scag_cluster at {dt.datetime.now()}")
     cluster = SLURMCluster(
         shebang="#!/usr/bin/bash",
         account="ucb544_peak2",
@@ -87,19 +87,19 @@ def run_scag(bip_file, src_file, working_dir, product):
     bip_info = get_info_from_bip_file(bip_file.with_suffix(bip_file.suffix + ".meta"))
 
     def run_command(cmd):
-        result_str = ''
+        result_str = ""
         start_time = dt.datetime.now()
-        result_str += f'starting run_command() at {dt.datetime.now()}: {cmd}'
+        result_str += f"starting run_command() at {dt.datetime.now()}: {cmd}"
         result = subprocess.run(
             cmd, shell=True, capture_output=True, text=True, executable="/usr/bin/bash"
         )
         end_time = dt.datetime.now()
         result.check_returncode()
-        result_str += f'stdout\n{result.stdout}'
-        result_str += f'stderr\n{result.stderr}'
-        result_str += f'  done run_command() at {dt.datetime.now()}: {cmd}'
+        result_str += f"stdout\n{result.stdout}"
+        result_str += f"stderr\n{result.stderr}"
+        result_str += f"  done run_command() at {dt.datetime.now()}: {cmd}"
         run_time = end_time - start_time
-        result_str += f'  Processing time {run_time} for {cmd}'
+        result_str += f"  Processing time {run_time} for {cmd}"
 
         return result_str
 
@@ -107,14 +107,14 @@ def run_scag(bip_file, src_file, working_dir, product):
     delayed_tasks = []
     for control_file in control_files:
         cmd = f"cd {working_dir}; {TOPDIR}/scag/bin/scag {bip_file.name} {bip_info['num_bands']} {bip_info['num_samples']} {bip_info['num_lines']} {control_file.name}"
-        print(f'  submitting delayed task for {control_file=} at {dt.datetime.now()}')
+        print(f"  submitting delayed task for {control_file=} at {dt.datetime.now()}")
         delayed_task = scag_client.submit(run_command, cmd)
-        print(f'  appending delayed task for {control_file=} at {dt.datetime.now()}')
+        print(f"  appending delayed task for {control_file=} at {dt.datetime.now()}")
         delayed_tasks.append(delayed_task)
 
-    print(f'About to gather scag_client.... {dt.datetime.now()}', flush=True)
+    print(f"About to gather scag_client.... {dt.datetime.now()}", flush=True)
     results = scag_client.gather(delayed_tasks)
-    print(f'  ...Finished gathering scag_client.... {dt.datetime.now()}')
+    print(f"  ...Finished gathering scag_client.... {dt.datetime.now()}")
 
     for result in results:
         print("SCAG command result: ", result, "\n")
@@ -130,29 +130,30 @@ def run_scag(bip_file, src_file, working_dir, product):
     )
     scag_sort_endtime = dt.datetime.now()
     result_sort.check_returncode()
-    scag_sort_str = ''
-    scag_sort_str += f'\n\nscag sort cmd:\n{cmd_sort}\n'
-    scag_sort_str += f'scag sort took:\n{scag_sort_endtime - scag_sort_starttime}\n'
-    scag_sort_str += f'scag sort stdout:\n{result_sort.stdout}\n'
-    scag_sort_str += f'scag sort stderr:\n{result_sort.stderr}\n'
+    scag_sort_str = ""
+    scag_sort_str += f"\n\nscag sort cmd:\n{cmd_sort}\n"
+    scag_sort_str += f"scag sort took:\n{scag_sort_endtime - scag_sort_starttime}\n"
+    scag_sort_str += f"scag sort stdout:\n{result_sort.stdout}\n"
+    scag_sort_str += f"scag sort stderr:\n{result_sort.stderr}\n"
     print("SCAG sort command result: ", scag_sort_str, "\n")
 
     # mask scag and create geotifs
-    print(f'Starting mask_scag at {dt.datetime.now()}')
+    print(f"Starting mask_scag at {dt.datetime.now()}")
     mask_scag(
         date=get_date_from_filename(src_file),
         working_dir=working_dir,
         tile=bip_info["tile_id"],
         product=product,
     )
-    print(f'  ...finished mask_scag at {dt.datetime.now()}')
+    print(f"  ...finished mask_scag at {dt.datetime.now()}")
 
-    # # create netcdf files
-    # create_netcdf(
-    #     day=get_date_from_filename(src_file),
-    #     tif_dir=working_dir,
-    #     tile_id=bip_info["tile_id"],
-    # )
+    # create netcdf files
+    create_netcdf(
+        day=get_date_from_filename(src_file),
+        tif_dir=working_dir,
+        tile_id=bip_info["tile_id"],
+        product=product,
+    )
 
 
 if __name__ == "__main__":

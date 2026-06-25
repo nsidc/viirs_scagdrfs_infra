@@ -1,0 +1,34 @@
+# double x(x)
+x:
+  datatype: d
+  standard_name: projection_x_coordinate
+  coverage_content_type: coordinate
+  long_name: x
+  units: meters
+  axis: X
+
+# double y(y)
+y:
+  datatype: d
+  standard_name: projection_y_coordinate
+  coverage_content_type: coordinate
+  long_name: y
+  units: meters
+  axis: Y
+
+crs:
+  datatype: S1
+  grid_mapping_name: sinusoidal
+  false_easting: 0.0
+  false_northing: 0.0
+  long_name: MODIS Sinusoidal projection definition
+  semi_major_axis: 6371007.181
+  semi_minor_axis: 6371007.181
+  crs_wkt: >-
+    PROJCS["Sinusoidal", GEOGCS["GCS_unnamed ellipse", DATUM["D_unknown",
+    SPHEROID["Unknown",6371007.181,0]], PRIMEM["Greenwich",0],
+    UNIT["Degree",0.017453292519943295]], PROJECTION["Sinusoidal"],
+    PARAMETER["central_meridian",0], PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],UNIT["Meter",1]]
+  # Follow this format: 7783653.63836566265672445297 463.31271656938469050147 0.0 3335851.55929956957697868347 0.0 -463.31271656938469050147
+  GeoTransform: autofill

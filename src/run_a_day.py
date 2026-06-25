@@ -17,7 +17,7 @@ from src.copy_scag_ancillary import copy_scag_ancillary_files
 from src.move_tiles import copy_tile_file
 from src.run_drfs import run_drfs
 
-# from scagdrfs_infra.netcdf import create_netcdf
+from src.netcdf import create_netcdf
 from src.run_scag import run_scag
 from src.constants.products import (
     PRODUCT_FILE_EXTENSION,
@@ -144,12 +144,13 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         )
         print(f"This will not run until there is 1 file in {working_dir}\n")
         print("SKIPPING create_netcdf()")
-        # print("An empty netcdf will be created.\n")
-        # create_netcdf(
-        #     day=day,
-        #     tif_dir=working_dir,
-        #     tile_id=tile,
-        # )
+        print("An empty netcdf will be created.\n")
+        create_netcdf(
+            day=day,
+            tif_dir=working_dir,
+            tile_id=tile,
+            product=product,
+        )
 
     else:
         src_file = src_files[0]

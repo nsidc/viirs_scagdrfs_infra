@@ -1,0 +1,9 @@
+# double time(time)
+time:
+  datatype: d
+  standard_name: time
+  calendar: standard
+  coverage_content_type: coordinate
+  long_name: ANSI date
+  units: days since 2000-01-01
+  axis: T

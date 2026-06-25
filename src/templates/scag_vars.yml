@@ -1,0 +1,291 @@
+# ubyte snow_fraction(time,y,x)
+snow_fraction:
+  datatype: u1
+  long_name: MODSCAG viewable snow fraction
+  standard_name: snow_area_fraction_viewable_from_above
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  ancillary_variables: SCAG_data_mask
+
+# ubyte unmasked_snow_fraction(time,y,x)
+unmasked_snow_fraction:
+  datatype: u1
+  long_name: Unmasked MODSCAG viewable snow fraction
+  standard_name: snow_area_fraction_viewable_from_above
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+
+# ushort grain_size(time,y,x)
+grain_size:
+  datatype: u2
+  long_name: MODSCAG grain size
+  standard_name: snow_grain_size
+  units: m
+  _FillValue: 65535
+  valid_range:
+    datatype: u2
+    values:
+      - 10
+      - 1100
+  comment: Optical snow grain size based on MODSCAG spectral mixture analysis
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.000001
+  ancillary_variables: SCAG_data_mask
+
+# ushort unmasked_grain_size(time,y,x)
+unmasked_grain_size:
+  datatype: u2
+  long_name: Unmasked MODSCAG grain size
+  standard_name: snow_grain_size
+  units: m
+  _FillValue: 65535
+  valid_range:
+    datatype: u2
+    values:
+      - 10
+      - 1100
+  comment: >-
+    Unmasked optical snow grain size based on MODSCAG spectral mixture analysis
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.000001
+
+# ubyte veg_fraction(time,y,x)
+veg_fraction:
+  datatype: u1
+  long_name: MODSCAG vegetation fraction
+  standard_name: vegetation_area_fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  ancillary_variables: SCAG_data_mask
+
+# ubyte unmasked_veg_fraction(time,y,x)
+unmasked_veg_fraction:
+  datatype: u1
+  long_name: Unmasked MODSCAG vegetation fraction
+  standard_name: vegetation_area_fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+
+# ubyte rock_fraction(time,y,x)
+rock_fraction:
+  datatype: u1
+  long_name: MODSCAG viewable rock fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  ancillary_variables: SCAG_data_mask
+
+# ubyte unmasked_rock_fraction(time,y,x)
+unmasked_rock_fraction:
+  datatype: u1
+  long_name: Unmasked MODSCAG viewable rock fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+
+# ubyte ice_fraction (time,y,x)
+ice_fraction:
+  datatype: u1
+  long_name: MODSCAG ice fraction
+  standard_name: land_ice_area_fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  ancillary_variables: SCAG_data_mask
+
+# ubyte unmasked_ice_fraction (time,y,x)
+unmasked_ice_fraction:
+  datatype: u1
+  long_name: Unmasked MODSCAG ice fraction
+  standard_name: land_ice_area_fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+
+# ubyte shade_fraction (time,y,x)
+shade_fraction:
+  datatype: u1
+  long_name: MODSCAG viewable shade fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+  ancillary_variables: SCAG_data_mask
+
+# ubyte unmasked_shade_fraction (time,y,x)
+unmasked_shade_fraction:
+  datatype: u1
+  long_name: Unmasked MODSCAG viewable shade fraction
+  units: '1'
+  _FillValue: 255
+  valid_range:
+    datatype: u1
+    values:
+      - 0
+      - 100
+  grid_mapping: crs
+  add_offset:
+    datatype: f4
+    values:
+      - 0.0
+  scale_factor:
+    datatype: f4
+    values:
+      - 0.01
+
+# ubyte SCAG_data_mask(time, y, x)
+SCAG_data_mask:
+  datatype: u1
+  dimensions:  (time, y, x,)
+  long_name: flag values for masked SCAG data
+  standard_name: status_flag
+  units: '1'
+  _FillValue: 0
+  valid_range:
+    datatype: u1
+    values:
+      - 235
+      - 255
+  grid_mapping: crs
+  flag_values:
+    datatype: u1
+    values:
+      - 235
+      - 245
+      - 250
+      - 255
+  flag_meanings: value_not_calculated snow_area_fraction_viewable_from_above_less_than_0.15 cloud no_input_data

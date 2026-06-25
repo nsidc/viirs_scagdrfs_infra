@@ -1,0 +1,81 @@
+# Per-product metadata for SCAGDRFS netCDF global attributes.
+# These values fill the placeholders in scagdrfs_template.cdl.
+# Keys match placeholder names exactly.
+
+MOD09GA:
+  title: "Near Real-Time MODIS/Terra L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
+  source: "http://doi.org/10.5067/MODIS/MOD09GA.NRT.061"
+  platform: "Terra"
+  instrument: "MODIS > Moderate-Resolution Imaging Spectroradiometer"
+  summary: >
+    The MODIS Snow Covered Area and Grain-size (MODSCAG) and MODIS Dust Radiative Forcing in Snow
+    (MODDRFS) data are derived from near real-time MODIS/Terra surface reflectance data (MOD09GA_NRT)
+    and include the following parameters: snow fraction, snow grain size (from the SCAG algorithm),
+    vegetation fraction, rock fraction, ice fraction, shade fraction, deltavis, radiative forcing,
+    and optical snow grain size (from the DRFS algorithm).
+  comment: >
+    This data is based on the MODIS Snow Covered Area and Grain-size (MODSCAG) and MODIS Dust
+    Radiative Forcing in Snow (MODDRFS) data sets previously produced by the NASA Jet Propulsion
+    Laboratory (JPL).
+  citation: >
+    Rittger, K., Brodzik, M. J., Hardman, M. A., Wilcox, H., Scott, D. J., Marowitz, R., & Painter, T.
+    (2024). Near Real-Time MODIS/Terra L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust
+    Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data
+    Center Distributed Active Archive Center. https://doi.org/10.5067/5OTQIAWI04ZT. [Data Accessed].
+  doi: "10.5067/5OTQIAWI04ZT"
+  product_version: "v1.1"
+  source_id: "MOD09GANRT061"
+  nc_filename_version: "V01.1"
+  software_version_id: "0.0.1"
+
+VNP09GA:
+  title: "Near Real-Time VIIRS/Suomi-NPP L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
+  source: "http://doi.org/10.5067/VIIRS/VNP09GA.NRT.002"
+  platform: "Suomi-NPP"
+  instrument: "VIIRS > Visible Infrared Imaging Radiometer Suite"
+  summary: >
+    The VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust Radiative Forcing in Snow
+    (VDRFS) data are derived from near real-time VIIRS/Suomi-NPP surface reflectance data (VNP09GA_NRT)
+    and include the following parameters: snow fraction, snow grain size (from the SCAG algorithm),
+    vegetation fraction, rock fraction, ice fraction, shade fraction, deltavis, radiative forcing,
+    and optical snow grain size (from the DRFS algorithm).
+  comment: >
+    This data is based on the VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust
+    Radiative Forcing in Snow (VDRFS) data sets, adapted from the MODIS equivalents originally
+    produced by the NASA Jet Propulsion Laboratory (JPL).
+  citation: >
+    Rittger, K., Brodzik, M. J., Hardman, M. A., Wilcox, H., Scott, D. J., Marowitz, R., & Painter, T.
+    (2024). Near Real-Time VIIRS/Suomi-NPP L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and
+    Dust Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data
+    Center Distributed Active Archive Center. https://doi.org/{doi}. [Data Accessed].
+  doi: "PLACEHOLDER_VNP_DOI"
+  product_version: "v1.0"
+  source_id: "VNP09GANRT02"
+  nc_filename_version: "V01.0"
+  software_version_id: "0.0.1"
+
+VJ109GA:
+  title: "Near Real-Time VIIRS/NOAA-20 L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
+  source: "http://doi.org/10.5067/VIIRS/VJ109GA.NRT.002"
+  platform: "NOAA-20"
+  instrument: "VIIRS > Visible Infrared Imaging Radiometer Suite"
+  summary: >
+    The VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust Radiative Forcing in Snow
+    (VDRFS) data are derived from near real-time VIIRS/NOAA-20 surface reflectance data (VJ109GA_NRT)
+    and include the following parameters: snow fraction, snow grain size (from the SCAG algorithm),
+    vegetation fraction, rock fraction, ice fraction, shade fraction, deltavis, radiative forcing,
+    and optical snow grain size (from the DRFS algorithm).
+  comment: >
+    This data is based on the VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust
+    Radiative Forcing in Snow (VDRFS) data sets, adapted from the MODIS equivalents originally
+    produced by the NASA Jet Propulsion Laboratory (JPL).
+  citation: >
+    Rittger, K., R. Marowitz, J.S. Stewart, D.J.Scott, D.J., OTHER (2026). Near Real-Time VIIRS L3
+    Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1
+    [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active
+    Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
+  doi: "10.5067/1M2W6PZRN4VD"
+  product_version: "v1.0"
+  source_id: "VJ109GANRT02"
+  nc_filename_version: "V01.0"
+  software_version_id: "0.0.1"
