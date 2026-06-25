@@ -7,13 +7,13 @@ from datetime import timedelta
 from pathlib import Path
 
 import click
+
 # from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
 from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 
-# from scagdrfs_infra.error import ScagDrfsFileError
 from src.move_tiles import copy_tile_file
 from src.run_drfs import run_drfs
 
@@ -23,9 +23,7 @@ from src.constants.products import (
     PRODUCT_FILE_EXTENSION,
     SUPPORTED_PRODUCTS,
 )
-# from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
-from src.constants.paths import WORK_DIR, get_nrt_dir, DRFS_COMPONENT_DIR
-# from src.run_drfs_python import run_drfs_python
+from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
 from src.run_drfs_python import create_drfs_geotiffs
 
 
@@ -127,8 +125,6 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
     tile_params["product"] = product
 
-    # NOTE: maybe this is NOT the best method to find files. I feel like we can be more exact
-    # grab files for day
     if not skip:
         copy_tile_file(
             move_date=day,
@@ -164,24 +160,15 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
         copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
-        # Set up the dask clusters if they will be used
-        # if not no_queue:
-        #     day_cluster = setup_day_cluster()
-        #     day_client = Client(day_cluster)
-        #     drfs_futures = []
-        #     scag_futures = []
-
         for tile_params in param_lists:
             tifCounter0 = len(glob.glob(os.path.join(working_dir, "*.tif")))
 
             # Run DRFS and SCAG on the command line not in the supercomputer
             if no_queue:
-                # TODO: re-DO assign "component_dir"
                 # skip drfs if there are 6 tifs present (masked and unmasked drfs)
                 DRFS_products = ("MOD09GA", "VJ109GA")
                 if product.upper() in DRFS_products:
                     # TODO: We should check for specific tif file names, not a count
-                    # TODO: If we stop creating .tif files, we need to change this logic
                     if tifCounter0 != 6:
                         print("Running DRFS for ", tile_params["src_file"], "...\n")
                         ctx.invoke(
@@ -192,9 +179,10 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                             component_dir=tile_params["component_dir"],
                         )
                 else:
-                    print(f'Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}')
+                    print(
+                        f"Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}"
+                    )
 
-                # Always run scag
                 SCAG_products = ("MOD09GA", "VJ109GA")
                 if product.upper() in SCAG_products:
                     ctx.invoke(
@@ -205,16 +193,17 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                         product=product,
                     )
                 else:
-                    print(f'Skipping SCAG calculation because {product.upper()=} not in {SCAG_products=}')
+                    print(
+                        f"Skipping SCAG calculation because {product.upper()=} not in {SCAG_products=}"
+                    )
 
             # Run DRFS and SCAG in the supercomputer queue
             else:  # this is the "not no_queue" condition; i.e. run on supercomputer with dask
                 DRFS_products = ("MOD09GA", "VJ109GA")
                 if product.upper() in DRFS_products:
                     # TODO: We should check for specific tif file names, not a count
-                    # TODO: If we stop creating .tif files, we need to change this logic
                     # if tifCounter0 != 6:
-                    print('Forcing the running of DRFS (ignoring .tif count)')
+                    print("Forcing the running of DRFS (ignoring .tif count)")
                     if True or tifCounter0 != 6:
                         print(
                             "Submitting DRFS run to queue for ",
@@ -229,11 +218,12 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                             tile_params["staging_dir"],
                             tile_params["component_dir"],
                         )
-                        print(f'{drfs_result=}')
+                        print(f"{drfs_result=}")
                 else:
-                    print(f'Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}')
+                    print(
+                        f"Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}"
+                    )
 
-                # Always run SCAG
                 SCAG_products = ("MOD09GA", "VJ109GA")
                 if product.upper() in SCAG_products:
                     print(
@@ -241,12 +231,14 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                         tile_params["src_file"],
                         "...\n",
                     )
-                    cmd_scag = ". {}/scripts/run-scag.sh -b {} -h {} -w {} -P {}".format(
-                        os.environ.get("TOPDIR"),
-                        tile_params["bip_meta_file"].with_suffix(""),
-                        tile_params["src_file"],
-                        tile_params["working_dir"],
-                        tile_params["product"],
+                    cmd_scag = (
+                        ". {}/scripts/run-scag.sh -b {} -h {} -w {} -P {}".format(
+                            TOPDIR,
+                            tile_params["bip_meta_file"].with_suffix(""),
+                            tile_params["src_file"],
+                            tile_params["working_dir"],
+                            tile_params["product"],
+                        )
                     )
                     print("SCAG command to run: ", cmd_scag, "\n")
 
@@ -262,7 +254,16 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                     except RuntimeError:
                         print(f"EXCEPTION running cmd_scag: {cmd_scag}")
                 else:
-                    print(f'Skipping SCAG calculation because {product.upper()=} not in {SCAG_products=}')
+                    print(
+                        f"Skipping SCAG calculation because {product.upper()=} not in {SCAG_products=}"
+                    )
+
+            create_netcdf(
+                day=day,
+                tif_dir=working_dir,
+                tile_id=tile,
+                product=product,
+            )
 
             # Run a check to see if all the expected tifs exist
             tifCounter = len(glob.glob(os.path.join(working_dir, "*.tif")))
