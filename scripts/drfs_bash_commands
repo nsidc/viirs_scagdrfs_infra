@@ -136,6 +136,8 @@ mod_drfs_v1_2, dir=working_dir, comps_dir=component_dir, file=full_filename, out
 ;;;;; And the final cleanse operations (fast)
 ;;;;;;;;;;;;;;;;;;;;;;;
 print,'In IDL, calling moddrfs_cleanse()...'
+print,'  full_prefix: ', full_prefix
+print,'  mod09ga: ', full_filename
 moddrfs_cleanse, prefix=full_prefix, ns=2400, nl=2400, mod09ga=full_filename
 
 

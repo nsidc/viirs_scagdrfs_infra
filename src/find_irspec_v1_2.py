@@ -43,7 +43,7 @@ def _find_bounding_index(array, value):
 
 
 def find_irspec(
-    sza: float, elev: float, dir_arr: np.ndarray, dif_arr: np.ndarray
+    sza: float, elev: float, dir_arr: np.ndarray, dif_arr: np.ndarray, verbose:bool=False
 ) -> np.ndarray:
     """Return weighted average direct and diffuse irradiance spectra
     for a given solar zenith angle and elevation.
@@ -57,14 +57,19 @@ def find_irspec(
     Returns:
         Array of shape (2, 216) where [0, :] is direct and [1, :] is diffuse
     """
-    z_sub = _find_bounding_index(ZENITH_ARRAY, sza)
-    mini = ZENITH_ARRAY[z_sub]
+    # TODO: The IDL code clips the solar_zenith_angle to an integer whereas
+    #       here, the code here allows floating point values
+    sza_int = int(sza)
+    # z_sub = _find_bounding_index(ZENITH_ARRAY, sza)
+    z_sub = _find_bounding_index(ZENITH_ARRAY, sza_int)
+    # mini = ZENITH_ARRAY[z_sub]
     maxi = ZENITH_ARRAY[z_sub + 1]
     # Each SBDART spectrum is 5 degrees apart
-    z_weight = 1 - ((maxi - sza) / 5)
+    # z_weight = 1 - ((maxi - sza) / 5)
+    z_weight = 1 - ((maxi - sza_int) / 5)
 
     e_sub = _find_bounding_index(ELEVATION_ARRAY, elev)
-    e_weight = 1 - ((ELEVATION_ARRAY[e_sub + 1] - elev) / 0.5)
+    # e_weight = 1 - ((ELEVATION_ARRAY[e_sub + 1] - elev) / 0.5)
 
     dir_min = dir_arr[:, z_sub, e_sub]
     dir_max = dir_arr[:, z_sub + 1, e_sub + 1]
@@ -83,6 +88,7 @@ def compute_irradiance(
     cosine_illumination_angle: float,
     dir_arr: np.ndarray,
     dif_arr: np.ndarray,
+    verbose: bool=False,
 ) -> np.ndarray:
     """Compute terrain- and geometry-corrected spectral irradiance.
 
@@ -96,9 +102,11 @@ def compute_irradiance(
     Returns:
         Corrected irradiance spectrum, shape (216,)
     """
+    # TODO: In IDL, sza is an integer; here it is a float
     result = find_irspec(
-        sza=solar_zenith_angle, elev=elev, dir_arr=dir_arr, dif_arr=dif_arr
+        sza=solar_zenith_angle, elev=elev, dir_arr=dir_arr, dif_arr=dif_arr, verbose=verbose
     )
     direct_input = result[0, :]
     diffuse_input = result[1, :]
+
     return (cosine_illumination_angle * direct_input) + diffuse_input
