@@ -71,7 +71,6 @@ from src.util import (
 )
 def run_drfs(src_file, component_dir, working_dir, staging_dir, product):
     """Process the DRFS files: DELTAVIS, drfsGS, RF"""
-    raise RuntimeError("ERROR: running run_drfs() which does IDL")
 
     day = get_date_from_filename(src_file)
     tile = get_tile_id_from_filename(src_file)
