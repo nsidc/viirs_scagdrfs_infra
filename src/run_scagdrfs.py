@@ -1,6 +1,4 @@
 import datetime as dt
-import glob
-import os
 import subprocess
 from datetime import timedelta
 from pathlib import Path
@@ -12,8 +10,8 @@ from dask_jobqueue import SLURMCluster
 # from scagdrfs_infra.error import ScagDrfsDateRangeError
 # from scagdrfs_infra.output_to_peta import copy_output_to_peta
 # from scagdrfs_infra.output_to_v0 import copy_output_to_v0
-from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
-from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
+from src.constants.paths import WORK_DIR, TOPDIR
+from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_a_day import run_a_day
 from src.util import (
     date_range,
@@ -130,7 +128,6 @@ def run_scagdrfs(
 
     product = product.upper()
     orig_transfer_dir = transfer_dir
-    input_dir = get_nrt_dir(product)
 
     if not no_queue:
         scagdrfs_cluster = setup_scagdrfs_cluster()
@@ -142,7 +139,6 @@ def run_scagdrfs(
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
             print(f"    run_scagdrfs: tile: {tile}")
-            day_input_dir = input_dir / day.strftime("%Y.%m.%d")
             tif_dir = WORK_DIR / product / day.strftime("%Y.%m.%d") / tile
             tif_count = check_expected_tif_files_with_glob(tif_dir, tile, product)
             if tif_count and not force_run_scagdrfs:
