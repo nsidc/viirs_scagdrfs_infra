@@ -150,13 +150,6 @@ Files are automatically organized by product and date in separate directories:
 
 ### Running DRFS processing (TEMPORARY)
 
-- Run the `./scripts/run-drfs.sh` script
-  - A script has been written with hardcoded values for that work for development
-  - NOTE: this procedure requires that the MODIS .hdf file and the corresponding .bip and .bip_meta files already exist
-  - From the "root" repo directory, run:
-    - `./runonlydrfs.sh`
-- This creates .dat, .bin, .mask, .tif output files.  The .tif files match exactly the .tif files created via `scagdrfs_infra`.  For the default values and operator_name `scotts`, the output files are:
-
 ```bash
 ls -lrt /scratch/alpine/scotts/scagdrfs/working/2026.03.09/h09v05
 total 373249
