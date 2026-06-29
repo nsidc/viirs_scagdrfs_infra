@@ -150,8 +150,9 @@ Files are automatically organized by product and date in separate directories:
 
 ### Running DRFS processing (TEMPORARY)
 
+Below are the expected DRFS output files.
 ```bash
-ls -lrt /scratch/alpine/scotts/scagdrfs/working/2026.03.09/h09v05
+ls -lrt /scratch/alpine/scotts/scagdrfs/working/*/2026.03.09/h09v05
 total 373249
 -rwxrwxr-x 1 scotts scottsgrp 80572911 Mar 10 02:03 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
 -rw-rw-r-- 1 scotts scottsgrp 80640000 Mar 10 09:41 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.bip
