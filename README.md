@@ -150,24 +150,9 @@ Files are automatically organized by product and date in separate directories:
 
 ### Running DRFS processing (TEMPORARY)
 
-The files needed to run DRFS have been copied to this repository.  There are several requirements to be able to run DRFS in standalone mode:
-
-- Be in the `scag` conda environment:
-  - `conda activate scag`
-- Run `. config/env.sh`
-- Generate the `drfs_idl_startup.bat` file by running the generation script:
-  - From "root" repo directory, run:
-    - `./scripts/gen_drfs_idl_startup.sh ./scripts/drfs_idl_startup.bat`
-  - NOTE: This only needs to be run the first time you set up the environment
-- Run the `./scripts/run-drfs.sh` script
-  - A script has been written with hardcoded values for that work for development
-  - NOTE: this procedure requires that the MODIS .hdf file and the corresponding .bip and .bip_meta files already exist
-  - From the "root" repo directory, run:
-    - `./runonlydrfs.sh`
-- This creates .dat, .bin, .mask, .tif output files.  The .tif files match exactly the .tif files created via `scagdrfs_infra`.  For the default values and operator_name `scotts`, the output files are:
-
+Below are the expected DRFS output files.
 ```bash
-ls -lrt /scratch/alpine/scotts/scagdrfs/working/2026.03.09/h09v05
+ls -lrt /scratch/alpine/scotts/scagdrfs/working/*/2026.03.09/h09v05
 total 373249
 -rwxrwxr-x 1 scotts scottsgrp 80572911 Mar 10 02:03 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.hdf
 -rw-rw-r-- 1 scotts scottsgrp 80640000 Mar 10 09:41 MOD09GA.A2026068.h09v05.061.2026069014006.NRT.bip
