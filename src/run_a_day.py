@@ -15,7 +15,7 @@ from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 
 from src.move_tiles import copy_tile_file
-from src.run_drfs import run_drfs
+# from src.run_drfs import run_drfs
 
 from src.netcdf import create_netcdf
 from src.run_scag import run_scag
@@ -171,13 +171,17 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                     # TODO: We should check for specific tif file names, not a count
                     if tifCounter0 != 6:
                         print("Running DRFS for ", tile_params["src_file"], "...\n")
-                        ctx.invoke(
-                            run_drfs,
-                            src_file=tile_params["src_file"],
-                            working_dir=tile_params["working_dir"],
-                            staging_dir=tile_params["staging_dir"],
-                            component_dir=tile_params["component_dir"],
+                        raise RuntimeError(
+                            'We should be calling create_drfs_geotiffs() instead of'
+                            ' run_drfs()'
                         )
+                        # ctx.invoke(
+                        #     run_drfs,
+                        #     src_file=tile_params["src_file"],
+                        #     working_dir=tile_params["working_dir"],
+                        #     staging_dir=tile_params["staging_dir"],
+                        #     component_dir=tile_params["component_dir"],
+                        # )
                 else:
                     print(
                         f"Skipping DRFS calculation because {product.upper()=} not in {DRFS_products=}"
