@@ -292,4 +292,5 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
 
 if __name__ == "__main__":
     """Executed from the command line"""
+    setup_logging(level=logging.DEBUG)
     run_a_day()
