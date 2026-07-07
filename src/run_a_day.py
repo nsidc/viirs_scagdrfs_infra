@@ -1,5 +1,6 @@
 import datetime as dt
 import glob
+from src.log_config import setup_logging
 import logging
 import os
 import subprocess

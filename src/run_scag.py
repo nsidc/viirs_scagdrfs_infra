@@ -14,6 +14,7 @@ from src.constants.paths import WORK_DIR, TOPDIR
 from src.util import get_date_from_filename, get_info_from_bip_file
 
 import logging
+from src.log_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

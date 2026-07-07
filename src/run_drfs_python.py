@@ -33,6 +33,7 @@ from src.util import (
     get_tile_id_from_filename,
 )
 import logging
+from src.log_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

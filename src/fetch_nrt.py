@@ -4,6 +4,7 @@
 import datetime as dt
 from pathlib import Path
 import logging
+from src.log_config import setup_logging
 import sys
 
 
