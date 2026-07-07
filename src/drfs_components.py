@@ -4,6 +4,9 @@ import re
 from pathlib import Path
 
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 ZENITH_VALUES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
 

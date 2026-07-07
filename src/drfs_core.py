@@ -5,6 +5,9 @@ Translates MOD09GA_FORCE_WEIGHT_v1_2 from IDL to numpy.
 
 import numpy as np
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.find_irspec_v1_2 import compute_irradiance
 

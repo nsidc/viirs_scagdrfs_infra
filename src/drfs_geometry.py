@@ -4,6 +4,9 @@ Translates the geometry section of MOD_DRFS_v1_2.pro to numpy.
 """
 
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def preprocess_geometry(
