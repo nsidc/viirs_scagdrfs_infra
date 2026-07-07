@@ -22,6 +22,10 @@ from src.util import (
     check_expected_tif_files_with_glob,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def setup_scagdrfs_cluster():
     # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026

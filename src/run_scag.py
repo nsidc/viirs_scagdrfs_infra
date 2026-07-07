@@ -13,6 +13,10 @@ from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
 from src.constants.paths import WORK_DIR, TOPDIR
 from src.util import get_date_from_filename, get_info_from_bip_file
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # TODO: This function is not used:  setup_scag_cluster()
 def setup_scag_cluster():

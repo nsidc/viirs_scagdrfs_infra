@@ -32,6 +32,9 @@ from src.util import (
     get_field_name,
     get_tile_id_from_filename,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_bip_file_drfs(src_file, bip_file_drfs):
@@ -114,7 +117,7 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     print("  BIP loaded.", flush=True)
 
     # --- Compute DRFS ---
-    print('Calling compute_drfs()...', flush=True)
+    print("Calling compute_drfs()...", flush=True)
     results = compute_drfs(
         rfl=rfl,  # (7, 2400, 2400)
         solarzenith_deg=geom["solarzenith_deg"],  # (2400, 2400)
@@ -176,7 +179,7 @@ def create_drfs_geotiffs(
 
     # Get the bip.meta filename
     bip_files = list(working_dir.glob("**/*.bip.meta"))
-    bip_files = [f for f in bip_files if 'drfs.bip' not in f.stem]
+    bip_files = [f for f in bip_files if "drfs.bip" not in f.stem]
 
     if len(bip_files) != 1:
         raise RuntimeError(
@@ -184,11 +187,11 @@ def create_drfs_geotiffs(
             "metadata files in working directory: " + str(working_dir)
         )
     bip_meta_file = bip_files[0]
-    result_bip_meta_file = f'bip meta filename: {bip_meta_file}'
-    print(f'{result_bip_meta_file=}')
+    result_bip_meta_file = f"bip meta filename: {bip_meta_file}"
+    print(f"{result_bip_meta_file=}")
 
     # Create geotiffs for the unmasked fields
-    result_unmasked_geotiffs = ''
+    result_unmasked_geotiffs = ""
     for unmask_file in glob.glob(os.path.join(working_dir, "*.Unmask")):
         field_name = get_field_name(unmask_file)
         bit_depth = get_bitdepth_for_field_name(field_name)
@@ -204,10 +207,10 @@ def create_drfs_geotiffs(
             output_file=output_tif,
         )
         geotiff_creation_string += result_make_tif
-        result_unmasked_geotiffs += f'{geotiff_creation_string}\n'
+        result_unmasked_geotiffs += f"{geotiff_creation_string}\n"
 
     # Create geotiffs for the masked fields
-    result_masked_geotiffs = ''
+    result_masked_geotiffs = ""
     for mask_file in glob.glob(os.path.join(working_dir, "*.mask")):
         field_name = get_field_name(mask_file)
         bit_depth = get_bitdepth_for_field_name(field_name)
@@ -221,7 +224,7 @@ def create_drfs_geotiffs(
             output_file=output_tif,
         )
         geotiff_creation_string += result_make_tif
-        result_unmasked_geotiffs += f'{geotiff_creation_string}\n'
+        result_unmasked_geotiffs += f"{geotiff_creation_string}\n"
 
     final_result = (
         result_drfs,
@@ -242,10 +245,10 @@ if __name__ == "__main__":
     @click.option("--component-dir", required=True, type=click.Path(path_type=Path))
     @click.option("--working-dir", required=True, type=click.Path(path_type=Path))
     def main(src_file, component_dir, working_dir):
-        print('Running from run_drfs_python() __main__')
-        print(f'  {src_file=}')
-        print(f'  {component_dir=}')
-        print(f'  {working_dir=}')
+        print("Running from run_drfs_python() __main__")
+        print(f"  {src_file=}")
+        print(f"  {component_dir=}")
+        print(f"  {working_dir=}")
         result = run_drfs_python(src_file, component_dir, working_dir)
         print(result)
 

@@ -15,6 +15,7 @@ from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 
 from src.move_tiles import copy_tile_file
+
 # from src.run_drfs import run_drfs
 
 from src.netcdf import create_netcdf
@@ -26,8 +27,6 @@ from src.constants.products import (
 from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
 from src.run_drfs_python import create_drfs_geotiffs
 
-
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -172,8 +171,8 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
                     if tifCounter0 != 6:
                         print("Running DRFS for ", tile_params["src_file"], "...\n")
                         raise RuntimeError(
-                            'We should be calling create_drfs_geotiffs() instead of'
-                            ' run_drfs()'
+                            "We should be calling create_drfs_geotiffs() instead of"
+                            " run_drfs()"
                         )
                         # ctx.invoke(
                         #     run_drfs,

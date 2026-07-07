@@ -6,6 +6,7 @@ from pathlib import Path
 import logging
 import sys
 
+
 try:
     import click
 except ModuleNotFoundError as e:
@@ -191,4 +192,5 @@ def get_nrt_data(start_date, end_date, product):
 
 
 if __name__ == "__main__":
+    setup_logging()
     get_nrt_data()
