@@ -12,7 +12,7 @@ ZENITH_VALUES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
 
 
 def load_irradiance_arrays(
-    comps_dir: Path, verbose: bool = True
+    comps_dir: Path,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Load direct and diffuse irradiance arrays.
 
@@ -35,7 +35,7 @@ def load_irradiance_arrays(
     return dir_arr, dif_arr
 
 
-def load_modis_wavelengths(comps_dir: Path, verbose: bool = True) -> np.ndarray:
+def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load 7 MODIS band wavelengths. Shape: (7,)"""
     fn_modis_wavelengths = comps_dir / "MODIS.wvl"
     modis_wavelengths = np.loadtxt(fn_modis_wavelengths)
@@ -44,7 +44,7 @@ def load_modis_wavelengths(comps_dir: Path, verbose: bool = True) -> np.ndarray:
     return modis_wavelengths
 
 
-def load_aviris_wavelengths(comps_dir: Path, verbose: bool = True) -> np.ndarray:
+def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load AVIRIS wavelengths. Shape: (2, 216)"""
     fn_aviris_wavelengths = comps_dir / "irrad10nm.wvl"
     aviris_wavelengths = np.loadtxt(fn_aviris_wavelengths).T
@@ -53,7 +53,7 @@ def load_aviris_wavelengths(comps_dir: Path, verbose: bool = True) -> np.ndarray
     return aviris_wavelengths
 
 
-def load_ndgsi_lut(comps_dir: Path, sza: int, verbose: bool = True) -> np.ndarray:
+def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
     """Load NDGSI lookup table for a given SZA. Shape: (2, 110)"""
     fn_ndgsi_lut = comps_dir / f"MODIS.z{sza}.ndgsi"
     ndgsi_lut = np.loadtxt(fn_ndgsi_lut).T
@@ -63,7 +63,7 @@ def load_ndgsi_lut(comps_dir: Path, sza: int, verbose: bool = True) -> np.ndarra
     return ndgsi_lut
 
 
-def load_sli(comps_dir: Path, sza: int, verbose: bool = True) -> np.ndarray:
+def load_sli(comps_dir: Path, sza: int) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
     fn_sli = comps_dir / f"MODIS.z{sza}.sli"
 
@@ -77,19 +77,21 @@ def load_sli(comps_dir: Path, sza: int, verbose: bool = True) -> np.ndarray:
     return data_7x110
 
 
-def load_all_luts(comps_dir: Path, verbose: bool = True) -> dict:
+def load_all_luts(comps_dir: Path) -> dict:
     """Pre-load all LUTs at startup rather than inside the pixel loop."""
     return {
         sza: {
-            "ndgsi": load_ndgsi_lut(comps_dir, sza, verbose),
-            "sli": load_sli(comps_dir, sza, verbose),
+            "ndgsi": load_ndgsi_lut(comps_dir, sza),
+            "sli": load_sli(comps_dir, sza),
         }
         for sza in ZENITH_VALUES
     }
 
 
 def load_terrain(
-    comps_dir: Path, h: str, v: str, verbose: bool = True
+    comps_dir: Path,
+    h: str,
+    v: str,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Load slope and aspect arrays for a tile.
 
@@ -112,7 +114,7 @@ def load_terrain(
     return slope, aspect
 
 
-def load_dem(comps_dir: Path, h: str, v: str, verbose: bool = True) -> np.ndarray:
+def load_dem(comps_dir: Path, h: str, v: str) -> np.ndarray:
     """Load DEM elevation in meters. Shape: (2400, 2400)"""
     dem_files = list((comps_dir / "DEM").glob(f"dem_*_h{h}v{v}.bsq"))
     if len(dem_files) != 1:

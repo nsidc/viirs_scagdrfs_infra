@@ -75,7 +75,7 @@ def IDL_Spline(X, Y, T, sigma=1.0):
     # Retrieved 2026-06-18, License - CC BY-SA 4.0
     n = min(len(X), len(Y))
     if n <= 2:
-        print("X and Y must be arrays of 3 or more elements.")
+        raise ValueError("X and Y must be arrays of 3 or more elements.")
     if sigma != 1.0:
         sigma = min(sigma, 0.001)
     yp = np.zeros(2 * n)
@@ -230,7 +230,7 @@ def compute_drfs(
     valid_mask = (b4 > 0) & (b5 > 0)
 
     if not np.any(valid_mask):
-        print("NO SNOW FOUND, RETURNING FLAGGED BUNDLE")
+        logger.warning("NO SNOW FOUND, RETURNING FLAGGED BUNDLE")
         return {
             "ndgsi": ndgsi,
             "ndsi": ndsi,
@@ -282,14 +282,14 @@ def compute_drfs(
     # Find nearest SZA for each pixel
     nearest_sza = _find_nearest_sza(solarzenith_int)
 
-    logger.debug("Starting radiative forcing computation...")
-    logger.debug("check nearest_sza...")
+    logger.info("Starting radiative forcing computation...")
+    logger.info("check nearest_sza...")
 
     # Process per unique SZA to minimize LUT lookups
     for sza_val in ZENITH_VALUES:
         sza_mask = (nearest_sza == sza_val) & ~np.isclose(ndgsi, FLAG)
         logger.debug(
-            f"num grid cells with sza: {sza_val}  {np.sum(np.where(sza_mask, 1, 0))}"
+            f"num grid cells with sza {sza_val}:  {np.count_nonzero(sza_mask)}"
         )
 
         if not np.any(sza_mask):
@@ -426,4 +426,4 @@ def write_drfs_outputs(
     for field, data in outputs.items():
         outpath = working_dir / f"{filename_prefix}.{field}.dat"
         data.astype(np.float32).tofile(outpath)
-        print(f"Wrote {outpath}")
+        logger.info(f"Wrote {outpath}")

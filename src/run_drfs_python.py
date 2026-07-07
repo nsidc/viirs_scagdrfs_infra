@@ -55,23 +55,23 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
         Status string for logging
     """
     filename_stem = src_file.stem
-    print(f"run_drfs_python: processing {filename_stem}", flush=True)
+    logger.info(f"run_drfs_python: processing {filename_stem}", flush=True)
 
     # --- Parse tile ID ---
     # e.g. MOD09GA.A2026068.h09v05.061... -> h='09', v='05'
     tile_part = filename_stem.split(".")[2]  # e.g. 'h09v05'
     h, v = parse_tile_id(tile_part)
-    print(f"  tile: h{h}v{v}", flush=True)
+    logger.info(f"tile: h{h}v{v}", flush=True)
 
     # --- Load component files ---
-    print("  loading component files...", flush=True)
+    logger.info("loading component files...", flush=True)
     dir_arr, dif_arr = load_irradiance_arrays(component_dir)
     modis_wvl = load_modis_wavelengths(component_dir)
     aviris_wvl = load_aviris_wavelengths(component_dir)
     luts = load_all_luts(component_dir)
     slope, aspect = load_terrain(component_dir, h, v)
     dem = load_dem(component_dir, h, v)
-    print("  component files loaded.", flush=True)
+    logger.info("component files loaded.", flush=True)
 
     # --- Extract solar geometry from input file ---
     # This replaces IDL's command:
@@ -88,16 +88,15 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     create_bip_file_drfs(src_file, bip_file_drfs)
 
     # --- Load solar geometry ---
-    print("  loading solar geometry...", flush=True)
+    logger.info("loading solar geometry...", flush=True)
     zenith_file = working_dir / f"{filename_stem}.SolarZenith_1.dat"
     azimuth_file = working_dir / f"{filename_stem}.SolarAzimuth_1.dat"
     solarzenith_raw, solarazimuth_raw = load_solar_geometry(
         str(zenith_file), str(azimuth_file)
     )
-    print("  solar geometry loaded.", flush=True)
+    logger.info("solar geometry loaded.", flush=True)
 
     # --- Preprocess geometry ---
-    print("  preprocessing geometry...", flush=True)
     geom = preprocess_geometry(
         solarzenith=solarzenith_raw,
         solarazimuth=solarazimuth_raw,
@@ -107,17 +106,16 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     )
 
     # --- Load BIP reflectance ---
-    print("  loading BIP reflectance...", flush=True)
+    logger.info("loading BIP reflectance...", flush=True)
     if not bip_file_drfs.exists():
         raise FileNotFoundError(f"BIP file not found: {bip_file_drfs}")
     # BIP is (ns, nl, nb) — reshape to (nb, ns, nl) for compute_drfs
     bip_raw = np.fromfile(bip_file_drfs, dtype=np.int16).reshape(2400, 2400, 7)
 
     rfl = np.divide(bip_raw, 1000.0, dtype=np.float32)
-    print("  BIP loaded.", flush=True)
+    logger.info("BIP loaded.", flush=True)
 
     # --- Compute DRFS ---
-    print("Calling compute_drfs()...", flush=True)
     results = compute_drfs(
         rfl=rfl,  # (7, 2400, 2400)
         solarzenith_deg=geom["solarzenith_deg"],  # (2400, 2400)
@@ -133,10 +131,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
         v=v,  # '05'
         thresh=1,
     )
-    print("  DRFS computation complete.", flush=True)
+    logger.info("DRFS computation complete.", flush=True)
 
     # --- Write outputs ---
-    print("  writing output files...", flush=True)
+    logger.info("writing output files...", flush=True)
     write_drfs_outputs(
         results=results,
         working_dir=working_dir,
@@ -188,7 +186,7 @@ def create_drfs_geotiffs(
         )
     bip_meta_file = bip_files[0]
     result_bip_meta_file = f"bip meta filename: {bip_meta_file}"
-    print(f"{result_bip_meta_file=}")
+    logger.info(f"{result_bip_meta_file=}")
 
     # Create geotiffs for the unmasked fields
     result_unmasked_geotiffs = ""
@@ -199,7 +197,6 @@ def create_drfs_geotiffs(
             staging_dir, unmask_file.replace("bin.Unmask", "Unmask.tif")
         )
         geotiff_creation_string = f"Generating tif for:\n  unmask_file: {unmask_file}\n  field_name: {field_name}\n  bit_depth: {bit_depth}\n  output_tif: {output_tif}"
-        # print(geotiff_creation_string, flush=True)
         result_make_tif = make_tif(
             meta_file=bip_meta_file,
             input_file=unmask_file,
@@ -216,7 +213,6 @@ def create_drfs_geotiffs(
         bit_depth = get_bitdepth_for_field_name(field_name)
         output_tif = os.path.join(staging_dir, mask_file.replace("bin.mask", "tif"))
         geotiff_creation_string = f"Generating tif for:\n  mask_file: {mask_file}\n  field_name: {field_name}\n  bit_depth: {bit_depth}\n  output_tif: {output_tif}"
-        # print(geotiff_creation_string, flush=True)
         result_make_tif = make_tif(
             meta_file=bip_meta_file,
             input_file=mask_file,
@@ -224,7 +220,7 @@ def create_drfs_geotiffs(
             output_file=output_tif,
         )
         geotiff_creation_string += result_make_tif
-        result_unmasked_geotiffs += f"{geotiff_creation_string}\n"
+        result_masked_geotiffs += f"{geotiff_creation_string}\n"
 
     final_result = (
         result_drfs,
@@ -245,11 +241,12 @@ if __name__ == "__main__":
     @click.option("--component-dir", required=True, type=click.Path(path_type=Path))
     @click.option("--working-dir", required=True, type=click.Path(path_type=Path))
     def main(src_file, component_dir, working_dir):
+        setup_logging(level=logging.DEBUG)
         print("Running from run_drfs_python() __main__")
         print(f"  {src_file=}")
         print(f"  {component_dir=}")
         print(f"  {working_dir=}")
         result = run_drfs_python(src_file, component_dir, working_dir)
-        print(result)
+        logger.info(result)
 
     main()
