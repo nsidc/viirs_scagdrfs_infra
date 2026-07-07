@@ -116,7 +116,7 @@ def run_scag(bip_file, src_file, working_dir, product):
         delayed_task = scag_client.submit(run_command, cmd)
         delayed_tasks.append(delayed_task)
 
-    logger.info(f"Gathering scag_client...{dt.datetime.now()}", flush=True)
+    logger.info(f"Gathering scag_client...{dt.datetime.now()}")
     results = scag_client.gather(delayed_tasks)
     logger.info(f"Finished gathering scag_client...{dt.datetime.now()}")
 

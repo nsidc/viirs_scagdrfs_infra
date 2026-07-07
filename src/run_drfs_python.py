@@ -56,23 +56,23 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
         Status string for logging
     """
     filename_stem = src_file.stem
-    logger.info(f"run_drfs_python: processing {filename_stem}", flush=True)
+    logger.info(f"run_drfs_python: processing {filename_stem}")
 
     # --- Parse tile ID ---
     # e.g. MOD09GA.A2026068.h09v05.061... -> h='09', v='05'
     tile_part = filename_stem.split(".")[2]  # e.g. 'h09v05'
     h, v = parse_tile_id(tile_part)
-    logger.info(f"tile: h{h}v{v}", flush=True)
+    logger.info(f"tile: h{h}v{v}")
 
     # --- Load component files ---
-    logger.info("loading component files...", flush=True)
+    logger.info("loading component files...")
     dir_arr, dif_arr = load_irradiance_arrays(component_dir)
     modis_wvl = load_modis_wavelengths(component_dir)
     aviris_wvl = load_aviris_wavelengths(component_dir)
     luts = load_all_luts(component_dir)
     slope, aspect = load_terrain(component_dir, h, v)
     dem = load_dem(component_dir, h, v)
-    logger.info("component files loaded.", flush=True)
+    logger.info("component files loaded.")
 
     # --- Extract solar geometry from input file ---
     # This replaces IDL's command:
@@ -89,13 +89,13 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     create_bip_file_drfs(src_file, bip_file_drfs)
 
     # --- Load solar geometry ---
-    logger.info("loading solar geometry...", flush=True)
+    logger.info("loading solar geometry...")
     zenith_file = working_dir / f"{filename_stem}.SolarZenith_1.dat"
     azimuth_file = working_dir / f"{filename_stem}.SolarAzimuth_1.dat"
     solarzenith_raw, solarazimuth_raw = load_solar_geometry(
         str(zenith_file), str(azimuth_file)
     )
-    logger.info("solar geometry loaded.", flush=True)
+    logger.info("solar geometry loaded.")
 
     # --- Preprocess geometry ---
     geom = preprocess_geometry(
@@ -107,14 +107,14 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     )
 
     # --- Load BIP reflectance ---
-    logger.info("loading BIP reflectance...", flush=True)
+    logger.info("loading BIP reflectance...")
     if not bip_file_drfs.exists():
         raise FileNotFoundError(f"BIP file not found: {bip_file_drfs}")
     # BIP is (ns, nl, nb) — reshape to (nb, ns, nl) for compute_drfs
     bip_raw = np.fromfile(bip_file_drfs, dtype=np.int16).reshape(2400, 2400, 7)
 
     rfl = np.divide(bip_raw, 1000.0, dtype=np.float32)
-    logger.info("BIP loaded.", flush=True)
+    logger.info("BIP loaded.")
 
     # --- Compute DRFS ---
     results = compute_drfs(
@@ -132,10 +132,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
         v=v,  # '05'
         thresh=1,
     )
-    logger.info("DRFS computation complete.", flush=True)
+    logger.info("DRFS computation complete.")
 
     # --- Write outputs ---
-    logger.info("writing output files...", flush=True)
+    logger.info("writing output files...")
     write_drfs_outputs(
         results=results,
         working_dir=working_dir,
