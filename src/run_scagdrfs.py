@@ -39,9 +39,9 @@ def setup_scagdrfs_cluster():
         ],
         log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
-    # NOTE: This scale should be at least 30 so that run_scag() can
-    #       process 30 pic files at a time
-    cluster.scale(30)
+    # NOTE: This scale should be at least 31 so that run_scag() can
+    #       process 30 pic files at a time, plus one for the job-runner
+    cluster.scale(31)
 
     print(cluster.job_script(), "\n")
     return cluster

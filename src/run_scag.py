@@ -31,8 +31,9 @@ def setup_scag_cluster():
         log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
     # cluster.adapt(minimum_jobs=1, maximum_jobs=50)
-    # This should be 30 so that all 30 pic files can be created at once
-    cluster.scale(30)
+    # This should be 31 so that all 30 pic files can be created at once
+    #    plus one for the job that runs the jobs
+    cluster.scale(31)
 
     return cluster
 
