@@ -23,7 +23,7 @@ from src.constants.products import (
     PRODUCT_FILE_EXTENSION,
     SUPPORTED_PRODUCTS,
 )
-from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
+from src.constants.paths import WORK_DIR, STAGE_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
 from src.run_drfs_python import create_drfs_geotiffs
 
 
@@ -77,11 +77,27 @@ def setup_day_cluster():
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
-    envvar="STAGING_DIR",
+    default=STAGE_DIR,
     show_default=True,
     help="Path to staging directory where output files are stored before being"
-    " transferred to the final directory. Defaults to environment variable STAGING_DIR."
-    " Date and tile ID subdirectories will be added (e.g. 2023.10.03/h08v04).",
+    " transferred to the final directory. Defaults to STAGE_DIR defined in"
+    " src.constants.paths."
+    " Platform, date and tile ID subdirectories will be added"
+    "(e.g. VJ109GA/2023.10.03/h08v04).",
+)
+@click.option(
+    "-w",
+    "--working-dir",
+    type=click.Path(
+        file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
+    ),
+    default=WORK_DIR,
+    show_default=True,
+    help="Path to working directory where intermediate files are written"
+    " while the product is being created. Defaults to WORK_DIR defined in"
+    " src.constants.paths."
+    " Platform, date and tile ID subdirectories will be added"
+    "(e.g. VJ109GA/2023.10.03/h08v04).",
 )
 @click.option(
     "-t",
@@ -100,31 +116,31 @@ def setup_day_cluster():
     "-n", "--no-queue", is_flag=True, help="Do not run tasks in the SLURM queue."
 )
 @click.pass_context
-def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
+def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue):
 
     # NOTE: In normal operation, all sections of this code should run
     #       Developers may set some of these flags to False to speed
     #       up debug iteration
     remove_intermediate_files = False
 
-    input_dir = get_nrt_dir(product.upper())
-    working_dir = WORK_DIR / product.upper() / day.strftime("%Y.%m.%d") / tile
-    working_dir.mkdir(parents=True, exist_ok=True)
-    ext = PRODUCT_FILE_EXTENSION[product.upper()]
-    logger.info("Running a day for %s with tile %s", day, tile)
-    param_lists = []
-    print(
-        f"original working dir: {working_dir} work_dir: {WORK_DIR}",
-        "\n",
-    )
     tile_params = {}
+
+    working_dir = working_dir / product.upper() / day.strftime("%Y.%m.%d") / tile
+    working_dir.mkdir(parents=True, exist_ok=True)
     tile_params["working_dir"] = working_dir
-    staging_dir = staging_dir / day.strftime("%Y.%m.%d") / tile
+
+    logger.info("Running a day for %s with tile %s", day, tile)
+    logger.info("  run_a_day working_dir: %s", working_dir)
+    logger.info("  run_a_day default WORK_DIR: %s", WORK_DIR)
+
+    staging_dir = staging_dir / product.upper() / day.strftime("%Y.%m.%d") / tile
     staging_dir.mkdir(parents=True, exist_ok=True)
     tile_params["staging_dir"] = staging_dir
 
+    # TODO: Should tile_params["product"] be product.upper() ?
     tile_params["product"] = product
 
+    input_dir = get_nrt_dir(product.upper())
     if not skip:
         copy_tile_file(
             move_date=day,
@@ -133,7 +149,11 @@ def run_a_day(ctx, day, product, staging_dir, tile, skip, no_queue):
             tile=tile,
             product=product,
         )
+
+    ext = PRODUCT_FILE_EXTENSION[product.upper()]
     src_files = list(working_dir.glob(f"**/*{ext}"))
+
+    param_lists = []
     if len(src_files) != 1:
         print(
             f"Found either zero or multiple files in working directory: {working_dir}\n"

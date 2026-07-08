@@ -41,6 +41,7 @@ def get_final_dir(product: str) -> Path:
 
 # ── Scratch ────────────────────────────────────────────────────────────────────
 WORK_DIR = Path(f"/scratch/alpine/{os.getenv('USER')}/scagdrfs/working")
+STAGE_DIR = Path(f"/scratch/alpine/{os.getenv('USER')}/scagdrfs/staging")
 
 # ── Constants ────────────────────────────────────────────────────────────────────
 CONSTANTS_DIR = Path(os.getenv("CONSTANTS_DIR", TOPDIR / "src" / "constants"))

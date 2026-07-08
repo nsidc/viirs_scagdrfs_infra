@@ -16,8 +16,11 @@ def copy_tile_file(
     date_file = move_date.strftime("%Y%j")
     output_filepath = output_dir
     if output_dir == os.environ.get("WORK_DIR"):
+        print(f'    output_dir is os.environ...: {output_dir}')
         output_filepath = output_dir / f"{product}/{date_str}/{tile}"
+        print(f'    output_filepath is now: {output_filepath}')
     if not os.path.exists(output_filepath):
+        print(f'    output_filepath did not exist: {output_filepath}')
         os.makedirs(output_filepath)
     if product == "MOD09GA":
         filename_start = f"{product}.A{date_file}.{tile}"
