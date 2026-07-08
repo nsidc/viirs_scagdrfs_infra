@@ -98,8 +98,8 @@ def run_scag(bip_file, src_file, working_dir, product):
         )
         end_time = dt.datetime.now()
         result.check_returncode()
-        result_str += f"stdout\n{result.stdout}"
-        result_str += f"stderr\n{result.stderr}"
+        result_str += f"stdout\n{result.stdout.rstrip()}\n"
+        result_str += f"stderr\n{result.stderr.rstrip()}\n"
         result_str += f"  done run_command() at {dt.datetime.now()}: {cmd}"
         run_time = end_time - start_time
         result_str += f"  Processing time {run_time} for {cmd}"
@@ -110,15 +110,13 @@ def run_scag(bip_file, src_file, working_dir, product):
     delayed_tasks = []
     for control_file in control_files:
         cmd = f"cd {working_dir}; {TOPDIR}/scag/bin/scag {bip_file.name} {bip_info['num_bands']} {bip_info['num_samples']} {bip_info['num_lines']} {control_file.name}"
-        logger.debug(
-            f"submitting delayed task for {control_file=} at {dt.datetime.now()}"
-        )
+        logger.debug(f"submitting delayed task for {control_file=}")
         delayed_task = scag_client.submit(run_command, cmd)
         delayed_tasks.append(delayed_task)
 
-    logger.info(f"Gathering scag_client...{dt.datetime.now()}")
+    logger.info(f"Gathering scag_client...")
     results = scag_client.gather(delayed_tasks)
-    logger.info(f"Finished gathering scag_client...{dt.datetime.now()}")
+    logger.info(f"Finished gathering scag_client...")
 
     for result in results:
         logger.info("SCAG command result:\n%s", result)
@@ -136,20 +134,20 @@ def run_scag(bip_file, src_file, working_dir, product):
     result_sort.check_returncode()
     scag_sort_str = ""
     scag_sort_str += f"\n\nscag sort cmd:\n{cmd_sort}\n"
-    scag_sort_str += f"scag sort took:\n{scag_sort_endtime - scag_sort_starttime}\n"
-    scag_sort_str += f"scag sort stdout:\n{result_sort.stdout}\n"
-    scag_sort_str += f"scag sort stderr:\n{result_sort.stderr}\n"
+    scag_sort_str += f"scag sort took: {scag_sort_endtime - scag_sort_starttime}\n"
+    scag_sort_str += f"scag sort stdout: {result_sort.stdout.rstrip()}\n"
+    scag_sort_str += f"scag sort stderr: {result_sort.stderr.rstrip()}\n"
     logger.info("SCAG sort command result:\n%s", scag_sort_str)
 
     # mask scag and create geotifs
-    logger.info(f"Starting mask_scag at {dt.datetime.now()}")
+    logger.info(f"Starting mask_scag")
     mask_scag(
         date=get_date_from_filename(src_file),
         working_dir=working_dir,
         tile=bip_info["tile_id"],
         product=product,
     )
-    logger.info(f"...finished mask_scag at {dt.datetime.now()}")
+    logger.info(f"...finished mask_scag")
 
 
 if __name__ == "__main__":
