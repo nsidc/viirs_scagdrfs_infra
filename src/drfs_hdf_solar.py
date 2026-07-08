@@ -33,6 +33,14 @@ import xarray as xr
 from pathlib import Path
 
 
+def is_hdf4_file(fn: Path):
+    return fn.suffix == '.hdf'
+
+
+def is_hdf5_file(fn: Path):
+    return fn.suffix == '.h5'
+
+
 def extract_hdf_solar_fields(hdf_filename: Path):
     """
     This routine replaces IDL "pro" drfs_hdf_solar() in drfs_hdf_solar.pro
@@ -53,10 +61,27 @@ def extract_hdf_solar_fields(hdf_filename: Path):
     #       data field.
     # xarray needs to use engine 'netcdf4' to open old-hdf(eos?) files
     # xarray will probably want to use engine "h5netcdf" for HDF5 files (like VIIRS)
-    ds = xr.open_dataset(hdf_filename, engine='netcdf4', mask_and_scale=False)
+    if is_hdf4_file(hdf_filename):
+        ds = xr.open_dataset(
+            hdf_filename,
+            engine='netcdf4',
+            mask_and_scale=False
+        )
+    elif is_hdf5_file(hdf_filename):
+        ds = xr.open_dataset(
+            hdf_filename,
+            engine='netcdf4',
+            group='/HDFEOS/GRIDS/VIIRS_Grid_1km_2D/Data Fields', mask_and_scale=False
+        )
+    else:
+        raise RuntimeError(f'Unknown "hdf" file type: {hdf_filename=}')
 
     hdf_arrs = {}
     for hdf_varname in solar_hdf_varnames:
+        # Note: The same variable access pattern works because
+        #       the Solar vars are in root group of hdf4
+        #       and in the root group of the hdf5 file when it is opened
+        #       as a "group".
         hdf_arr = np.array(ds.variables[hdf_varname])
 
         if hdf_arr.shape == (1200, 1200):
