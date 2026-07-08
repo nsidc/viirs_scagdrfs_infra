@@ -174,7 +174,7 @@ def run_scagdrfs(
             logger.info(f"Running SCAGDRFS for {product},day: {day}\n")
 
             if no_queue:
-                print("    in no_queue...")
+                # print("    in no_queue...")
                 ctx.invoke(
                     run_a_day,
                     day=day,
@@ -185,7 +185,7 @@ def run_scagdrfs(
                     no_queue=no_queue,
                 )
             else:
-                print("    NOT in no_queue...")
+                # print("    NOT in no_queue...")
                 cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {transfer_dir} -t {tile} -P {product}"
 
                 if skip:
@@ -204,7 +204,16 @@ def run_scagdrfs(
     if not no_queue:
         day_results = scagdrfs_client.gather(day_futures)
         for day_result in day_results:
-            print(f"Result from SCAGDRFS day run: {day_result} \n")
+            if day_result.returncode == 0:
+                logger.info("Day run succeeded: %s", day_result.args)
+            else:
+                logger.error(
+                    "Day run FAILED (rc=%d): %s", day_result.returncode, day_result.args
+                )
+            if day_result.stdout:
+                logger.info("day run stdout:\n%s", day_result.stdout)
+            if day_result.stderr:
+                logger.info("day run stderr:\n%s", day_result.stderr)
         # Close clients before closing the cluster that they were created on
         scagdrfs_client.close()
         scagdrfs_cluster.close()

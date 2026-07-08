@@ -11,7 +11,7 @@ import logging
 import sys
 
 LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
-DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
+DATE_FORMAT = "%H:%M:%S"
 
 
 def setup_logging(level=logging.INFO, log_file=None):
