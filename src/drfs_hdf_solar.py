@@ -30,16 +30,17 @@ TODO: Consider replacing informative print() statements with appropriate logging
 
 import numpy as np
 import xarray as xr
+from pathlib import Path
 
 
-def extract_hdf_solar_fields(hdf_filename: str):
+def extract_hdf_solar_fields(hdf_filename: Path):
     """
     This routine replaces IDL "pro" drfs_hdf_solar() in drfs_hdf_solar.pro
 
     solar azimuth and zenith fields are:
       read in from hdf file,
       rescaled from 1200x1200 to 2400x2400 by block-rebinning,
-      written to raw .dat files.  
+      written to raw .dat files.
     These data are not scaled by the scaling factor.
     """
     solar_hdf_varnames = [
@@ -91,7 +92,8 @@ if __name__ == '__main__':
 
     try:
         ifn = sys.argv[1]
-        assert Path(ifn).is_file()
+        ifp = Path(ifn)
+        assert ifp.is_file()
     except IndexError as err:
         print()
         print('No input file given.  Input file is a MOD09GA .hdf file.')
@@ -104,6 +106,6 @@ if __name__ == '__main__':
         print()
         raise err
 
-    extract_hdf_solar_fields(ifn)
+    extract_hdf_solar_fields(ifp)
 
     print(f'Finished running:\n  {sys.argv}')
