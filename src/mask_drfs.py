@@ -31,11 +31,11 @@ def get_data(filename, data_type, error_value):
 def get_cloud_mask_6band(working_dir, src_root, file_info):
     bip_file = Path(working_dir) / (src_root + file_info.get("FILE_INFO", "BIP_SUFFIX"))
     with open(bip_file, "rb") as fbip:
-        data = np.fromfile(fbip, dtype=np.uint16)
+        data = np.fromfile(fbip, dtype=np.int16)
     try:
         data = data.reshape(2400, 2400, 7)
     except ValueError as e:
-        print(f"Error attempting to reshape data")
+        print("Error attempting to reshape data")
         print(f"  bip_file: {bip_file}")
         print(f"  size of bip_files data: {data.size}")
         raise e

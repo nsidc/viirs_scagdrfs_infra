@@ -11,7 +11,7 @@ from typing import Iterator
 
 import pandas as pd
 
-from src.constants.field_info import FIELD_BITDEPTHS, VALID_FIELD_NAMES
+from src.constants.field_info import FIELD_BITDEPTHS
 from src.constants.paths import TOPDIR
 from src.constants.products import PRODUCT_TIF_PATTERN
 

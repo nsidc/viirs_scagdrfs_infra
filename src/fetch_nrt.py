@@ -2,7 +2,6 @@
 """Fetch VIIRS Near Real-Time (NRT) data from NASA LANCE."""
 
 import datetime as dt
-from pathlib import Path
 import logging
 import sys
 

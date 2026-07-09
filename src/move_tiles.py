@@ -5,8 +5,6 @@ import os
 import shutil
 from pathlib import Path
 
-from src.constants.products import PRODUCT_FILE_EXTENSION
-
 
 def copy_tile_file(
     move_date: dt.date, input_dir: Path, output_dir: Path, tile: str, product: str

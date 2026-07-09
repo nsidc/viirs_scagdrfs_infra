@@ -22,7 +22,7 @@ from src.drfs_components import (
 from src.drfs_geometry import preprocess_geometry, load_solar_geometry
 from src.drfs_core import compute_drfs, write_drfs_outputs
 from src.drfs_hdf_solar import extract_hdf_solar_fields
-from src.drfs_BIPifier import bipify_file_drfs
+from scag.scripts.BIPifier import bipify_file
 from src.moddrfs_cleanse import moddrfs_cleanse
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs
@@ -32,12 +32,6 @@ from src.util import (
     get_field_name,
     get_tile_id_from_filename,
 )
-
-
-def create_bip_file_drfs(src_file, bip_file_drfs):
-    """Create the DRFS version of the .bip file.
-    Unlike SCAG, this allows negative integer values"""
-    bipify_file_drfs(src_file, bip_file_drfs)
 
 
 def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> str:
@@ -81,8 +75,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     # Write a python version of:
     #    create_bip = extract_modis_reflectance(file, bip) ; HDF file needs full path.  Inserted by AB, 9/3/13
     #    (in mod_drfs_v1_2.pro)
-    bip_file_drfs = working_dir / f"{filename_stem}.drfs.bip"
-    create_bip_file_drfs(src_file, bip_file_drfs)
+    # TODO: This file name should not be hardcoded like this.
+    #       (Similarly for files below...!)
+    bip_file = working_dir / f"{filename_stem}.bip"
+    bipify_file(src_file, bip_file)
 
     # --- Load solar geometry ---
     print("  loading solar geometry...", flush=True)
@@ -105,10 +101,10 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
 
     # --- Load BIP reflectance ---
     print("  loading BIP reflectance...", flush=True)
-    if not bip_file_drfs.exists():
-        raise FileNotFoundError(f"BIP file not found: {bip_file_drfs}")
+    if not bip_file.exists():
+        raise FileNotFoundError(f"BIP file not found: {bip_file}")
     # BIP is (ns, nl, nb) — reshape to (nb, ns, nl) for compute_drfs
-    bip_raw = np.fromfile(bip_file_drfs, dtype=np.int16).reshape(2400, 2400, 7)
+    bip_raw = np.fromfile(bip_file, dtype=np.int16).reshape(2400, 2400, 7)
 
     rfl = np.divide(bip_raw, 1000.0, dtype=np.float32)
     print("  BIP loaded.", flush=True)

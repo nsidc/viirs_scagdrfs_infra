@@ -73,13 +73,12 @@ def moddrfs_cleanse(prefix, ns, nl, nbands=7):
         input_fns[drfs_var] = Path(f'{prefix}.{drfs_var}.dat')
         output_fns[drfs_var] = Path(f'{prefix}.{drfs_var}.cleanse.dat')
         dat_arrays[drfs_var] = np.fromfile(
-                input_fns[drfs_var], dtype=np.float32).reshape(nl, ns)
+            input_fns[drfs_var], dtype=np.float32).reshape(nl, ns)
 
     # Compute where input is missing from drfs.bip file
     # NOTE: Here, we use the DRFS BIP file instead of
     #       re-calculating the BIP arrays
-    # bip_fn = prefix + '.drfs.bip'
-    bip_fn = Path(f'{prefix}.drfs.bip')
+    bip_fn = Path(f'{prefix}.bip')
     bip = np.fromfile(bip_fn, dtype=np.int16).reshape(nl, ns, nbands)
     is_bip_missing = bip == DRFS_BIP_MISSINGVAL
     is_bip_mask = np.sum(is_bip_missing.astype(np.uint8), axis=2) > 0
@@ -103,11 +102,11 @@ def moddrfs_cleanse(prefix, ns, nl, nbands=7):
     err_val = VAR_LIMITS[drfs_var]['error_val']
     dat_arrays[drfs_var][data < (min_val - err_val)] = np.nan
     dat_arrays[drfs_var][
-            (data >= (min_val - err_val)) & (data < min_val)] = 0.0
+        (data >= (min_val - err_val)) & (data < min_val)] = 0.0
     dat_arrays[drfs_var][
-            (data > max_val) & (data <= (max_val + err_val))] = max_val
+        (data > max_val) & (data <= (max_val + err_val))] = max_val
     dat_arrays[drfs_var][
-            data >= (max_val + err_val)] = np.nan
+        data >= (max_val + err_val)] = np.nan
     dat_arrays[drfs_var][is_bip_mask] = np.nan
 
     # For deltavis: set missing to NaN, <min to NaN; >max to NaNax
