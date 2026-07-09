@@ -30,16 +30,25 @@ TODO: Consider replacing informative print() statements with appropriate logging
 
 import numpy as np
 import xarray as xr
+from pathlib import Path
 
 
-def extract_hdf_solar_fields(hdf_filename: str):
+def is_hdf4_file(fn: Path):
+    return fn.suffix == '.hdf'
+
+
+def is_hdf5_file(fn: Path):
+    return fn.suffix == '.h5'
+
+
+def extract_hdf_solar_fields(hdf_filename: Path):
     """
     This routine replaces IDL "pro" drfs_hdf_solar() in drfs_hdf_solar.pro
 
     solar azimuth and zenith fields are:
       read in from hdf file,
       rescaled from 1200x1200 to 2400x2400 by block-rebinning,
-      written to raw .dat files.  
+      written to raw .dat files.
     These data are not scaled by the scaling factor.
     """
     solar_hdf_varnames = [
@@ -52,10 +61,27 @@ def extract_hdf_solar_fields(hdf_filename: str):
     #       data field.
     # xarray needs to use engine 'netcdf4' to open old-hdf(eos?) files
     # xarray will probably want to use engine "h5netcdf" for HDF5 files (like VIIRS)
-    ds = xr.open_dataset(hdf_filename, engine='netcdf4', mask_and_scale=False)
+    if is_hdf4_file(hdf_filename):
+        ds = xr.open_dataset(
+            hdf_filename,
+            engine='netcdf4',
+            mask_and_scale=False
+        )
+    elif is_hdf5_file(hdf_filename):
+        ds = xr.open_dataset(
+            hdf_filename,
+            engine='netcdf4',
+            group='/HDFEOS/GRIDS/VIIRS_Grid_1km_2D/Data Fields', mask_and_scale=False
+        )
+    else:
+        raise RuntimeError(f'Unknown "hdf" file type: {hdf_filename=}')
 
     hdf_arrs = {}
     for hdf_varname in solar_hdf_varnames:
+        # Note: The same variable access pattern works because
+        #       the Solar vars are in root group of hdf4
+        #       and in the root group of the hdf5 file when it is opened
+        #       as a "group".
         hdf_arr = np.array(ds.variables[hdf_varname])
 
         if hdf_arr.shape == (1200, 1200):
@@ -91,7 +117,8 @@ if __name__ == '__main__':
 
     try:
         ifn = sys.argv[1]
-        assert Path(ifn).is_file()
+        ifp = Path(ifn)
+        assert ifp.is_file()
     except IndexError as err:
         print()
         print('No input file given.  Input file is a MOD09GA .hdf file.')
@@ -104,6 +131,6 @@ if __name__ == '__main__':
         print()
         raise err
 
-    extract_hdf_solar_fields(ifn)
+    extract_hdf_solar_fields(ifp)
 
     print(f'Finished running:\n  {sys.argv}')
