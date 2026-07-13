@@ -11,10 +11,7 @@ from src.fetch_nrt import move_granules_to_date_dirs
 from src.fetch import chmod_data, chown_data, get_data
 from src.util import date_range
 
-from src.constants import (
-    FILE_PERMISSIONS,
-    get_final_dir,
-)
+from src.constants import get_final_dir
 from src.constants.products import PRODUCT_LANCE_CONFIG_FINAL
 
 logger = logging.getLogger(__name__)

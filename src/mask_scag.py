@@ -18,7 +18,6 @@ from src.masking import cw_mask
 from src.constants.field_info import (
     DTYPE_FOR_BITDEPTH,
     FIELD_BITDEPTHS,
-    VALID_FIELD_NAMES,
 )
 from src.constants.products import (
     PRODUCT_FILE_EXTENSION,

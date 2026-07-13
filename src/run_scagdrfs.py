@@ -1,6 +1,4 @@
 import datetime as dt
-import glob
-import os
 import subprocess
 from datetime import timedelta
 from pathlib import Path
@@ -12,8 +10,8 @@ from dask_jobqueue import SLURMCluster
 # from scagdrfs_infra.error import ScagDrfsDateRangeError
 # from scagdrfs_infra.output_to_peta import copy_output_to_peta
 # from scagdrfs_infra.output_to_v0 import copy_output_to_v0
-from src.constants.paths import WORK_DIR, TOPDIR, get_nrt_dir
-from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_INPUT_DIR_ENVVAR
+from src.constants.paths import WORK_DIR, TOPDIR
+from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_a_day import run_a_day
 from src.util import (
     date_range,
@@ -46,9 +44,9 @@ def setup_scagdrfs_cluster():
         ],
         log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
-    # NOTE: This scale should be at least 30 so that run_scag() can
-    #       process 30 pic files at a time
-    cluster.scale(30)
+    # NOTE: This scale should be at least 31 so that run_scag() can
+    #       process 30 pic files at a time, plus one for the job-runner
+    cluster.scale(31)
 
     logger.debug("Dask job script:\n%s", cluster.job_script())
 
@@ -150,7 +148,6 @@ def run_scagdrfs(
 
     product = product.upper()
     orig_transfer_dir = transfer_dir
-    input_dir = get_nrt_dir(product)
 
     if not no_queue:
         scagdrfs_cluster = setup_scagdrfs_cluster()
