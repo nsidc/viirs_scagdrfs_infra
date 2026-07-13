@@ -159,7 +159,6 @@ def run_scagdrfs(
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
             logger.info(f"run_scagdrfs: tile: {tile}")
-            day_input_dir = input_dir / day.strftime("%Y.%m.%d")
             tif_dir = WORK_DIR / product / day.strftime("%Y.%m.%d") / tile
             tif_count = check_expected_tif_files_with_glob(tif_dir, tile, product)
             if tif_count and not force_run_scagdrfs:
