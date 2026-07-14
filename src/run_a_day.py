@@ -1,5 +1,6 @@
 import datetime as dt
 import glob
+from src.log_config import setup_logging
 import logging
 import os
 import subprocess
@@ -15,6 +16,7 @@ from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 
 from src.move_tiles import copy_tile_file
+
 # from src.run_drfs import run_drfs
 
 from src.netcdf import create_netcdf
@@ -23,11 +25,15 @@ from src.constants.products import (
     PRODUCT_FILE_EXTENSION,
     SUPPORTED_PRODUCTS,
 )
-from src.constants.paths import WORK_DIR, STAGE_DIR, TOPDIR, get_nrt_dir, DRFS_COMPONENT_DIR
+from src.constants.paths import (
+    WORK_DIR,
+    STAGE_DIR,
+    TOPDIR,
+    get_nrt_dir,
+    DRFS_COMPONENT_DIR,
+)
 from src.run_drfs_python import create_drfs_geotiffs
 
-
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -121,7 +127,7 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
     # NOTE: In normal operation, all sections of this code should run
     #       Developers may set some of these flags to False to speed
     #       up debug iteration
-    remove_intermediate_files = False
+    remove_intermediate_files = True
 
     tile_params = {}
 
@@ -192,8 +198,8 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                     if tifCounter0 != 6:
                         print("Running DRFS for ", tile_params["src_file"], "...\n")
                         raise RuntimeError(
-                            'We should be calling create_drfs_geotiffs() instead of'
-                            ' run_drfs()'
+                            "We should be calling create_drfs_geotiffs() instead of"
+                            " run_drfs()"
                         )
                         # ctx.invoke(
                         #     run_drfs,
@@ -313,4 +319,5 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
 
 if __name__ == "__main__":
     """Executed from the command line"""
+    setup_logging(level=logging.DEBUG)
     run_a_day()

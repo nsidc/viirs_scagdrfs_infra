@@ -5,6 +5,9 @@ Translates MOD09GA_FORCE_WEIGHT_v1_2 from IDL to numpy.
 
 import numpy as np
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.find_irspec_v1_2 import compute_irradiance
 
@@ -65,69 +68,69 @@ def _vegetation_mask(b1, b2, b3, b4, b5, b6, h, v, thresh):
     return b1, b2, b3, b4, b5, b6
 
 
-def IDL_Spline(X, Y, T, sigma = 1.0):
+def IDL_Spline(X, Y, T, sigma=1.0):
     """Reproduce IDL's spline() function"""
     # Source - https://stackoverflow.com/a/64266640
     # Posted by Swike
     # Retrieved 2026-06-18, License - CC BY-SA 4.0
     n = min(len(X), len(Y))
     if n <= 2:
-        print('X and Y must be arrays of 3 or more elements.')
+        raise ValueError("X and Y must be arrays of 3 or more elements.")
     if sigma != 1.0:
         sigma = min(sigma, 0.001)
-    yp = np.zeros(2*n)
-    delx1 = X[1]-X[0]
-    dx1 = (Y[1]-Y[0])/delx1
-    nm1 = n-1
+    yp = np.zeros(2 * n)
+    delx1 = X[1] - X[0]
+    dx1 = (Y[1] - Y[0]) / delx1
+    nm1 = n - 1
     # nmp = n+1
-    delx2 = X[2]-X[1]
-    delx12 = X[2]-X[0]
-    c1 = -(delx12+delx1)/(delx12*delx1)
-    c2 = delx12/(delx1*delx2)
-    c3 = -delx1/(delx12*delx2)
-    slpp1 = c1*Y[0]+c2*Y[1]+c3*Y[2]
-    deln = X[nm1]-X[nm1-1]
-    delnm1 = X[nm1-1]-X[nm1-2]
-    delnn = X[nm1]-X[nm1-2]
-    c1 = (delnn+deln)/(delnn*deln)
-    c2 = -delnn/(deln*delnm1)
-    c3 = deln/(delnn*delnm1)
-    slppn = c3*Y[nm1-2]+c2*Y[nm1-1]+c1*Y[nm1]
-    sigmap = sigma*nm1/(X[nm1]-X[0])
-    dels = sigmap*delx1
+    delx2 = X[2] - X[1]
+    delx12 = X[2] - X[0]
+    c1 = -(delx12 + delx1) / (delx12 * delx1)
+    c2 = delx12 / (delx1 * delx2)
+    c3 = -delx1 / (delx12 * delx2)
+    slpp1 = c1 * Y[0] + c2 * Y[1] + c3 * Y[2]
+    deln = X[nm1] - X[nm1 - 1]
+    delnm1 = X[nm1 - 1] - X[nm1 - 2]
+    delnn = X[nm1] - X[nm1 - 2]
+    c1 = (delnn + deln) / (delnn * deln)
+    c2 = -delnn / (deln * delnm1)
+    c3 = deln / (delnn * delnm1)
+    slppn = c3 * Y[nm1 - 2] + c2 * Y[nm1 - 1] + c1 * Y[nm1]
+    sigmap = sigma * nm1 / (X[nm1] - X[0])
+    dels = sigmap * delx1
     exps = np.exp(dels)
-    sinhs = 0.5*(exps-1/exps)
-    sinhin = 1/(delx1*sinhs)
-    diag1 = sinhin*(dels*0.5*(exps+1/exps)-sinhs)
-    diagin = 1/diag1
-    yp[0] = diagin*(dx1-slpp1)
-    spdiag = sinhin*(sinhs-dels)
-    yp[n] = diagin*spdiag
-    delx2 = X[1:]-X[:-1]
-    dx2 = (Y[1:]-Y[:-1])/delx2
-    dels = sigmap*delx2
+    sinhs = 0.5 * (exps - 1 / exps)
+    sinhin = 1 / (delx1 * sinhs)
+    diag1 = sinhin * (dels * 0.5 * (exps + 1 / exps) - sinhs)
+    diagin = 1 / diag1
+    yp[0] = diagin * (dx1 - slpp1)
+    spdiag = sinhin * (sinhs - dels)
+    yp[n] = diagin * spdiag
+    delx2 = X[1:] - X[:-1]
+    dx2 = (Y[1:] - Y[:-1]) / delx2
+    dels = sigmap * delx2
     exps = np.exp(dels)
-    sinhs = 0.5*(exps-1/exps)
-    sinhin = 1/(delx2*sinhs)
-    diag2 = sinhin*(dels*(0.5*(exps+1/exps))-sinhs)
-    diag2 = np.concatenate([np.array([0]), diag2[:-1]+diag2[1:]])
-    dx2nm1 = dx2[nm1-1]
-    dx2 = np.concatenate([np.array([0]), dx2[1:]-dx2[:-1]])
-    spdiag = sinhin*(sinhs-dels)
+    sinhs = 0.5 * (exps - 1 / exps)
+    sinhin = 1 / (delx2 * sinhs)
+    diag2 = sinhin * (dels * (0.5 * (exps + 1 / exps)) - sinhs)
+    diag2 = np.concatenate([np.array([0]), diag2[:-1] + diag2[1:]])
+    dx2nm1 = dx2[nm1 - 1]
+    dx2 = np.concatenate([np.array([0]), dx2[1:] - dx2[:-1]])
+    spdiag = sinhin * (sinhs - dels)
     for i in range(1, nm1):
-        diagin = 1/(diag2[i]-spdiag[i-1]*yp[i+n-1])
-        yp[i] = diagin*(dx2[i]-spdiag[i-1]*yp[i-1])
-        yp[i+n] = diagin*spdiag[i]
-    diagin = 1/(diag1-spdiag[nm1-1]*yp[n+nm1-1])
-    yp[nm1] = diagin*(slppn-dx2nm1-spdiag[nm1-1]*yp[nm1-1])
-    for i in range(n-2, -1, -1):
-        yp[i] = yp[i]-yp[i+n]*yp[i+1]
+        diagin = 1 / (diag2[i] - spdiag[i - 1] * yp[i + n - 1])
+        yp[i] = diagin * (dx2[i] - spdiag[i - 1] * yp[i - 1])
+        yp[i + n] = diagin * spdiag[i]
+    diagin = 1 / (diag1 - spdiag[nm1 - 1] * yp[n + nm1 - 1])
+    yp[nm1] = diagin * (slppn - dx2nm1 - spdiag[nm1 - 1] * yp[nm1 - 1])
+    for i in range(n - 2, -1, -1):
+        yp[i] = yp[i] - yp[i + n] * yp[i + 1]
     m = len(T)
     subs = np.repeat(nm1, m)
-    s = X[nm1]-X[0]
-    sigmap = sigma*nm1/s
+    s = X[nm1] - X[0]
+    sigmap = sigma * nm1 / s
     j = 0
-    for i in range(1, nm1+1):
+    for i in range(1, nm1 + 1):
         while T[j] < X[i]:
             subs[j] = i
             j += 1
@@ -135,22 +138,23 @@ def IDL_Spline(X, Y, T, sigma = 1.0):
                 break
         if j == m:
             break
-    subs1 = subs-1
-    del1 = T-X[subs1]
-    del2 = X[subs]-T
-    dels = X[subs]-X[subs1]
-    exps1 = np.exp(sigmap*del1)
-    sinhd1 = 0.5*(exps1-1/exps1)
-    exps = np.exp(sigmap*del2)
-    sinhd2 = 0.5*(exps-1/exps)
-    exps = exps1*exps
-    sinhs = 0.5*(exps-1/exps)
-    spl = (yp[subs]*sinhd1+yp[subs1]*sinhd2)/sinhs+((Y[subs]-yp[subs])*del1+(Y[subs1]-yp[subs1])*del2)/dels
+    subs1 = subs - 1
+    del1 = T - X[subs1]
+    del2 = X[subs] - T
+    dels = X[subs] - X[subs1]
+    exps1 = np.exp(sigmap * del1)
+    sinhd1 = 0.5 * (exps1 - 1 / exps1)
+    exps = np.exp(sigmap * del2)
+    sinhd2 = 0.5 * (exps - 1 / exps)
+    exps = exps1 * exps
+    sinhs = 0.5 * (exps - 1 / exps)
+    spl = (yp[subs] * sinhd1 + yp[subs1] * sinhd2) / sinhs + (
+        (Y[subs] - yp[subs]) * del1 + (Y[subs1] - yp[subs1]) * del2
+    ) / dels
     if m == 1:
         return spl[0]
     else:
         return spl
-
 
 
 def compute_drfs(
@@ -200,12 +204,12 @@ def compute_drfs(
     # rfl comes in as BIP (ns, nl, nb) from IDL — reshape to (nb, ns, nl)
     # Note: The IDL calculations are done on un-scaled TB fields,
     #       so here, we cause the b1-b6 fields to be scaled-by-1000 values
-    b1 = np.round(rfl[:, :, 0] * 1000.)
-    b2 = np.round(rfl[:, :, 1] * 1000.)
-    b3 = np.round(rfl[:, :, 2] * 1000.)
-    b4 = np.round(rfl[:, :, 3] * 1000.)
-    b5 = np.round(rfl[:, :, 4] * 1000.)
-    b6 = np.round(rfl[:, :, 5] * 1000.)
+    b1 = np.round(rfl[:, :, 0] * 1000.0)
+    b2 = np.round(rfl[:, :, 1] * 1000.0)
+    b3 = np.round(rfl[:, :, 2] * 1000.0)
+    b4 = np.round(rfl[:, :, 3] * 1000.0)
+    b5 = np.round(rfl[:, :, 4] * 1000.0)
+    b6 = np.round(rfl[:, :, 5] * 1000.0)
 
     # Initialize output arrays with FLAG
     ndsi = np.full((ns, nl), FLAG, dtype=np.float32)
@@ -226,7 +230,7 @@ def compute_drfs(
     valid_mask = (b4 > 0) & (b5 > 0)
 
     if not np.any(valid_mask):
-        print("NO SNOW FOUND, RETURNING FLAGGED BUNDLE")
+        logger.warning("NO SNOW FOUND, RETURNING FLAGGED BUNDLE")
         return {
             "ndgsi": ndgsi,
             "ndsi": ndsi,
@@ -278,13 +282,15 @@ def compute_drfs(
     # Find nearest SZA for each pixel
     nearest_sza = _find_nearest_sza(solarzenith_int)
 
-    print("Starting radiative forcing computation...")
-    print('check nearest_sza...')
+    logger.info("Starting radiative forcing computation...")
+    logger.info("check nearest_sza...")
 
     # Process per unique SZA to minimize LUT lookups
     for sza_val in ZENITH_VALUES:
         sza_mask = (nearest_sza == sza_val) & ~np.isclose(ndgsi, FLAG)
-        print(f'  num grid cells with sza: {sza_val}  {np.sum(np.where(sza_mask, 1, 0))}')
+        logger.debug(
+            f"num grid cells with sza {sza_val}:  {np.count_nonzero(sza_mask)}"
+        )
 
         if not np.any(sza_mask):
             continue
@@ -362,7 +368,9 @@ def compute_drfs(
                 # This was the original conversion, using scipy.interpolate.CubicSpline()
                 # cs = CubicSpline(modis_wvl[0:4], weights)
                 # splineweights = cs(avi_wvl[0:51]) / 10000
-                splineweights = IDL_Spline(modis_wvl[0:4], weights, avi_wvl[0:51]) / 10000
+                splineweights = (
+                    IDL_Spline(modis_wvl[0:4], weights, avi_wvl[0:51]) / 10000
+                )
 
                 # Compute irradiance
                 irrad = compute_irradiance(
@@ -418,4 +426,4 @@ def write_drfs_outputs(
     for field, data in outputs.items():
         outpath = working_dir / f"{filename_prefix}.{field}.dat"
         data.astype(np.float32).tofile(outpath)
-        print(f"Wrote {outpath}")
+        logger.info(f"Wrote {outpath}")

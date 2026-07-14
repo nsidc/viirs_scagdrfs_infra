@@ -3,7 +3,9 @@
 
 import datetime as dt
 import logging
+from src.log_config import setup_logging
 import sys
+
 
 try:
     import click
@@ -24,10 +26,6 @@ from src.constants import (
     get_nrt_dir,
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 
@@ -190,4 +188,5 @@ def get_nrt_data(start_date, end_date, product):
 
 
 if __name__ == "__main__":
+    setup_logging()
     get_nrt_data()

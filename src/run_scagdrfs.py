@@ -20,6 +20,11 @@ from src.util import (
     check_expected_tif_files_with_glob,
 )
 
+import logging
+from src.log_config import setup_logging
+
+logger = logging.getLogger(__name__)
+
 
 def setup_scagdrfs_cluster():
     # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
@@ -43,7 +48,8 @@ def setup_scagdrfs_cluster():
     #       process 30 pic files at a time, plus one for the job-runner
     cluster.scale(31)
 
-    print(cluster.job_script(), "\n")
+    logger.debug("Dask job script:\n%s", cluster.job_script())
+
     return cluster
 
 
@@ -135,6 +141,7 @@ def run_scagdrfs(
     no_publish,
     product,
 ):
+    setup_logging()
     # Forces a run even with 18 tifs should be a click option
     force_run_scagdrfs = True  # This should be false for normal Ops operations
     # Set to true since we are in development stage
@@ -148,22 +155,22 @@ def run_scagdrfs(
         day_futures = []
 
     for day in date_range(start_date=start_date, end_date=end_date):
-        print(f"run_scagdrfs: loop day: {day}")
+        logger.info(f"run_scagdrfs: loop day: {day}")
         tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
-            print(f"    run_scagdrfs: tile: {tile}")
+            logger.info(f"run_scagdrfs: tile: {tile}")
             tif_dir = WORK_DIR / product / day.strftime("%Y.%m.%d") / tile
             tif_count = check_expected_tif_files_with_glob(tif_dir, tile, product)
             if tif_count and not force_run_scagdrfs:
-                print(
+                logger.info(
                     f"All expected tif files in {tif_dir} skipping running {tile} for {day}.\n"
                 )
                 continue
 
-            print(f"Running SCAGDRFS for {product},day: {day}\n")
+            logger.info(f"Running SCAGDRFS for {product},day: {day}\n")
 
             if no_queue:
-                print("    in no_queue...")
+                # print("    in no_queue...")
                 ctx.invoke(
                     run_a_day,
                     day=day,
@@ -174,12 +181,12 @@ def run_scagdrfs(
                     no_queue=no_queue,
                 )
             else:
-                print("    NOT in no_queue...")
+                # print("    NOT in no_queue...")
                 cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {transfer_dir} -t {tile} -P {product}"
 
                 if skip:
                     cmd += " -k"
-                print(f"Running SCAGDRFS for day: {day} with command: \n{cmd}\n")
+                logger.info(f"Running SCAGDRFS for day: {day} with command: {cmd}")
                 future = scagdrfs_client.submit(
                     subprocess.run,
                     cmd,
@@ -193,7 +200,16 @@ def run_scagdrfs(
     if not no_queue:
         day_results = scagdrfs_client.gather(day_futures)
         for day_result in day_results:
-            print(f"Result from SCAGDRFS day run: {day_result} \n")
+            if day_result.returncode == 0:
+                logger.info("Day run succeeded: %s", day_result.args)
+            else:
+                logger.error(
+                    "Day run FAILED (rc=%d): %s", day_result.returncode, day_result.args
+                )
+            if day_result.stdout:
+                logger.info("day run stdout:\n%s", day_result.stdout)
+            if day_result.stderr:
+                logger.info("day run stderr:\n%s", day_result.stderr)
         # Close clients before closing the cluster that they were created on
         scagdrfs_client.close()
         scagdrfs_cluster.close()
@@ -223,7 +239,7 @@ def run_scagdrfs(
     #         tiles=tile_ids,
     #     )
 
-    print(f"Finished run_scagdrfs() at {dt.datetime.now()}")
+    logger.info(f"Finished run_scagdrfs() at {dt.datetime.now()}")
 
 
 if __name__ == "__main__":

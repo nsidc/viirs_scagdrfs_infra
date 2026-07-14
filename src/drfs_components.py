@@ -4,11 +4,16 @@ import re
 from pathlib import Path
 
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 ZENITH_VALUES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
 
 
-def load_irradiance_arrays(comps_dir: Path, verbose: bool=True) -> tuple[np.ndarray, np.ndarray]:
+def load_irradiance_arrays(
+    comps_dir: Path,
+) -> tuple[np.ndarray, np.ndarray]:
     """Load direct and diffuse irradiance arrays.
 
     Returns (dir_arr, dif_arr) each shape (216, 14, 19)
@@ -24,70 +29,70 @@ def load_irradiance_arrays(comps_dir: Path, verbose: bool=True) -> tuple[np.ndar
     tot_arr = total.reshape(216, 14, 19, order="F")
     dif_arr = tot_arr - dir_arr
 
-    if verbose:
-        print(f'    Loaded direct irradiance from: {fn_direct}')
-        print(f'    Loaded difuse irradiance from: {fn_total}')
+    logger.debug(f"Loaded direct irradiance from: {fn_direct}")
+    logger.debug(f"Loaded difuse irradiance from: {fn_total}")
 
     return dir_arr, dif_arr
 
 
-def load_modis_wavelengths(comps_dir: Path, verbose: bool=True) -> np.ndarray:
+def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load 7 MODIS band wavelengths. Shape: (7,)"""
     fn_modis_wavelengths = comps_dir / "MODIS.wvl"
     modis_wavelengths = np.loadtxt(fn_modis_wavelengths)
-    if verbose:
-        print(f'    Loaded modis_wavelengths from: {fn_modis_wavelengths}')
+    logger.debug(f"Loaded modis_wavelengths from: {fn_modis_wavelengths}")
 
     return modis_wavelengths
 
 
-def load_aviris_wavelengths(comps_dir: Path, verbose: bool=True) -> np.ndarray:
+def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load AVIRIS wavelengths. Shape: (2, 216)"""
     fn_aviris_wavelengths = comps_dir / "irrad10nm.wvl"
     aviris_wavelengths = np.loadtxt(fn_aviris_wavelengths).T
-    if verbose:
-        print(f'    Loaded aviris_wavelengths from: {fn_aviris_wavelengths}')
+    logger.debug(f"Loaded aviris_wavelengths from: {fn_aviris_wavelengths}")
 
     return aviris_wavelengths
 
 
-def load_ndgsi_lut(comps_dir: Path, sza: int, verbose: bool=True) -> np.ndarray:
+def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
     """Load NDGSI lookup table for a given SZA. Shape: (2, 110)"""
     fn_ndgsi_lut = comps_dir / f"MODIS.z{sza}.ndgsi"
     ndgsi_lut = np.loadtxt(fn_ndgsi_lut).T
-    if verbose:
-        print(f'    Loaded ndgsi lut for {sza} from: {fn_ndgsi_lut}')
+
+    logger.debug(f"Loaded ndgsi lut for {sza} from: {fn_ndgsi_lut}")
 
     return ndgsi_lut
 
 
-def load_sli(comps_dir: Path, sza: int, verbose: bool=True) -> np.ndarray:
+def load_sli(comps_dir: Path, sza: int) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
     fn_sli = comps_dir / f"MODIS.z{sza}.sli"
 
     data_raw = np.fromfile(fn_sli, dtype=np.float32)
-    data_first_7x110 = data_raw[:7*110]
+    data_first_7x110 = data_raw[: 7 * 110]
     data_110x7 = data_first_7x110.reshape(110, 7)
     data_7x110 = np.swapaxes(data_110x7, 0, 1)
 
-    if verbose:
-        print(f'    Loaded clean snow SLI for {sza} from: {fn_sli}')
+    logger.debug(f"Loaded clean snow SLI for {sza} from: {fn_sli}")
 
     return data_7x110
 
 
-def load_all_luts(comps_dir: Path, verbose: bool=True) -> dict:
+def load_all_luts(comps_dir: Path) -> dict:
     """Pre-load all LUTs at startup rather than inside the pixel loop."""
     return {
         sza: {
-            "ndgsi": load_ndgsi_lut(comps_dir, sza, verbose),
-            "sli": load_sli(comps_dir, sza, verbose),
+            "ndgsi": load_ndgsi_lut(comps_dir, sza),
+            "sli": load_sli(comps_dir, sza),
         }
         for sza in ZENITH_VALUES
     }
 
 
-def load_terrain(comps_dir: Path, h: str, v: str, verbose: bool=True) -> tuple[np.ndarray, np.ndarray]:
+def load_terrain(
+    comps_dir: Path,
+    h: str,
+    v: str,
+) -> tuple[np.ndarray, np.ndarray]:
     """Load slope and aspect arrays for a tile.
 
     Returns (slope, aspect) each shape (2400, 2400)
@@ -101,13 +106,15 @@ def load_terrain(comps_dir: Path, h: str, v: str, verbose: bool=True) -> tuple[n
     data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2, 2400, 2400)
     slope = data[0, :, :]
     aspect = data[1, :, :]
-    if verbose:
-        print(f'    Loaded terrain slope and aspect for h{h}v{v} from: {terrain_files[0]}')
+
+    logger.debug(
+        f"Loaded terrain slope and aspect for h{h}v{v} from: {terrain_files[0]}"
+    )
 
     return slope, aspect
 
 
-def load_dem(comps_dir: Path, h: str, v: str, verbose: bool=True) -> np.ndarray:
+def load_dem(comps_dir: Path, h: str, v: str) -> np.ndarray:
     """Load DEM elevation in meters. Shape: (2400, 2400)"""
     dem_files = list((comps_dir / "DEM").glob(f"dem_*_h{h}v{v}.bsq"))
     if len(dem_files) != 1:
@@ -116,8 +123,8 @@ def load_dem(comps_dir: Path, h: str, v: str, verbose: bool=True) -> np.ndarray:
         )
     dem_file = dem_files[0]
     dem_data = np.fromfile(dem_file, dtype=np.int16).reshape(2400, 2400)
-    if verbose:
-        print(f'    Loaded DEM data for h{h}v{v} from: {dem_file}')
+
+    logger.debug(f"Loaded DEM data for h{h}v{v} from: {dem_file}")
 
     return dem_data
 
