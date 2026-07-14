@@ -127,7 +127,7 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
     # NOTE: In normal operation, all sections of this code should run
     #       Developers may set some of these flags to False to speed
     #       up debug iteration
-    remove_intermediate_files = False
+    remove_intermediate_files = True
 
     tile_params = {}
 

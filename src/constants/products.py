@@ -37,8 +37,8 @@ PRODUCT_SENSOR = {
 # (output_prefix, product_id) used in TIF filename glob patterns
 PRODUCT_TIF_PATTERN = {
     "MOD09GA": ("MODSCGDRF_NRT", "MOD09GANRT061"),
-    "VNP09GA": ("VIRSCGDRF_NRT", "VNP09GANRT02"),
-    "VJ109GA": ("VIRSCGDRF_NRT", "VJ109GANRT02"),
+    "VNP09GA": ("VNPSCGDRF_NRT", "VNP09GANRT02"),
+    "VJ109GA": ("VJ1SCGDRF_NRT", "VJ109GANRT02"),
 }
 
 # File patterns
