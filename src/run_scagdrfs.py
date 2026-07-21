@@ -143,7 +143,7 @@ def run_scagdrfs(
 ):
     setup_logging()
     # Forces a run even with 18 tifs should be a click option
-    force_run_scagdrfs = True  # This should be false for normal Ops operations
+    force_run_scagdrfs = False  # This should be false for normal Ops operations
     # Set to true since we are in development stage
 
     product = product.upper()
