@@ -82,7 +82,7 @@ def setup_scagdrfs_cluster():
         "useast",
         "euralps",
         "canada",
-        "ashimilaya",
+        "ashimalaya",
         "nzalps",
     ],
     multiple=True,
