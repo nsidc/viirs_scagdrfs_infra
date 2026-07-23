@@ -83,6 +83,7 @@ def setup_scagdrfs_cluster():
         "euralps",
         "canada",
         "ashimilaya",
+        "nzalps",
     ],
     multiple=True,
     help="Regions of tiles to process. Defaults to list with Western US and Alaska.",
