@@ -3,21 +3,17 @@ import glob
 from src.log_config import setup_logging
 import logging
 import os
+import shutil
 import subprocess
 from datetime import timedelta
 from pathlib import Path
 
 import click
 
-# from dask.distributed import Client
-from dask_jobqueue import SLURMCluster
-
 from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 
 from src.move_tiles import copy_tile_file
-
-# from src.run_drfs import run_drfs
 
 from src.netcdf import create_netcdf
 from src.run_scag import run_scag
@@ -35,30 +31,6 @@ from src.constants.paths import (
 from src.run_drfs_python import create_drfs_geotiffs
 
 logger = logging.getLogger(__name__)
-
-
-def setup_day_cluster():
-    logger.info("Setting up Dask cluster...")
-    # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
-    cluster = SLURMCluster(
-        shebang="#!/usr/bin/bash",
-        account="ucb544_peak2",
-        cores=5,
-        memory="10GB",
-        walltime="03:00:00",
-        death_timeout="1200",
-        local_directory=str(WORK_DIR / "dask"),
-        job_extra_directives=[
-            "--qos=normal",
-            "--job-name=scagdrfs-day",
-            "--partition=amilan",
-        ],
-        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
-    )
-    cluster.adapt(minimum_jobs=1, maximum_jobs=100)
-
-    print(cluster.job_script(), "\n")
-    return cluster
 
 
 @click.command()
@@ -123,11 +95,6 @@ def setup_day_cluster():
 )
 @click.pass_context
 def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue):
-
-    # NOTE: In normal operation, all sections of this code should run
-    #       Developers may set some of these flags to False to speed
-    #       up debug iteration
-    remove_intermediate_files = True
 
     tile_params = {}
 
@@ -294,27 +261,6 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                 tile_id=tile,
                 product=product,
             )
-
-            # Run a check to see if all the expected tifs exist
-            tifCounter = len(glob.glob(os.path.join(working_dir, "*.tif")))
-            if tifCounter == 18:
-                if remove_intermediate_files:
-                    # remove intermediary files
-                    types = (
-                        "*.pic",
-                        "*.control",
-                        "*.list",
-                        "*models",
-                        "*.dat",
-                        "*.bin",
-                    )
-                    file_list = []
-                    for t in types:
-                        file_list.extend(glob.glob(os.path.join(working_dir, t)))
-                    for f in file_list:
-                        os.remove(f)
-            else:
-                print(f"You have {tifCounter} tif files in {working_dir}")
 
 
 if __name__ == "__main__":

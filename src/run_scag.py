@@ -3,8 +3,6 @@ import subprocess
 from pathlib import Path
 
 import click
-from dask.distributed import Client
-from dask_jobqueue import SLURMCluster
 
 from src.mask_scag import mask_scag
 from src.constants.products import SUPPORTED_PRODUCTS, PRODUCT_FILE_EXTENSION
@@ -15,32 +13,6 @@ import logging
 from src.log_config import setup_logging
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: This function is not used:  setup_scag_cluster()
-def setup_scag_cluster():
-    # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
-    logger.info(f"Setting up scag_cluster at {dt.datetime.now()}")
-    cluster = SLURMCluster(
-        shebang="#!/usr/bin/bash",
-        account="ucb544_peak2",
-        cores=1,
-        memory="10GB",
-        walltime="01:00:00",
-        local_directory=str(WORK_DIR / "dask"),
-        job_extra_directives=[
-            "--qos=normal",
-            "--job-name=scag-proc",
-            "--partition=amilan",
-        ],
-        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
-    )
-    # cluster.adapt(minimum_jobs=1, maximum_jobs=50)
-    # This should be 31 so that all 30 pic files can be created at once
-    #    plus one for the job that runs the jobs
-    cluster.scale(31)
-
-    return cluster
 
 
 @click.command()
