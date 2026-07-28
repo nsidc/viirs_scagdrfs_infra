@@ -1,20 +1,5 @@
-title: >-
-  Near Real-Time MODIS/Terra L3 Global Daily 500m SIN Grid Snow Cover, Grain
-  Size, and Dust Radiative Forcing
 Conventions: CF-1.11, ACDD-1.3
-source: http://doi.org/10.5067/MODIS/MOD09GA.NRT.061
 standard_name_vocabulary: CF Standard Name Table (v86, 04 September 2024)
-summary: >-
-  The MODIS Snow Covered Area and Grain-size (MODSCAG) and MODIS Dust Radiative
-  Forcing in Snow (MODDRFS) data are derived from near real-time MODIS/Terra
-  surface reflectance data (MOD09GA_NRT) and include the following parameters:
-  snow fraction, snow grain size (from the SCAG algorithm), vegetation fraction,
-  rock fraction, ice fraction, shade fraction, deltavis, radiative forcing, and
-  optical snow grain size (from the DRFS algorithm).
-comment: >-
-  This data is based on the MODIS Snow Covered Area and Grain-size (MODSCAG) and
-  MODIS Dust Radiative Forcing in Snow (MODDRFS) data sets previously produced by
-  the NASA Jet Propulsion Laboratory (JPL).
 references: >-
   Painter, T.H., Rittger, K., McKenzie, C., Slaughter, P., Davis, R.E., & Dozier,
   J. (2009). Retrieval of subpixel snow-covered area, grain size, and albedo from
@@ -25,8 +10,7 @@ references: >-
 publisher_institution: >-
   National Snow and Ice Data Center/Cooperative Institute for Research in
   Environmental Sciences/University of Colorado at Boulder/Boulder, CO
-publisher_name: >-
-  NASA National Snow and Ice Data Center Distributed Active Archive Center
+publisher_name: NASA National Snow and Ice Data Center Distributed Active Archive Center
 publisher_type: institution
 publisher_url: https://nsidc.org/daac
 publisher_email: nsidc@nsidc.org
@@ -41,14 +25,9 @@ keywords: >-
   EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW RADIATIVE FORCING,
   EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW GRAIN SIZE,
   EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > VISIBLE SNOW DARKENING
-keywords_vocabulary: >-
-  NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
-platform: Terra
-platform_vocabulary: >-
-  NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
-instrument: MODIS > Moderate-Resolution Imaging Spectroradiometer
-instrument_vocabulary: >-
-  NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
+keywords_vocabulary: NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
+platform_vocabulary: NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
+instrument_vocabulary: NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
 license: >-
   Access Constraint: These data are freely, openly, and fully accessible;
   Use Constraint: These data are freely, openly, and fully available to use
@@ -57,46 +36,14 @@ license: >-
   Data Center Distributed Active Archive Center
 contributor_name: >-
   Karl Rittger, Mary J. Brodzik, Molly A. Hardman, Hannah Wilcox, Donna J. Scott,
-  Robyn Marowitz, Jessica Calme, Sebastien J. P. Lenard, Ken Mankoff, Annie
-  Burgess
+  Robyn Marowitz, Jessica Calme, Sebastien J. P. Lenard, Ken Mankoff, Annie Burgess
 contributor_role: >-
   principal_investigator, science_programmer, science_programmer,
   software_developer, project_lead, software_developer, data_manager,
   postdoc_researcher, science_programmer, researcher
-citation: >-
-  Rittger, K., Brodzik, M. J., Hardman, M. A., Wilcox, H., Scott, D. J.,
-  Marowitz, R., & Painter, T. (2024). Near Real-Time MODIS/Terra L3 Global Daily
-  500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1
-  [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center
-  Distributed Active Archive Center. https://doi.org/10.5067/5OTQIAWI04ZT.
-  [Data Accessed].
-id: 10.5067/5OTQIAWI04ZT
-metadata_link: https://doi.org/10.5067/5OTQIAWI04ZT
-product_version: v1.1
-software_version_id: autofill
-software_repository: autofill
 geospatial_bounds_crs: EPSG:4326
-# Follow this format for each tile/file using information from sn_bound_10deg
-# or sn_gring_10deg tabs, Scott's script
-# POLYGON((30.00000000 80.82903769, 30.00000000 92.37604307, 20.00000000
-# 85.13422180, 20.00000000 74.49244407, 30.00000000 80.82903769))"
-geospatial_bounds: autofill
 cdm_data_type: Grid
-# Use information in sn_bound_10deg or sn_gring_10_deg tabs of this document
-# *NOTE - Scott has a script that reads the two sn_*_10deg files from the
-# modland website - Leverage this script.
-# The script also works for the geospatial_bounds, and GeoTransform
-geospatial_lat_min: autofill
-geospatial_lat_max: autofill
-geospatial_lon_min: autofill
-geospatial_lon_max: autofill
 geospatial_lat_units: degrees_north
 geospatial_lon_units: degrees_east
 time_coverage_resolution: P1D
-# Determined by file contents, "midnight" of the date in filename
-time_coverage_start: autofill
-# Determined by file contents, "midnight" of the date in filename
-time_coverage_end: autofill
 time_coverage_duration: P1D
-date_created: autofill
-date_modified: autofill
