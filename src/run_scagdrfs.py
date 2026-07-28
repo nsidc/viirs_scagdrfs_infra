@@ -49,7 +49,6 @@ def setup_scagdrfs_cluster(n_workers):
             "--job-name=scagdrfs",
             "--partition=acpu",
         ],
-        log_directory=f"{os.path.join(os.environ.get('WORK_DIR'), 'dask', 'jobqueue-logs')}",
         log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
     # One worker per job, one tile per worker
