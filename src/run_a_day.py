@@ -27,6 +27,7 @@ from src.constants.paths import (
     TOPDIR,
     get_nrt_dir,
     DRFS_COMPONENT_DIR,
+    get_slurm_scratch,
 )
 from src.run_drfs_python import create_drfs_geotiffs
 
@@ -112,6 +113,9 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
 
     # TODO: Should tile_params["product"] be product.upper() ?
     tile_params["product"] = product
+    slurm_scratch = get_slurm_scratch(product, day, tile)
+    slurm_scratch.mkdir(parents=True, exist_ok=True)
+    logger.info("  run_a_day slurm_scratch: %s", slurm_scratch)
 
     input_dir = get_nrt_dir(product.upper())
     if not skip:
@@ -144,13 +148,21 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
     else:
         src_file = src_files[0]
         tile_params["src_file"] = src_file
+
         # bipify files
         bipify_files(input_dir=working_dir, output_dir=working_dir, product=product)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
         bip_meta_file = bip_meta_files[0]
-        tile_params["bip_meta_file"] = bip_meta_file
+        bip_file = bip_meta_file.with_suffix("")
+
+        # stage scag's inputs into node-local scratch
+        shutil.copy2(src_file, slurm_scratch / src_file.name)
+        shutil.copy2(bip_file, slurm_scratch / bip_file.name)
+        shutil.copy2(bip_meta_file, slurm_scratch / bip_meta_file.name)
+        copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=slurm_scratch)
+
+        tile_params["bip_meta_file"] = slurm_scratch / bip_meta_file.name
         tile_params["component_dir"] = DRFS_COMPONENT_DIR
-        copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
         for tile_params in param_lists:
@@ -186,7 +198,7 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                         run_scag,
                         bip_file=tile_params["bip_meta_file"].with_suffix(""),
                         src_file=tile_params["src_file"],
-                        working_dir=tile_params["working_dir"],
+                        working_dir=slurm_scratch,
                         product=product,
                     )
                 else:
@@ -233,7 +245,7 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                             TOPDIR,
                             tile_params["bip_meta_file"].with_suffix(""),
                             tile_params["src_file"],
-                            tile_params["working_dir"],
+                            slurm_scratch,
                             tile_params["product"],
                         )
                     )
