@@ -1,5 +1,4 @@
 Conventions: CF-1.11, ACDD-1.3
-standard_name_vocabulary: CF Standard Name Table (v86, 04 September 2024)
 references: >-
   Painter, T.H., Rittger, K., McKenzie, C., Slaughter, P., Davis, R.E., & Dozier,
   J. (2009). Retrieval of subpixel snow-covered area, grain size, and albedo from
@@ -25,9 +24,6 @@ keywords: >-
   EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW RADIATIVE FORCING,
   EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > SNOW GRAIN SIZE,
   EARTH SCIENCE > CRYOSPHERE > SNOW/ICE > VISIBLE SNOW DARKENING
-keywords_vocabulary: NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
-platform_vocabulary: NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
-instrument_vocabulary: NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20
 license: >-
   Access Constraint: These data are freely, openly, and fully accessible;
   Use Constraint: These data are freely, openly, and fully available to use
