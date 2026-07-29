@@ -34,13 +34,6 @@ license: >-
   without restrictions, provided that you cite the data according to the
   recommended citation included here. creator_name: NASA National Snow and Ice
   Data Center Distributed Active Archive Center
-contributor_name: >-
-  Karl Rittger, Mary J. Brodzik, Molly A. Hardman, Hannah Wilcox, Donna J. Scott,
-  Robyn Marowitz, Jessica Calme, Sebastien J. P. Lenard, Ken Mankoff, Annie Burgess
-contributor_role: >-
-  principal_investigator, science_programmer, science_programmer,
-  software_developer, project_lead, software_developer, data_manager,
-  postdoc_researcher, science_programmer, researcher
 geospatial_bounds_crs: EPSG:4326
 cdm_data_type: Grid
 geospatial_lat_units: degrees_north

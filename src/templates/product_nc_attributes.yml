@@ -22,6 +22,13 @@ MOD09GA:
     (2024). Near Real-Time MODIS/Terra L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust
     Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data
     Center Distributed Active Archive Center. https://doi.org/10.5067/5OTQIAWI04ZT. [Data Accessed].
+  contributor_name: >-
+    Karl Rittger, Mary J. Brodzik, Molly A. Hardman, Hannah Wilcox, Donna J. Scott,
+    Robyn Marowitz, Jessica Calme, Sebastien J. P. Lenard, Ken Mankoff, Annie Burgess
+  contributor_role: >-
+    principal_investigator, science_programmer, science_programmer,
+    software_developer, project_lead, software_developer, data_manager,
+    postdoc_researcher, science_programmer, researcher
   doi: "10.5067/5OTQIAWI04ZT"
   product_version: "v1.1"
   source_id: "MOD09GANRT061"
@@ -70,10 +77,13 @@ VJ109GA:
     Radiative Forcing in Snow (VDRFS) data sets, adapted from the MODIS equivalents originally
     produced by the NASA Jet Propulsion Laboratory (JPL).
   citation: >
-    Rittger, K., R. Marowitz, J.S. Stewart, D.J.Scott, D.J., OTHER (2026). Near Real-Time VIIRS L3
-    Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1
-    [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active
-    Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
+    Rittger, K., R. Marowitz, J.S. Stewart, D.J.Scott, D.J., OTHER (2026). Near Real-Time VIIRS L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
+  contributor_name: >-
+    Karl Rittger, James S. Stewart, Robyn Marowitz, Donna J. Scott,
+    Hannah Wilcox,  Jessica Calme, Annie Burgess
+  contributor_role: >-
+    principal_investigator, science_programmer, software_developer,
+    project_lead, software_developer, data_manager, researcher
   doi: "10.5067/1M2W6PZRN4VD"
   product_version: "v1.0"
   source_id: "VJ109GANRT02"
