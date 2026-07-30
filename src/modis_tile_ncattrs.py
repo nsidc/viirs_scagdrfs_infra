@@ -74,7 +74,11 @@ from pathlib import Path
 import pandas as pd
 
 
-res500m = 463.312716525
+# res500m = 463.312716524999985  # from geotiff of MOD09GA file
+# res500m = 463.312716525  # as above, correcting float64 discretization
+# res500m = 463.312716527778  # From typical VJ109GA file
+# res500m = 463.31271656938424  # apparent GDAL value
+res500m = 463.31271652777775  # This is the value that yield exact results with MOD09GA 500m files
 
 
 def get_tiletuple_from_arg(argstr):
