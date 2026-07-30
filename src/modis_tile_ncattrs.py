@@ -68,6 +68,11 @@ yields ->
 """
 
 import sys
+#from src.constants.paths import CONSTANTS_DIR
+from constants.paths import CONSTANTS_DIR
+from pathlib import Path
+import pandas as pd
+
 
 res500m = 463.312716525
 
@@ -157,7 +162,7 @@ def get_geospatial_bounds_latlon(hID, vID):
         # Points are: LL, UL, UR, UR, LR, LL(again)
         # Note: the original file from MODIS has four digits after decimal point
         geospatial_bounds_str = (
-            f"POLYGON(("
+            "POLYGON(("
             f"{lat_min:.4f} {lon_min:.4f},"
             f"{lat_max:.4f} {lon_min:.4f},"
             f"{lat_max:.4f} {lon_max:.4f},"
@@ -173,7 +178,28 @@ def get_geospatial_bounds_latlon(hID, vID):
 
 
 def look_up_latlon_minmax(hID, vID):
+    """Use values for min/max lat/lon calculated to replace
+    the values found at:
+         https://modis-land.gsfc.nasa.gov/pdf/sn_bound_10deg.txt
     """
+
+    latlon_minmax_filename = Path(CONSTANTS_DIR / 'modis_tile_lonlat_bounds.txt')
+    bounds = pd.read_csv(latlon_minmax_filename, sep='\s+')  # noqa
+
+    lon_min = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lon_min'])
+    lon_max = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lon_max'])
+    lat_min = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lat_min'])
+    lat_max = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lat_max'])
+
+    is_valid_tileID = lon_min > -200
+
+    return is_valid_tileID, lon_min, lon_max, lat_min, lat_max
+
+
+def look_up_latlon_minmax_orig(hID, vID):
+    """
+    Note: This routine is superseded by the new routine, but left
+       here for reference.
     Use the values in:
          https://modis-land.gsfc.nasa.gov/pdf/sn_bound_10deg.txt
     to provide the global ncattrs:
