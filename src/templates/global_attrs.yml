@@ -28,8 +28,8 @@ license: >-
   Access Constraint: These data are freely, openly, and fully accessible;
   Use Constraint: These data are freely, openly, and fully available to use
   without restrictions, provided that you cite the data according to the
-  recommended citation included here. creator_name: NASA National Snow and Ice
-  Data Center Distributed Active Archive Center
+  recommended citation included here.
+creator_name: NASA National Snow and Ice Data Center Distributed Active Archive Center
 geospatial_bounds_crs: EPSG:4326
 cdm_data_type: Grid
 geospatial_lat_units: degrees_north
