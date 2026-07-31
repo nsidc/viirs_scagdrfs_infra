@@ -7,7 +7,9 @@ from osgeo import gdal, osr
 from src.make_tif import make_tif
 
 
-MODIS_PROJ = "+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+# The projection is updated for modern usage and precise Earth radius
+# MODIS_PROJ = "+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+MODIS_PROJ = "+proj=sinu +R=6371007.18042784"
 
 BASE_BIP_INFO = {
     "num_samples": "10",
@@ -166,7 +168,8 @@ class TestProjection:
 
         ds = open_output(output_file)
         srs = osr.SpatialReference(wkt=ds.GetProjection())
-        assert srs.GetSemiMajor() == pytest.approx(6371007.181, rel=1e-6)
+        # assert srs.GetSemiMajor() == pytest.approx(6371007.181, rel=1e-6)
+        assert srs.GetSemiMajor() == pytest.approx(6371007.18042784, rel=1e-6)
 
 
 class TestOutputDimensions:
