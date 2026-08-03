@@ -1,6 +1,6 @@
 radiative_forcing:
   datatype: u2
-  _FillValue: 255
+  _FillValue: 65535US
   long_name: VIIRSDRFS radiative forcing on snow
   standard_name: surface_downward_heat_flux_in_snow
   units: W m-2
