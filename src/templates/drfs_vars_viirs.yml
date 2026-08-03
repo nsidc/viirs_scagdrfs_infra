@@ -13,7 +13,7 @@ radiative_forcing:
 
 unmasked_radiative_forcing:
   datatype: u2
-  _FillValue: 255
+  _FillValue: 65535US
   long_name: Unmasked VIIRSDRFS radiative forcing on snow
   standard_name: surface_downward_heat_flux_in_snow
   units: W m-2
@@ -25,7 +25,7 @@ unmasked_radiative_forcing:
 
 drfs_grnsz:
   datatype: u2
-  _FillValue: 255
+  _FillValue: 65535US
   long_name: VIIRSDRFS grain size
   standard_name: snow_grain_size
   units: m
@@ -40,7 +40,7 @@ drfs_grnsz:
 
 unmasked_drfs_grnsz:
   datatype: u2
-  _FillValue: 255
+  _FillValue: 65535
   long_name: Unmasked VIIRSDRFS grain size
   standard_name: snow_grain_size
   units: m
@@ -59,7 +59,7 @@ deltavis:
   units: "1"
   valid_range:
     datatype: u2
-    values: [0, 75]
+    values: [0, 99]
   add_offset: 0.0
   scale_factor: 0.01
   comment: Also known as snow darkening. Difference between observed visible broadband (0.350-0.876 micrometer) albedo and clean snow albedo estimated from VIIRSDRFS grain size
@@ -73,7 +73,7 @@ unmasked_deltavis:
   units: "1"
   valid_range:
     datatype: u2
-    values: [0, 75]
+    values: [0, 99]
   add_offset: 0.0
   scale_factor: 0.01
   comment: Also known as snow darkening. Unmasked difference between observed visible broadband (0.350-0.876 micrometer) albedo and clean snow albedo estimated from VIIRSDRFS grain size
