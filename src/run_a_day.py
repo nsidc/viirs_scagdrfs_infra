@@ -127,7 +127,11 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
             product=product,
         )
         copy_tile_file(
-            move_date=day, input_dir=input_dir, output_dir=slurm_scratch, tile=tile
+            move_date=day,
+            input_dir=input_dir,
+            output_dir=slurm_scratch,
+            tile=tile,
+            product=product
         )
 
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
