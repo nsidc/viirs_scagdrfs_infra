@@ -48,9 +48,12 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     #   The bip_info string value is:
     #     bip_info["proj_string"]=\\\'"+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"\\\'
     #   The hardcoded replacement value here is:
-    #     "+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+    #     "+proj=sinu +R=6371007.18042784"
+    #   Note: this removes the obsolete 'nagrids' and 'wktext' flags
+    #         and sets the Earth radius to the value that *exactly* matches
+    #         MOD09GA in-file georeferencing.
 
-    modis_sinu_proj_string = "+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+    modis_sinu_proj_string = "+proj=sinu +R=6371007.18042784"
     # srs.SetFromUserInput(bip_info["proj_string"])  # accepts PROJ4, EPSG:, WKT, etc.
     srs.SetFromUserInput(modis_sinu_proj_string)  # accepts PROJ4, EPSG:, WKT, etc.
 

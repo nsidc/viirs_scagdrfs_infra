@@ -68,8 +68,18 @@ yields ->
 """
 
 import sys
+from src.constants.paths import CONSTANTS_DIR
+# from constants.paths import CONSTANTS_DIR  # This version allows user to call file directly
+from pathlib import Path
+import pandas as pd
+import yaml
 
-res500m = 463.312716525
+
+# res500m = 463.312716524999985  # from geotiff of MOD09GA file
+# res500m = 463.312716525        # as above, correcting float64 discretization
+# res500m = 463.312716527778     # From typical VJ109GA file
+# res500m = 463.31271656938424   # apparent GDAL value
+res500m = 463.31271652777775     # This value yield exact results with MOD09GA 500m files
 
 
 def get_tiletuple_from_arg(argstr):
@@ -141,7 +151,31 @@ def get_geospatial_bounds_xy(hID, vID):
 
 
 def get_geospatial_bounds_latlon(hID, vID):
-    """Return the string containing the geospatial_bounds string
+    """
+    Note: This version uses nominal 10-degree spacing along
+           horizontal grid edges and 1-degree spacing along
+           vertical grid edges with vertices added for the
+           last-valid grid cell vertex at the -180/+180 degree
+           longitude line.
+    """
+    gsbounds_filename = Path(CONSTANTS_DIR / 'modis_tile_geospatial_bounds.yml')
+    with open(gsbounds_filename) as f:
+        gs_bounds_dict = yaml.safe_load(f)
+    tileID = f'h{hID:02d}v{vID:02d}'
+
+    polygon_str = gs_bounds_dict[tileID]
+
+    return polygon_str
+
+
+def get_geospatial_bounds_latlon_v1(hID, vID):
+    """
+    Note: This version creates a trapezoid using the MODLAND min/max lat/lon values.
+          but has been superseded by the new version which uses nominal 10-degree
+          spacing along horizontal grid edges and 1-degree spacing along vertical
+          grid edges with vertices added for the last-valid grid cell vertex at
+          the -180/+180 degree longitude line.
+    Return the string containing the geospatial_bounds string
     which is a POLYGON statement in the projected coordinates"""
 
     is_valid_tileID, lon_min, lon_max, lat_min, lat_max = look_up_latlon_minmax(
@@ -157,7 +191,7 @@ def get_geospatial_bounds_latlon(hID, vID):
         # Points are: LL, UL, UR, UR, LR, LL(again)
         # Note: the original file from MODIS has four digits after decimal point
         geospatial_bounds_str = (
-            f"POLYGON(("
+            "POLYGON(("
             f"{lat_min:.4f} {lon_min:.4f},"
             f"{lat_max:.4f} {lon_min:.4f},"
             f"{lat_max:.4f} {lon_max:.4f},"
@@ -173,7 +207,28 @@ def get_geospatial_bounds_latlon(hID, vID):
 
 
 def look_up_latlon_minmax(hID, vID):
+    """Use values for min/max lat/lon calculated to replace
+    the values found at:
+         https://modis-land.gsfc.nasa.gov/pdf/sn_bound_10deg.txt
     """
+
+    latlon_minmax_filename = Path(CONSTANTS_DIR / 'modis_tile_lonlat_bounds.txt')
+    bounds = pd.read_csv(latlon_minmax_filename, sep='\s+')  # noqa
+
+    lon_min = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lon_min'])
+    lon_max = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lon_max'])
+    lat_min = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lat_min'])
+    lat_max = float(bounds[(bounds['ih'] == hID) & (bounds['iv'] == vID)]['lat_max'])
+
+    is_valid_tileID = lon_min > -200
+
+    return is_valid_tileID, lon_min, lon_max, lat_min, lat_max
+
+
+def look_up_latlon_minmax_orig(hID, vID):
+    """
+    Note: This routine is superseded by the new routine, but left
+       here for reference.
     Use the values in:
          https://modis-land.gsfc.nasa.gov/pdf/sn_bound_10deg.txt
     to provide the global ncattrs:
