@@ -25,31 +25,38 @@ from src.log_config import setup_logging
 
 logger = logging.getLogger(__name__)
 
+MAX_CONCURRENT_TILES = 100
 
-def setup_scagdrfs_cluster():
+
+def setup_scagdrfs_cluster(n_workers):
     # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
     cluster = SLURMCluster(
         shebang="#!/usr/bin/bash",
         account="ucb544_peak2",
-        cores=5,
+        # cores/memory are dask's own accounting; job_cpu/job_mem are what
+        # actually land in the #SBATCH directives. One dask worker per job
+        # takes one tile, and run_scag's thread pool gets all 5 cores.
+        cores=1,
+        processes=1,
         memory="10GB",
+        job_cpu=5,
+        job_mem="10GB",
         walltime="03:00:00",
         death_timeout="1200",
         local_directory=str(WORK_DIR / "dask"),
-        # NOTE: name this based on which subroutine called it
         job_extra_directives=[
-            "--qos=normal",
+            "--qos=cpu-normal",
             "--job-name=scagdrfs",
-            "--partition=amilan",
+            "--partition=acpu",
         ],
         log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
     )
-    # NOTE: This scale should be at least 31 so that run_scag() can
-    #       process 30 pic files at a time, plus one for the job-runner
-    cluster.scale(31)
+    # One worker per job, one tile per worker
+    cluster.scale(n_workers)
 
     logger.debug("Dask job script:\n%s", cluster.job_script())
 
+    print(cluster.job_script(), "\n")
     return cluster
 
 
@@ -144,15 +151,17 @@ def run_scagdrfs(
 
     product = product.upper()
     orig_transfer_dir = transfer_dir
+    tile_ids = get_region_tile_ids(regions)
+    n_days = len(list(date_range(start_date=start_date, end_date=end_date)))
+    n_tasks = len(tile_ids) * n_days
 
     if not no_queue:
-        scagdrfs_cluster = setup_scagdrfs_cluster()
+        scagdrfs_cluster = setup_scagdrfs_cluster(min(n_tasks, MAX_CONCURRENT_TILES))
         scagdrfs_client = Client(scagdrfs_cluster)
         day_futures = []
 
     for day in date_range(start_date=start_date, end_date=end_date):
         logger.info(f"run_scagdrfs: loop day: {day}")
-        tile_ids = get_region_tile_ids(regions)
         for tile in tile_ids:
             logger.info(f"run_scagdrfs: tile: {tile}")
             tif_dir = WORK_DIR / product / day.strftime("%Y.%m.%d") / tile
