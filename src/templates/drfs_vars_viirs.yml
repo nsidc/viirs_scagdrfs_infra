@@ -53,12 +53,12 @@ unmasked_drfs_grnsz:
   grid_mapping: crs
 
 deltavis:
-  datatype: u2
+  datatype: u1
   _FillValue: 255
   long_name: VIIRSDRFS decrease in snow albedo from light absorbing particles
   units: "1"
   valid_range:
-    datatype: u2
+    datatype: u1
     values: [0, 99]
   add_offset: 0.0
   scale_factor: 0.01
@@ -67,12 +67,12 @@ deltavis:
   ancillary_variables: DRFS_data_mask
 
 unmasked_deltavis:
-  datatype: u2
+  datatype: u1
   _FillValue: 255
   long_name: Unmasked VIIRSDRFS decrease in snow albedo from light absorbing particles
   units: "1"
   valid_range:
-    datatype: u2
+    datatype: u1
     values: [0, 99]
   add_offset: 0.0
   scale_factor: 0.01
@@ -80,16 +80,16 @@ unmasked_deltavis:
   grid_mapping: crs
 
 DRFS_data_mask:
-  datatype: u2
+  datatype: u1
   _FillValue: 0
   long_name: flag values for masked DRFS data
   standard_name: status_flag
   units: "1"
   valid_range:
-    datatype: u2
+    datatype: u1
     values: [235, 255]
   grid_mapping: crs
   flag_values:
-    datatype: u2
+    datatype: u1
     values: [235, 250, 255]
   flag_meanings: value_not_calculated cloud no_input_data
