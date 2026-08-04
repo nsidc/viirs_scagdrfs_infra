@@ -1,12 +1,20 @@
 # Per-product metadata for SCAGDRFS netCDF global attributes.
-# These values fill the placeholders in scagdrfs_template.cdl.
 # Keys match placeholder names exactly.
+#
+# Filename-construction keys (not written as global attributes):
+#   source_id:           used in the netCDF filename
+#   tif_source_id:       used to find input tif files on disk
+#   nc_filename_version: used in the netCDF filename
 
 MOD09GA:
   title: "Near Real-Time MODIS/Terra L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
   source: "http://doi.org/10.5067/MODIS/MOD09GA.NRT.061"
   platform: "Terra"
   instrument: "MODIS > Moderate-Resolution Imaging Spectroradiometer"
+  standard_name_vocabulary: "CF Standard Name Table (v86, 04 September 2024)"
+  keywords_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20"
+  platform_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20"
+  instrument_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 20"
   summary: >
     The MODIS Snow Covered Area and Grain-size (MODSCAG) and MODIS Dust Radiative Forcing in Snow
     (MODDRFS) data are derived from near real-time MODIS/Terra surface reflectance data (MOD09GA_NRT)
@@ -22,9 +30,17 @@ MOD09GA:
     (2024). Near Real-Time MODIS/Terra L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust
     Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data
     Center Distributed Active Archive Center. https://doi.org/10.5067/5OTQIAWI04ZT. [Data Accessed].
+  contributor_name: >-
+    Karl Rittger, Mary J. Brodzik, Molly A. Hardman, Hannah Wilcox, Donna J. Scott,
+    Robyn Marowitz, Jessica Calme, Sebastien J. P. Lenard, Ken Mankoff, Annie Burgess
+  contributor_role: >-
+    principal_investigator, science_programmer, science_programmer,
+    software_developer, project_lead, software_developer, data_manager,
+    postdoc_researcher, science_programmer, researcher
   doi: "10.5067/5OTQIAWI04ZT"
   product_version: "v1.1"
   source_id: "MOD09GANRT061"
+  tif_source_id: "MOD09GANRT061"
   nc_filename_version: "V01.1"
   software_version_id: "0.0.1"
 
@@ -33,6 +49,10 @@ VNP09GA:
   source: "http://doi.org/10.5067/VIIRS/VNP09GA.NRT.002"
   platform: "Suomi-NPP"
   instrument: "VIIRS > Visible Infrared Imaging Radiometer Suite"
+  standard_name_vocabulary: "CF Standard Name Table (Version 93, 17 March 2026)"
+  keywords_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 23.8"
+  platform_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 23.8"
+  instrument_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 23.8"
   summary: >
     The VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust Radiative Forcing in Snow
     (VDRFS) data are derived from near real-time VIIRS/Suomi-NPP surface reflectance data (VNP09GA_NRT)
@@ -51,31 +71,38 @@ VNP09GA:
   doi: "PLACEHOLDER_VNP_DOI"
   product_version: "v1.0"
   source_id: "VNP09GANRT02"
+  tif_source_id: "VNP09GANRT02"
   nc_filename_version: "V01.0"
   software_version_id: "0.0.1"
 
 VJ109GA:
-  title: "Near Real-Time VIIRS/NOAA-20 L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
-  source: "http://doi.org/10.5067/VIIRS/VJ109GA.NRT.002"
-  platform: "NOAA-20"
-  instrument: "VIIRS > Visible Infrared Imaging Radiometer Suite"
+  title: "Near Real-Time VIIRS/JPSS-1 L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing"
+  source: "https://doi.org/10.5067/VIIRS/VJ109GA_NRT.002"
+  platform: "JPSS-1 > Joint Polar Satellite System - 1"
+  instrument: "VIIRS > Visible-Infrared Imager-Radiometer Suite"
+  standard_name_vocabulary: "CF Standard Name Table (Version 93, 17 March 2026)"
+  keywords_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 23.8"
+  platform_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 23.8"
+  instrument_vocabulary: "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 23.8"
   summary: >
-    The VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust Radiative Forcing in Snow
-    (VDRFS) data are derived from near real-time VIIRS/NOAA-20 surface reflectance data (VJ109GA_NRT)
+    The VIIRS Snow Covered Area and Grain-size (VIIRS SCAG) and VIIRS Dust Radiative Forcing in Snow
+    (VIIRS DRFS) data are derived from near real-time VIIRS/JPSS-1 surface reflectance data (VJ109GA_NRT)
     and include the following parameters: snow fraction, snow grain size (from the SCAG algorithm),
-    vegetation fraction, rock fraction, ice fraction, shade fraction, deltavis, radiative forcing,
+    vegetation fraction, rock fraction, ice fraction, shade fraction, snow darkening, radiative forcing,
     and optical snow grain size (from the DRFS algorithm).
   comment: >
-    This data is based on the VIIRS Snow Covered Area and Grain-size (VSCAG) and VIIRS Dust
-    Radiative Forcing in Snow (VDRFS) data sets, adapted from the MODIS equivalents originally
+    This data is based on the VIIRS Snow Covered Area and Grain-size (VIIRS SCAG) and VIIRS Dust
+    Radiative Forcing in Snow (VIIRS DRFS) data sets, adapted from the MODIS equivalents originally
     produced by the NASA Jet Propulsion Laboratory (JPL).
   citation: >
-    Rittger, K., R. Marowitz, J.S. Stewart, D.J.Scott, D.J., OTHER (2026). Near Real-Time VIIRS L3
-    Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1
-    [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active
-    Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
+   Rittger, K., R. Marowitz, J.S. Stewart, D.J.Scott, D.J., OTHER (2026). Near Real-Time VIIRS L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
+  contributor_name: >-
+   Karl Rittger, Robyn Marowitz, J. Scott Stewart, Donna J. Scott, Hannah Wilcox, Jessica Calme, Annie Burgess
+  contributor_role: >-
+   principal_investigator,software_developer,project_lead,software_developer,data_manager,researcher
   doi: "10.5067/1M2W6PZRN4VD"
   product_version: "v1.0"
   source_id: "VJ109GANRT02"
+  tif_source_id: "VJ109GANRT02"
   nc_filename_version: "V01.0"
   software_version_id: "0.0.1"

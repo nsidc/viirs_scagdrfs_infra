@@ -39,6 +39,17 @@ def get_final_dir(product: str) -> Path:
     return Path(os.getenv(env_var, str(PETALIB_DIR / product / "FIN")))
 
 
+def get_slurm_scratch(product: str, day, tile) -> Path:
+    """Node-local scratch dir for one product/day/tile.
+
+    Only valid inside a Slurm job; the directory is deleted when the job ends.
+    """
+    scratch = os.getenv("SLURM_SCRATCH")
+    if scratch is None:
+        raise RuntimeError("SLURM_SCRATCH is not set — must run inside a Slurm job")
+    return Path(scratch) / product.upper() / day.strftime("%Y.%m.%d") / tile
+
+
 # ── Scratch ────────────────────────────────────────────────────────────────────
 WORK_DIR = Path(f"/scratch/alpine/{os.getenv('USER')}/scagdrfs/working")
 STAGE_DIR = Path(f"/scratch/alpine/{os.getenv('USER')}/scagdrfs/staging")

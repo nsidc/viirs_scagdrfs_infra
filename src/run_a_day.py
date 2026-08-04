@@ -3,21 +3,17 @@ import glob
 from src.log_config import setup_logging
 import logging
 import os
+import shutil
 import subprocess
 from datetime import timedelta
 from pathlib import Path
 
 import click
 
-# from dask.distributed import Client
-from dask_jobqueue import SLURMCluster
-
 from src.bipify_input_files import bipify_files
 from src.copy_scag_ancillary import copy_scag_ancillary_files
 
 from src.move_tiles import copy_tile_file
-
-# from src.run_drfs import run_drfs
 
 from src.netcdf import create_netcdf
 from src.run_scag import run_scag
@@ -31,34 +27,11 @@ from src.constants.paths import (
     TOPDIR,
     get_nrt_dir,
     DRFS_COMPONENT_DIR,
+    get_slurm_scratch,
 )
 from src.run_drfs_python import create_drfs_geotiffs
 
 logger = logging.getLogger(__name__)
-
-
-def setup_day_cluster():
-    logger.info("Setting up Dask cluster...")
-    # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
-    cluster = SLURMCluster(
-        shebang="#!/usr/bin/bash",
-        account="ucb544_peak2",
-        cores=5,
-        memory="10GB",
-        walltime="03:00:00",
-        death_timeout="1200",
-        local_directory=str(WORK_DIR / "dask"),
-        job_extra_directives=[
-            "--qos=normal",
-            "--job-name=scagdrfs-day",
-            "--partition=amilan",
-        ],
-        log_directory=str(WORK_DIR / "dask" / "jobqueue-logs"),
-    )
-    cluster.adapt(minimum_jobs=1, maximum_jobs=100)
-
-    print(cluster.job_script(), "\n")
-    return cluster
 
 
 @click.command()
@@ -124,11 +97,6 @@ def setup_day_cluster():
 @click.pass_context
 def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue):
 
-    # NOTE: In normal operation, all sections of this code should run
-    #       Developers may set some of these flags to False to speed
-    #       up debug iteration
-    remove_intermediate_files = True
-
     tile_params = {}
 
     working_dir = working_dir / product.upper() / day.strftime("%Y.%m.%d") / tile
@@ -145,6 +113,9 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
 
     # TODO: Should tile_params["product"] be product.upper() ?
     tile_params["product"] = product
+    slurm_scratch = get_slurm_scratch(product, day, tile)
+    slurm_scratch.mkdir(parents=True, exist_ok=True)
+    logger.info("  run_a_day slurm_scratch: %s", slurm_scratch)
 
     input_dir = get_nrt_dir(product.upper())
     if not skip:
@@ -154,6 +125,13 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
             output_dir=working_dir,
             tile=tile,
             product=product,
+        )
+        copy_tile_file(
+            move_date=day,
+            input_dir=input_dir,
+            output_dir=slurm_scratch,
+            tile=tile,
+            product=product
         )
 
     ext = PRODUCT_FILE_EXTENSION[product.upper()]
@@ -177,13 +155,21 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
     else:
         src_file = src_files[0]
         tile_params["src_file"] = src_file
+
         # bipify files
         bipify_files(input_dir=working_dir, output_dir=working_dir, product=product)
         bip_meta_files = list(working_dir.glob("**/*.bip.meta"))
         bip_meta_file = bip_meta_files[0]
-        tile_params["bip_meta_file"] = bip_meta_file
+        bip_file = bip_meta_file.with_suffix("")
+
+        # stage scag's inputs into node-local scratch
+        shutil.copy2(src_file, slurm_scratch / src_file.name)
+        shutil.copy2(bip_file, slurm_scratch / bip_file.name)
+        shutil.copy2(bip_meta_file, slurm_scratch / bip_meta_file.name)
+        copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=slurm_scratch)
+
+        tile_params["bip_meta_file"] = slurm_scratch / bip_meta_file.name
         tile_params["component_dir"] = DRFS_COMPONENT_DIR
-        copy_scag_ancillary_files(bip_meta_file=bip_meta_file, output_dir=working_dir)
         param_lists.append(tile_params)
 
         for tile_params in param_lists:
@@ -219,7 +205,7 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                         run_scag,
                         bip_file=tile_params["bip_meta_file"].with_suffix(""),
                         src_file=tile_params["src_file"],
-                        working_dir=tile_params["working_dir"],
+                        working_dir=slurm_scratch,
                         product=product,
                     )
                 else:
@@ -266,7 +252,7 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                             TOPDIR,
                             tile_params["bip_meta_file"].with_suffix(""),
                             tile_params["src_file"],
-                            tile_params["working_dir"],
+                            slurm_scratch,
                             tile_params["product"],
                         )
                     )
@@ -294,27 +280,6 @@ def run_a_day(ctx, day, product, staging_dir, working_dir, tile, skip, no_queue)
                 tile_id=tile,
                 product=product,
             )
-
-            # Run a check to see if all the expected tifs exist
-            tifCounter = len(glob.glob(os.path.join(working_dir, "*.tif")))
-            if tifCounter == 18:
-                if remove_intermediate_files:
-                    # remove intermediary files
-                    types = (
-                        "*.pic",
-                        "*.control",
-                        "*.list",
-                        "*models",
-                        "*.dat",
-                        "*.bin",
-                    )
-                    file_list = []
-                    for t in types:
-                        file_list.extend(glob.glob(os.path.join(working_dir, t)))
-                    for f in file_list:
-                        os.remove(f)
-            else:
-                print(f"You have {tifCounter} tif files in {working_dir}")
 
 
 if __name__ == "__main__":

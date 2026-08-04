@@ -35,6 +35,17 @@ FILE_PART_TO_VAR = {
 
 VALID_PRODUCTS = ("MOD09GA", "VNP09GA", "VJ109GA")
 
+# Keys in product_nc_attributes.yml that exist purely for filename construction
+# (tif/netcdf naming) and should never be written as NetCDF global attributes.
+FILENAME_ONLY_ATTRS = ("source_id", "tif_source_id", "nc_filename_version")
+
+# Keys in product_nc_attributes.yml that map to a *different* global attribute
+# name (or names) than the YAML key itself.
+RENAMED_ATTRS = {
+    # 'doi' becomes both ':id' and ':metadata_link' on the netCDF dataset.
+    "doi": ("id", "metadata_link"),
+}
+
 
 def _load_yaml_config(config_filename):
     with open(config_filename) as yml_file:
@@ -49,16 +60,20 @@ def get_time_var():
     return _load_yaml_config(TEMPLATE_DIR / "time_var.yml")
 
 
-def get_drfs_vars():
-    return _load_yaml_config(TEMPLATE_DIR / "drfs_vars.yml")
+def get_drfs_vars(product: str) -> dict:
+    if product == "MOD09GA":
+        return _load_yaml_config(TEMPLATE_DIR / "drfs_vars.yml")
+    return _load_yaml_config(TEMPLATE_DIR / "drfs_vars_viirs.yml")
 
 
-def get_scag_vars():
-    return _load_yaml_config(TEMPLATE_DIR / "scag_vars.yml")
+def get_scag_vars(product: str) -> dict:
+    if product == "MOD09GA":
+        return _load_yaml_config(TEMPLATE_DIR / "scag_vars.yml")
+    return _load_yaml_config(TEMPLATE_DIR / "scag_vars_viirs.yml")
 
 
 def get_product_nc_attrs(product: str) -> dict:
-    """Return per-product global attribute values from product_nc_attributes.yml.
+    """Return per-product global attribute values from product_nc_attrs.yml.
 
     Args:
         product: One of 'MOD09GA', 'VNP09GA', 'VJ109GA'.
@@ -83,6 +98,31 @@ def get_file_info():
     parser = configparser.ConfigParser(os.environ)
     parser.read(os.path.join(f"{TOPDIR}", "src", "constants", "file_info.ini"))
     return parser
+
+
+def build_nc_filename(file_info, prefix, tile, source_id, date, version):
+    """Build the SCAGDRFS netCDF filename.
+
+    Template (from file_info.ini, NC_BASENAME):
+        {prefix}_NRT_{tile}_{source_id}_{date}_{version}.nc
+    """
+    template = file_info.get("FILE_INFO", "NC_BASENAME", raw=True)
+    return template % (prefix, tile, source_id, date, version)
+
+
+def build_tif_filename(
+    file_info, prefix, file_part_key, tile, source_id, date, version, masked=True
+):
+    """Build a SCAGDRFS tif filename for a single variable.
+
+    Template (from file_info.ini, MASKED_TIF_BASENAME / UNMASKED_TIF_BASENAME):
+        {prefix}_NRT{file_part}{tile}_{source_id}_{date}_{version}.tif[.Unmask]
+    `file_part` (e.g. "_GS_") already includes its own leading/trailing underscores.
+    """
+    template_key = "MASKED_TIF_BASENAME" if masked else "UNMASKED_TIF_BASENAME"
+    template = file_info.get("FILE_INFO", template_key, raw=True)
+    file_part = file_info.get("FILE_INFO", file_part_key)
+    return template % (prefix, file_part, tile, source_id, date, version)
 
 
 def get_dtype_from_string(type_string):
@@ -145,7 +185,7 @@ def create_nc_variable(nc_dataset, var_dict, dimensions, masked_tifs, unmasked_t
         tif_file = None
         if var_name.startswith("unmasked_") and var_name in unmasked_tifs:
             tif_file = str(unmasked_tifs[var_name])
-        elif var_name in masked_tifs.keys() and var_name in masked_tifs:
+        elif var_name in masked_tifs:
             tif_file = str(masked_tifs[var_name])
         if tif_file is not None:
             ds = rs.open(tif_file)
@@ -162,6 +202,24 @@ def create_nc_variable(nc_dataset, var_dict, dimensions, masked_tifs, unmasked_t
                 nc_var.set_auto_maskandscale(False)
                 no_data_array = np.full((1, 2400, 2400), 2550, dtype=nc_var.datatype)
                 nc_var[:] = no_data_array[:]
+
+
+def apply_global_attrs(nc_dataset, attrs, skip_keys=()):
+    """Set each key/value in `attrs` as a global attribute on `nc_dataset`.
+
+    Keys in `skip_keys` are not written (e.g. filename-only metadata).
+    Keys in RENAMED_ATTRS are written under their mapped attribute name(s)
+    instead of the YAML key itself (e.g. 'doi' -> 'id' and 'metadata_link').
+    """
+    for key, value in attrs.items():
+        if key in skip_keys:
+            continue
+        if key in RENAMED_ATTRS:
+            if key == "doi":
+                nc_dataset.id = value
+                nc_dataset.metadata_link = f"https://doi.org/{value}"
+            continue
+        setattr(nc_dataset, key, value)
 
 
 def fill_data_masks(nc_dataset):
@@ -187,44 +245,55 @@ def fill_data_masks(nc_dataset):
 
 
 def find_variable_files(day, tif_dir, tile, file_info, prefix, source_id):
-    masked_template = file_info.get("FILE_INFO", "MASKED_TIF_BASENAME", raw=True)
-    unmasked_template = file_info.get("FILE_INFO", "UNMASKED_TIF_BASENAME", raw=True)
+    """Locate the masked and unmasked tif files for each science variable.
+
+    Returns two dicts mapping nc variable name -> Path, for whichever files
+    are actually found. Variables with no matching tif are simply absent
+    from the returned dicts (callers fill those with no-data values).
+    """
+    date_str = day.strftime("%Y%m%d")
+    tif_version = file_info.get("FILE_INFO", "TIF_VERSIONS")
+
     masked_var_files = {}
     unmasked_var_files = {}
-    for nc_var_name, file_part in FILE_PART_TO_VAR.items():
-        masked_filename = masked_template % (
+    for nc_var_name, file_part_key in FILE_PART_TO_VAR.items():
+        masked_filename = build_tif_filename(
+            file_info,
             prefix,
-            file_info.get("FILE_INFO", file_part),
+            file_part_key,
             tile,
             source_id,
-            day.strftime("%Y%m%d"),
-            file_info.get("FILE_INFO", "TIF_VERSIONS"),
+            date_str,
+            tif_version,
+            masked=True,
         )
-        masked_list = list(tif_dir.rglob(masked_filename))
-        unmasked_filename = unmasked_template % (
+        unmasked_filename = build_tif_filename(
+            file_info,
             prefix,
-            file_info.get("FILE_INFO", file_part),
+            file_part_key,
             tile,
             source_id,
-            day.strftime("%Y%m%d"),
-            file_info.get("FILE_INFO", "TIF_VERSIONS"),
+            date_str,
+            tif_version,
+            masked=False,
         )
-        unmasked_list = list(tif_dir.rglob(unmasked_filename))
-        if len(masked_list) == 1:
-            masked_var_files[nc_var_name] = masked_list[0]
+
+        masked_matches = list(tif_dir.rglob(masked_filename))
+        unmasked_matches = list(tif_dir.rglob(unmasked_filename))
+
+        if len(masked_matches) == 1:
+            masked_var_files[nc_var_name] = masked_matches[0]
         else:
             print(
-                f"Found {len(masked_list)} files instead of the one "
-                f"expected file: {masked_filename} in the directory or "
-                f"subdirectory of: {tif_dir}"
+                f"Found {len(masked_matches)} files instead of the one expected "
+                f"file: {masked_filename} in the directory or subdirectory of: {tif_dir}"
             )
-        if len(unmasked_list) == 1:
-            unmasked_var_files["unmasked_" + nc_var_name] = unmasked_list[0]
+        if len(unmasked_matches) == 1:
+            unmasked_var_files["unmasked_" + nc_var_name] = unmasked_matches[0]
         else:
             print(
-                f"Found {len(unmasked_list)} files instead of the one "
-                f"expected file: {unmasked_filename} in the directory or "
-                f"subdirectory of: {tif_dir}"
+                f"Found {len(unmasked_matches)} files instead of the one expected "
+                f"file: {unmasked_filename} in the directory or subdirectory of: {tif_dir}"
             )
     return masked_var_files, unmasked_var_files
 
@@ -314,50 +383,36 @@ def create_netcdf(
 
     file_info = get_file_info()
     product_attrs = get_product_nc_attrs(product)
-    nc_filename = file_info.get("FILE_INFO", "NC_BASENAME", raw=True) % (
-        PRODUCT_OUTPUT_PREFIX[product.upper()],
-        tile_id,
-        product_attrs["source_id"],
-        day.strftime("%Y%m%d"),
-        product_attrs["nc_filename_version"],
-    )
-    nc_filepath = Path(os.path.join(tif_dir, nc_filename))
-    masked_var_files, unmasked_var_files = find_variable_files(
-        day,
-        tif_dir,
-        tile_id,
+    prefix = PRODUCT_OUTPUT_PREFIX[product.upper()]
+    date_str = day.strftime("%Y%m%d")
+
+    nc_filename = build_nc_filename(
         file_info,
-        PRODUCT_OUTPUT_PREFIX[product.upper()],
-        product_attrs["source_id"],
+        prefix=prefix,
+        tile=tile_id,
+        source_id=product_attrs["source_id"],
+        date=date_str,
+        version=product_attrs["nc_filename_version"],
+    )
+    nc_filepath = tif_dir / nc_filename
+
+    masked_var_files, unmasked_var_files = find_variable_files(
+        day, tif_dir, tile_id, file_info, prefix, product_attrs["tif_source_id"]
     )
 
-    # Load attribute sources
+    # Load attribute and variable-definition sources
     static_attrs = get_static_nc_attrs()
     crs_info = get_crs_info()
-    scag_vars = get_scag_vars()
-    drfs_vars = get_drfs_vars()
+    scag_vars = get_scag_vars(product)
+    drfs_vars = get_drfs_vars(product)
     time_var = get_time_var()
 
     nc_dataset = nc.Dataset(str(nc_filepath), "w", format="NETCDF4")
 
-    # Apply static global attributes first, then overlay product-specific ones.
-    # Skip 'source_id', which is filename-construction metadata, not a NetCDF
-    # global attribute in its own right.
-    for key, value in static_attrs.items():
-        setattr(nc_dataset, key, value)
-    for key, value in product_attrs.items():
-        if key in (
-            "source_id",
-            "tif_source_id",
-            "nc_filename_version",
-            "software_version_id",
-        ):
-            continue
-        if key == "doi":
-            nc_dataset.id = value
-            nc_dataset.metadata_link = f"https://doi.org/{value}"
-            continue
-        setattr(nc_dataset, key, value)
+    # Global attributes: static ones first, then product-specific ones layered
+    # on top (so a product attr would win if it ever overlapped a static one).
+    apply_global_attrs(nc_dataset, static_attrs)
+    apply_global_attrs(nc_dataset, product_attrs, skip_keys=FILENAME_ONLY_ATTRS)
 
     # Dimensions
     x_dim = nc_dataset.createDimension("x", 2400)
@@ -373,11 +428,10 @@ def create_netcdf(
         nc_dataset, crs_info, dimensions, masked_var_files, unmasked_var_files
     )
 
-    # Runtime attributes
+    # Runtime attributes (geospatial bounds, time coverage, software provenance)
     add_geospatial_info(tile_id, nc_dataset)
     add_time_info(day, nc_dataset)
     nc_dataset.software_repository = "https://github.com/nsidc/viirs_scagdrfs_infra"
-    nc_dataset.software_version_id = product_attrs["software_version_id"]
 
     # Science variables
     create_nc_variable(
