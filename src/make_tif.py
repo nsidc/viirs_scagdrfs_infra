@@ -48,14 +48,20 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     #   The bip_info string value is:
     #     bip_info["proj_string"]=\\\'"+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"\\\'
     #   The hardcoded replacement value here is:
-    #     "+proj=sinu +R=6371007.18042784"
+    #     "+proj=sinu +R=6371007.181"
     #   Note: this removes the obsolete 'nagrids' and 'wktext' flags
     #         and sets the Earth radius to the value that *exactly* matches
     #         MOD09GA in-file georeferencing.
 
-    modis_sinu_proj_string = "+proj=sinu +R=6371007.18042784"
-    # srs.SetFromUserInput(bip_info["proj_string"])  # accepts PROJ4, EPSG:, WKT, etc.
-    srs.SetFromUserInput(modis_sinu_proj_string)  # accepts PROJ4, EPSG:, WKT, etc.
+    # Attempting to use WKT instead of proj-string because proj-string does not
+    #   explicitly specify a datum.
+    # modis_sinu_proj_string = "+proj=sinu +R=6371007.181"
+    # srs.SetFromUserInput(modis_sinu_proj_string)  # accepts PROJ4, EPSG:, WKT, etc.
+
+    # With this, we get an error because "inf" is not a double-precision number
+    # modis_sinu_WKT_string = 'PROJCS["Sinusoidal",GEOGCS["GCS_Unknown",DATUM["D_unknown",SPHEROID["Unknown",6371007.181,"inf"]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Sinusoidal"],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'
+    modis_sinu_WKT_string = 'PROJCS["Sinusoidal",GEOGCS["GCS_Unknown",DATUM["D_unknown",SPHEROID["Unknown",6371007.181,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Sinusoidal"],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'
+    srs.SetFromUserInput(modis_sinu_WKT_string)  # accepts PROJ4, EPSG:, WKT, etc.
 
     # Write GeoTIFF with DEFLATE compression
     driver = gdal.GetDriverByName("GTiff")

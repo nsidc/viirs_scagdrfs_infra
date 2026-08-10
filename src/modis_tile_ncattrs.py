@@ -79,7 +79,7 @@ import yaml
 # res500m = 463.312716525        # as above, correcting float64 discretization
 # res500m = 463.312716527778     # From typical VJ109GA file
 # res500m = 463.31271656938424   # apparent GDAL value
-res500m = 463.31271652777775     # This value yield exact results with MOD09GA 500m files
+res500m = 463.31271656938424     # Used by GDAL, trigonometry, and NASA tilemap software
 
 
 def get_tiletuple_from_arg(argstr):
