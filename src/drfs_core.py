@@ -225,9 +225,10 @@ def compute_drfs(
 
     # Note: confirmed that here, b1 (after veg) is same as IDL
 
-    # Find valid pixels (b4 > 0 and b5 > 0)
     # Note: confirmed that this is the same as the 'pos' array in IDL
-    valid_mask = (b4 > 0) & (b5 > 0)
+    #       with: valid pixels (b4 > 0 and b5 > 0)
+    # Changing this to require valid values for all bands
+    valid_mask = (b1 > 0) & (b2 > 0) & (b3 > 0) & (b4 > 0) & (b5 > 0) & (b6 > 0)
 
     if not np.any(valid_mask):
         logger.warning("NO SNOW FOUND, RETURNING FLAGGED BUNDLE")
