@@ -5,10 +5,10 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export TOPDIR="$(dirname "${SCRIPT_DIR}")"
 
-export SCAG_DIR=${TOPDIR}/scag
-export SCAG_CONFIG_DIR=${SCAG_DIR}/config
-export DRFS_DIR=${TOPDIR}/scagdrfs_jpl
-export DRFS_IDL_DIR=${DRFS_DIR}/snowHydro
+export SCAG_DIR=${TOPDIR}/scag_code
+# export SCAG_CONFIG_DIR=${SCAG_DIR}/config
+# export DRFS_DIR=${TOPDIR}/scagdrfs_jpl
+# export DRFS_IDL_DIR=${DRFS_DIR}/snowHydro
 
 # Required to run IDL
-module load idl
+# module load idl
