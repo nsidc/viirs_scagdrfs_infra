@@ -57,7 +57,8 @@ CONFIG_CFLAGS = -m64
 # end configuration section
 #------------------------------------------------------------------------
 
-SUBDIRS = scagUtils scag tmscagSAT scag_sort
+# SUBDIRS = scagUtils scag tmscagSAT scag_sort
+SUBDIRS = scagUtils scag scag_sort
 
 all install clean:
 	for i in $(SUBDIRS); do			\
