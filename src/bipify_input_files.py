@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from scag.scripts.BIPifier import bipify_file
+from src.BIPifier import bipify_file
 from src.constants.products import PRODUCT_FILE_EXTENSION
 
 
