@@ -8,8 +8,13 @@ outlog.txt
 */drfs_idl_startup.bat
 *.dat
 *.hdf
+*.a
 
 *.meta
 *.bat
 *.h5
 out*
+
+# scag xecutables
+scag
+scag_sort
