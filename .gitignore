@@ -2,13 +2,14 @@ pathdef.m
 *.sw?
 .nfs*
 slurm*
-scag/
 __pycache__/
 outlog.txt
-*/drfs_idl_startup.bat
 *.dat
 *.hdf
+
+# Products of compilation
 *.a
+*.o
 
 *.meta
 *.bat
