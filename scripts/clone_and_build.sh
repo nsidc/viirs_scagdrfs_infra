@@ -1,22 +1,22 @@
 #!/bin/bash
 
-# Get the scag repository
-source ${PWD}/config/env.sh
-cd ${TOPDIR}
+# TODO: Rename this from clone_and_build.sh to build_scag.sh
 
-if [ ! -d ${TOPDIR}/scag ]; then
-    echo "Cloning scag repository."
-    git clone git@github.com:nsidc/scag.git
-fi
+# This replaces the call to env.sh
+# source ${PWD}/config/env.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export TOPDIR="$(dirname "${SCRIPT_DIR}")"
+
+# Get the scag repository
+export SCAG_DIR=${TOPDIR}/scag_code
 
 # Set environment variables and build executables
-echo "Building executables in repositories..."
-
-echo "Building scag"
-cd ${TOPDIR}/scag
+echo "Building scag executables..."
+cd ${SCAG_DIR}
 make build-alpine
 
 cd $TOPDIR
 
-echo "...done"
+echo
+echo "...Finished building scag executables"
 echo
