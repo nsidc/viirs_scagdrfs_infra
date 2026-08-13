@@ -22,7 +22,7 @@ from src.drfs_components import (
 from src.drfs_geometry import preprocess_geometry, load_solar_geometry
 from src.drfs_core import compute_drfs, write_drfs_outputs
 from src.drfs_hdf_solar import extract_hdf_solar_fields
-from scag.scripts.BIPifier import bipify_file
+from src.BIPifier import bipify_file
 from src.moddrfs_cleanse import moddrfs_cleanse
 from src.make_tif import make_tif
 from src.mask_drfs import mask_drfs

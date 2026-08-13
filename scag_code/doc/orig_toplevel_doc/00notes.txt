@@ -1,0 +1,2102 @@
+2019-04-01
+
+Meeting with KR:
+
+Systems at UCSB
+
+/home/tm/ contains code where Karl did his work.
+
+/home/tm/fsca/ -
+
+See the README file for "recipe" (3 steps):
+
+Step 1:
+last entry in input set up file is solar zenith.
+Solar elevation angle is measured from horizon, so 0 elevation is
+at horizon.
+Solar Zenith is measured from overhead zenith.  so 0 zenith angle
+directly overhead.
+
+(zenith angle can be derived from information in the Landsat
+file.)
+
+Ref. http://sacs.aeronomie.be/info/sza.php
+
+xsetup - is to make tiled inputs in 4x4 tile array--this is so
+that you can submit to more nodes/tasks simulatneously.
+
+11  12 13 14
+21  22 23 24
+...
+
+(we may not need the tileing if our processing runs fast enough
+and/or we have more memory to work with...)
+
+We have 180 GB/node and 32 tasks, so we have about 5.625 GB/task
+to work with.  We will need to scope this.
+
+Output are written to /fsca/Landsat8/ etc.
+
+under that there are subdirs by tile and
+
+full/ - no saturation
+sat1/ - sat in band1 only
+sat13/ - sat in bands 1 and 3 only
+
+these are for various runs assuming different saturation.  If
+bands 1, 2 and 3 area all saturated that's handled in a
+post-processing IDL step.
+
+So there are 4 possible runs.
+
+At the same level as these full/sat1/sat13 directories are the
+.img files that are combinations of output from the various runs.
+
+tmsort - sorts separate layers sat1 sat13
+
+Other places
+
+/home/rsi/
+/home/
+
+
+To do:
+
+1) MJB: What is tmsort?  C program? looks binary...
+2) KR: find a good candidate image I can run test processing on
+   /home/tm/TMsatTile/Landsat5/p042r034/20100426
+   
+3) MJB: On UCSB, try to run the processsing there.
+
+Options for processing nodes are
+
+hammer - (still has qsub)
+tong 
+anvil
+forge
+
+(slow to fast)
+
+
+2019-04-04
+
+Working on regression test:
+
+input setup file is:
+
+/home/tm/fsca/in/l5/p042r034/20100426
+
+as expected, with zenith angle set to 31.
+
+-bash-4.2$ ./xsetup < mjb_intest | sh
+20100426p000r000sub11  20100426p000r000sub31  x1120100426p000r000  x3120100426p000r000
+20100426p000r000sub12  20100426p000r000sub32  x1220100426p000r000  x3220100426p000r000
+20100426p000r000sub13  20100426p000r000sub33  x1320100426p000r000  x3320100426p000r000
+20100426p000r000sub14  20100426p000r000sub34  x1420100426p000r000  x3420100426p000r000
+20100426p000r000sub21  20100426p000r000sub41  x2120100426p000r000  x4120100426p000r000
+20100426p000r000sub22  20100426p000r000sub42  x2220100426p000r000  x4220100426p000r000
+20100426p000r000sub23  20100426p000r000sub43  x2320100426p000r000  x4320100426p000r000
+20100426p000r000sub24  20100426p000r000sub44  x2420100426p000r000  x4420100426p000r000
+x1120100426p000r000  x2120100426p000r000  x3120100426p000r000  x4120100426p000r000
+x1220100426p000r000  x2220100426p000r000  x3220100426p000r000  x4220100426p000r000
+x1320100426p000r000  x2320100426p000r000  x3320100426p000r000  x4320100426p000r000
+x1420100426p000r000  x2420100426p000r000  x3420100426p000r000  x4420100426p000r000
+
+20100426p000r000sub11:
+20100426p000r000sub11.idl  20100426p000r000sub11.sat*
+
+20100426p000r000sub12:
+20100426p000r000sub12.idl  20100426p000r000sub12.sat*
+
+20100426p000r000sub13:
+20100426p000r000sub13.idl  20100426p000r000sub13.sat*
+
+20100426p000r000sub14:
+20100426p000r000sub14.idl  20100426p000r000sub14.sat*
+
+20100426p000r000sub21:
+20100426p000r000sub21.idl  20100426p000r000sub21.sat*
+
+20100426p000r000sub22:
+20100426p000r000sub22.idl  20100426p000r000sub22.sat*
+
+20100426p000r000sub23:
+20100426p000r000sub23.idl  20100426p000r000sub23.sat*
+
+20100426p000r000sub24:
+20100426p000r000sub24.idl  20100426p000r000sub24.sat*
+
+20100426p000r000sub31:
+20100426p000r000sub31.idl  20100426p000r000sub31.sat*
+
+20100426p000r000sub32:
+20100426p000r000sub32.idl  20100426p000r000sub32.sat*
+
+20100426p000r000sub33:
+20100426p000r000sub33.idl  20100426p000r000sub33.sat*
+
+20100426p000r000sub34:
+20100426p000r000sub34.idl  20100426p000r000sub34.sat*
+
+20100426p000r000sub41:
+20100426p000r000sub41.idl  20100426p000r000sub41.sat*
+
+20100426p000r000sub42:
+20100426p000r000sub42.idl  20100426p000r000sub42.sat*
+
+20100426p000r000sub43:
+20100426p000r000sub43.idl  20100426p000r000sub43.sat*
+
+20100426p000r000sub44:
+20100426p000r000sub44.idl  20100426p000r000sub44.sat*
+/home/tm/fsca
+-bash-4.2$
+
+xsetup:
+
+inputs:
+
+platform
+path
+row
+yyyymmdd
+zenith_angle
+
+xsetup creates a directory structure with scripts for running
+xtmscag for each of 16 tiles:
+
+platform/pPPPrRRR/yyyymmdd/
+
+this directory has 16 subdirs:
+
+yyyymmddpPPPrRRRsubXY/
+
+each of which has two symlinks to actual data:
+
+yyyymmddpPPPrRRRsubXY.idl -> /home/tm/RsTMSCAGin/platform/pPPPrRRR/yyyymmdd/yyyymmddpPPPrRRRsub11.idl
+yyyymmddpPPPrRRRsubXY.sat* -> /home/tm/TMsatTile/Landsat5/pPPPrRRR/yyyymmdd/yyyymmddpPPPrRRRsub11.sat*
+
+for each of these subdirs, xsetup makes another file with a bash
+script to run the processing there:
+
+'xXYyyyymmddpPPPrRRR'
+
+#$ -cwd
+#$ -S /bin/bash
+/home/tm/fsca/xtmscag 20100426p000r000sub11 z30
+
+The first two lines are apparently Sun Grid Engine commands,
+#$ -cwd says "run the script in the cwd"
+#$ -S /bin/bash says "run the script using bash"
+
+I found a page online that indicates the first line of the script
+should also be #!/bin/bash, but apparently this isnt required if
+these have actually been running at UCSB.
+
+it determines the z30 parameter value by examining the input
+zenith_angle value.
+
+REQUIREMENTS: the files in RsTMSCAGin and TMsatTile need to exist
+or the symlinks will be invalid
+
+********************
+xtmscag:
+
+inputs:
+IMAGE=image_directory
+ZENITH=zZZ (zenith library to use)
+
+assumes it's being run from the directory where image_directory
+lives
+
+- Figures out IMGDIR full path
+- Creates a logfile: $IMGDIR/$IMAGE.cluster.log
+- Writes date to log
+- Writes hostname to log
+- Figures out scratch location to use by hostname
+- Makes a new scratch directory called "tmscag.$IMAGE"
+- ??Removes it??  traps for
+1) SIGHUP
+2) SIGINT
+3) SIGQUIT
+15) SIGTERM
+
+- something commented out use idl for saturation masks
+  --> should this be switchable?
+
+(See 'kill -l' for all trap signals...)
+
+- loop for bands in 13 1:
+  - in $TMP (for this image) directory, mkdir $TMP/sat$bands
+  - cp the .sat$bands mask to here/saturated.img
+  - cp the .idl tile to here/image.bip
+  - cp the TMSCAG_components/sat/$ZENITH spectral libraries to
+     here
+  - cp the TMSCAG_components/bands/TM.bands$bands to here/TM.bands
+    --> what are these???
+    1 file per 1, 123, 13, with band numbers to use...
+    but they don't seem to make sense...
+    
+  - cd to 'here'
+  - ./runtmscagSAT - this script comes from TMSCAG_components,
+    contains multiple calls to ~/bin/tmscagSAT with various
+    settings for control/loose.  I don't think this will work,
+    since it's using ~ instead of ~tm/ which I think has the
+    correct binary
+    ...and there's no such binary in ~tm/bin/
+  - call tmsort...
+  - make a new directory $IMGDIR/sat$bands
+  - move $SATDIR/$IMAGE*pic files to $IMGDIR/sat$bands
+  - remove $TMP/sat$bands
+
+Now run tmscag for the full scene:
+- mkdir $IMGDIR/full
+- cp the TMSCAG_components/sat/$ZENITH spectral libraries to here
+- cp the .idl tile to here/image.bip
+- cd to 'here' (full directory)
+- ./runtmscagSAT - (same problems as above)
+- call tmsort...
+- make a new directory $IMGDIR/full
+- move $SATDIR/$IMAGE*pic files to $IMGDIR/full
+- remove $TMP/full
+
+- cd into the $IMGDIR
+- set some env vars (why do they have to be global?)
+
+- call IDL for TM57_SAT_sort_sca, _veg, _rock...
+  this idl stuff does merge of sat13, sat1 and full file.
+
+- clean up temp directory...
+
+********************
+xqsub:
+
+takes same inputs as xsetup (ignores zenith_angle):
+
+platform
+path
+row
+yyyymmdd
+zenith_angle
+
+cds to platform/pPPPrRRR/yyyymmdd/
+
+and for each of 16 tiles, calls
+
+qsub on the x<TILEFILE>
+
+and sleeps for 10
+
+so this just submits each xtmscag job to the batch scheduler.
+
+*********************************
+
+There is one more step in matlab that re-mosaiks and trims back
+to original coverage.  This step also performs optional masking and
+other post-processing.  
+
+*********************************
+
+
++2) how are input directories under
+
+/home/tm/fsca/in/
+
+initialized/controlled?
+
+KR: Matlab does this when it's creating the Rs, Sat
+tiles. --details later
+
+KR: Due to older info that used to be included from USGS in
+Landsat images, Karl originally had to go back to DNs in images
+and use lookup-table to derive Rs. Also saturation issues.
+
++3) Presumably RsTMSCAGin/.../YYYYMMDDpPPPrRRRsubXY.idl files are
+the Landsat image cut into 16 tiles
+
+KR: yes, these have 6-bands per tile (see below).  They might be
+misnamed and might be .bips.  These are output by Matlab.  There
+will be transposition issues back and forth from IDL.
+
++4) Presumbaly sat masks are
+ TMsatTile/.../20100426p042r034sub11.sat* for 1, 123, 13
+
++5) why are relative sizes 48M vs. 8M (factor of 6?)?
+
+6-bands!
+
++6) xtmscag has section that makes saturation masks commented
+ out.
+    - presumably this is so they created once and not done again?
+    - should this be ported to python or matlab?  It's pretty simple.
+    - should it be switchable from command line?
+
+Commented out because the matlab pre-processing does this ahead
+of.
+
+Original development was on NN data, current data is produced
+with cubic-convolution, so we need to be more conservative about
+what's affected by a saturated pixel.
+
+This means that I can ignore the stuff that's commented out, we
+won't need it.
+     
++7) TM.bands* files should be setting bands to use, but don't
+ initially seem to make sense (but see notes, below):
+ [brodzik@hammer bands]$ more TM.bands1
+5
+2
+3
+4
+5
+6
+[brodzik@hammer bands]$ more TM.bands13
+4 sub for 1
+2 actual 2
+4 sub for 3
+5 sub for 4?
+6 sub for 5?
+[brodzik@hammer bands]$ more TM.bands123
+3
+4
+5
+6
+[brodzik@hammer bands]$
+
+are these correct?
+
+I believe the first line in the TM.bands file is the number of
+bands to use, followed by the band# for each band that should be
+used.  This is consistent, for example with:
+
+ [brodzik@hammer bands]$ more TM.bands1
+5
+2
+3
+4
+5
+6
+
+--> if band 1 is saturated, use only 5 bands, from band# = 2-6.
+
+KR: thinks that the C code may have to compensate for the fact
+that MODIS bands are not sequential, but Landsat bands are.
+
+MODIS bands in wavelenght order are
+
+3412567:
+
+3:  460 nm
+4:  555
+1:  645
+2:  860
+5: 1240
+6: 1640
+7: 2130
+
+Landsat has 6 bands, same as wavelength order,
+
+1:  500
+2:  580
+3:  650
+4:  850
+5: 1650
+(thermal)
+6: 2200
+
+KR: We think that band123 was just in there for some initial
+testing, the loops in the scripts don't ever use it.  band1 file
+*might* be using band 5 for band1 and still processing with 6
+bands?  --> band123 saturation is used when they are merged back together.
+
+Not sure about band13--investigate the code to figure out what's
+really happening in the tmscagSAT code???
+
++8)   - ./runtmscagSAT - this script comes from TMSCAG_components,
+    contains multiple calls to ~/bin/tmscagSAT with various
+    settings for control/loose.  I don't think this will work,
+    since it's using ~ instead of ~tm/ which I think has the
+    correct binary
+    ...and there's no such binary in ~tm/bin/
+
+    --same issue with call to $HOME/bin/tmsort--no binary...
+
+   I did find /home/snow/old_users/painter/src/C/tmscagSAT, and
+   tmsort.
+
+   Are these the source files and binaries we should be using?
+
+   NOOOOOO.
+
+   note set of $HOME to /home/scag/--this is the location of
+   source and binaries.
+
++9) idl routines to merge sat1 sat13 and full files:
+    - 1 each for sca, veg, rock
+    - should this be ported to python or matlab?  It's pretty simple.
+    - it should just be one routine that does each in turn.
+
+KR: wants to think about python vs. matlab
+
+
+2019-04-05
+
+Telecon with Karl.
+
+Use "scag" for general project name. Do a different repo for scripts.
+
+To run test day for p042r034 20100426:
+
+1) confirm that there is no directory setup  for this path/row
+at:
+
+/home/tm/fsca/Landsat5
+
+Confirmed Ts tiles exist here:
+/home/tm/RsTMSCAGin/Landsat5/p042r034/20100426
+
+and sat masks exist here:
+/home/tm/TMsatTile/Landsat5/p042r034/20100426
+
+2) On tong, run xsetup for this image:
+
+cd /home/tm/fsca/
+./xsetup < /home/tm/fsca/in/l5/p042r034/20100426 | sh
+
+ran successfully, which means it made a subdir in
+
+/home/tm/fsca/Landsat5/
+
+for path-row and date.  See above notes about what is in here,
+basically 16 subdirs (1 per tile) and 16 scripts for the grid
+engine to run for each tile.
+
+3) check that setup ran as expected,
+
+cd /home/tm/fsca/Landsat5/p042r034/20100426
+
+it is as expected here.
+
+4) Now how to run just the 22 tile?
+
+Working on stub at mjb_xtmscag.  Make it +x.
+
+edit the x22* script to call mjb_xtmscag.
+
+cd /home/tm/fsca/Landsat5/p042r034/20100426
+
+. ./x2220100426p042r034
+
+Doesn't find tmscagSAT:
+
+Calling runtmscagSAT...
+./runtmscagSAT: line 1: /home/scag/bin/tmscagSAT: No such file or directory
+
+
+2019-04-08
+
+How to find out what created the
+/home/scag/bin/tmscagSAT and tmscag binaries?
+
+- old_painter = /home/snow/old_users/painter/
+
+old_painter has .c files:
+
+src/C/tmscagSAT/
+src/C/tmscag/
+
+same set, what are differences?
+
+Only in geochecks.c:
+tmscagSAT has the water_flat case as float as opposed to int.
+
+main binaries are named tmscagSAT.c and tmscag.c
+
+Differences:
+
+tmscagSAT.c:
+
+- comments say it was modified by THP 4/25/2007 to handle TM
+  saturation.
+- has file pointers and names for sat mask
+- depends on contents of new control file line "indicating
+  whether to model" presumably this means use it.
+- looks like it reads the sat mask and if 0, sets output? flag to
+  -9999., otherwise models at this pixel.
+  if sat = 0
+     - sets all output -9999.0
+  else (sat = 1) but water flag is 1 (so it's too dark for
+  "information")
+     - sets all output to 0.0
+  else (sat = 1 and not water...)
+     - presumably regular processing?
+
+N.B.
+
+- comments say compilation is:
+
+cc -O -o tmscagSAT tmscagSAT.c fileops.c mgsmix.c shdnorm.c geochecks.c -lm
+
+analogously for tmscag.c
+
+cc -O -o tmscag tmscag.c fileops.c mgsmix.c shdnorm.c geochecks.c -lm
+
+...simple enough.
+
+For tmsort, using:
+
+cc -O -o tmsort tmsort.c -lm
+
+
+In /home/scag/src/ there is only the tmscag.c source file.
+Comparison of this tmscag/ dir to old_painter/src/C/tmscag/ shows
+they are identical.
+
+Differences between
+
+old_users/painter/src/C/*.c files and
+old_users/painter/src/C/tmscag/*.c files:
+
+fileops.c -
+
+"new" tmscag version:
+1) has #includes for <sys/types.h> and <unistd.h>
+2) removes declarations of subroutine local variables
+   looks like these may not be used, so someone was de-linting?
+3) takes out final "\0" in printf statements
+4) has new routine called "scanline" that does checks for \n and
+   \0 on fgets calls.
+
+mgsmix.c -
+
+new version
+
+1) removes declarations of subroutine local variables
+   looks like these may not be used, so someone was de-linting?
+2) changes rms from 0 to float 0.0, also looks like de-linting
+
+shdnorm.c -
+
+new version
+
+1) changes declaration of shnorm function return from float to
+   void--which is correct per code behavior
+
+spec.h -
+
+has new function declaration for "waterflag"--??
+
+(apparently waterflag processing was added here, along with other
+changes?
+
+--tmscag: copied from /home/scag/src/C/scag/
+
+  - had to fix errors for scanline overloading system version in
+    stdio.h (how did this ever compile before?)
+
+  - also removed unused function readperspheader that was having
+    casting trouble
+
+  - compiling with only a warning about writeline cast at this
+    point.  This should be addressed at some point.  going to
+    make as few changes as possible to get things running.f
+
+--tmscagSAT: copied from old_painter: src/
+
+  - same changes as above, 
+
+
+Now, both ~brodzik/src/C/tmscag/tmscag and
+~brodzik/src/C/tmscagSAT/tmscagSAT
+successfully return a usage message at least.
+
+Built tmsort from the one in old_painter--can't find source code
+anyplace else...
+
+Running sat13, sat1 and full overnight...
+
+2019-04-09
+
+Looks like scag ran but tmsort seg faulted:
+Calling tmsort...
+2eminput opened
+3eminput opened
+modprty2 opened
+modprty3 opened
+2 ENDMEMBER MODEL FILES OPENED
+2 ENDMEMBER MODEL FILES OPENED
+opening gr
+opening met
+opening till
+opening vlc1
+opening vlc2
+opening vlc3
+opening 3em.veg1
+opening 3em.veg2
+opening 3em.veg3
+opening 3em.veg4
+opening grveg
+opening metveg
+opening vlcveg
+opening lkice
+opening grloose
+opening metloose
+opening tillloose
+opening vlc1loose
+opening vlc2loose
+opening vlc3loose
+opening 3em.veg1loose
+opening 3em.veg2loose
+opening 3em.veg3loose
+opening 3em.veg4loose
+opening grveg.loose
+opening metveg.loose
+opening vlcveg.loose
+opening lkiceloose
+3 ENDMEMBER MODEL FILES OPENED
+2em prty 0 = 0
+2em prty 1 = 2
+3em prty 0 = 1
+3em prty 1 = 1
+3em prty 2 = 1
+3em prty 3 = 1
+3em prty 4 = 1
+3em prty 5 = 1
+3em prty 6 = 1
+3em prty 7 = 1
+3em prty 8 = 1
+3em prty 9 = 1
+3em prty 10 = 1
+3em prty 11 = 1
+3em prty 12 = 1
+3em prty 13 = 1
+3em prty 14 = 2
+3em prty 15 = 2
+3em prty 16 = 2
+3em prty 17 = 2
+3em prty 18 = 2
+3em prty 19 = 2
+3em prty 20 = 2
+3em prty 21 = 2
+3em prty 22 = 2
+3em prty 23 = 2
+3em prty 24 = 2
+3em prty 25 = 2
+3em prty 26 = 2
+3em prty 27 = 2
+PRIORITY DATA READ
+OUTPUT FILES OPENED
+/home/tm/fsca/mjb_xtmscag: line 90: 11060 Segmentation fault
+(core dumped) $HOME/bin/tmsort 2eminput 3eminput modprty2
+modprty3 $IMAGE. 2000 2000
+
+So I need to find the C code that produced the 2000x2000 and
+8000x8000 versions of tmsort.
+
+Where-oh-where is tmsort.c?
+
+Brute force searches:
+
+/home/snow/old_users/painter/src/C/tmsort.c
+--builds but seg-faults (maybe 2000 vs 4000 issue?)
+
+/home/snow/old_users/painter/src/C/astersort/tmsort.c
+??
+
+/home/scag -- nada
+
+/home/tm --
+ 1 copy, in /home/tm/fsca_20090227/tmsort.c:
+
+-bash-4.2$ ls -las tmsort.c
+6 -rw-r--r--. 1 tm tm 10266 Nov 24  2008 tmsort.c
+-bash-4.2$
+
+Note that time stamp is same date as time stamp on mystery "2000"
+binary:
+
+-bash-4.2$ cd /home/scag/bin/
+-bash-4.2$ ls -las tmsor*
+1 lrwxrwxrwx. 1 scag scag    16 Sep  9  2011 tmsort -> tmsort-2000x2000
+7 -rwxr-xr-x. 1 scag scag 10849 Nov 24  2008 tmsort-2000x2000
+7 -rwxrwxr-x. 1 scag scag 10865 Jul 22  2008 tmsort-8000x8000
+-bash-4.2$ 
+/
+
+The only difference in these is the MAXSAMPLES and MAXLINES dims,
+set to 2000 each.  Compiling this.  It works on tmscagSAT outputs.
+
+There is also /home/ceretha and /home/painter (but it has to be
+automounted)
+
+so runtmscagSAT (from sat components) was using ~/bin/tmscagSAT
+
+but
+
+runtmscag (from full componencts) was hardcoded to
+/home/scag/bin/tmscag
+
+ACCCKKKHHH@#$%!!
+
+Made runtmscag-HOME in each z30/z45/z60 full directory with same
+model as runtmscagSAT.
+
+Hopefully this will run OK and then it's on to the IDL code at
+the end.
+
+STILL DON'T KNOW IF THESE ARE CORRECT VERSIONS OF BINARIES.
+ 
+2019-04-17
+
+It's been too long since last week, running full once more, it
+works and I now have non-zero $IMG*pic files.
+
+Checking:
+$IMGDIR is /home/tm/fsca/Landsat5/p042r034/20100426/20100426p042r034sub22/
+$IMAGE is 20100426p042r034sub22
+
+Looking at IDL sort routines,
+for each of sca, veg, rock, these routines use the saturation
+masks made in previous steps (including sat123) to merge the TM
+results from full and saturated runs.
+
+Results should end up as merged:
+
+"$IMAGE.fSCA.img"
+"$IMAGE.fVEG.img"
+"$IMAGE.fROCK.img"
+
+in the /home/tm/fsca/Landsat5/p042r034/20100426/<subset>/full/
+
+Getting error when invoking idl on tong.  Sent in eri help request.
+
+ERI tweaked IDL installation, it works now.
+
+2019-04-23
+
+Checking what happens when I copy my .git* config files to tong.
+This fixes the differences in GH checkins.
+
+2019-05-03
+
+Which spectral libraries are being used?
+
+tong:fsca brodzik$ find ./ -name *.sli | grep z30
+./L57_sli/TM.z30.LIB.sli
+./TMSCAG_components/sat/z30/TM.z30.LIB.sli
+./TMSCAG_components/full/z30/TM.z30.LIB.sli
+./L8_sli/L8_OLI_SCAG_6band_z30.sli
+./TMSCAG_components_L8/sat/z30/TM.z30.LIB.sli
+./TMSCAG_components_L8/full/z30/TM.z30.LIB.sli
+
+
+./L57_sli/TM.z30.LIB.sli                        --call this "origL57"
+./TMSCAG_components/sat/z30/TM.z30.LIB.sli      --same as origL57
+./TMSCAG_components/full/z30/TM.z30.LIB.sli     --same as origL57
+./L8_sli/L8_OLI_SCAG_6band_z30.sli		--differ from origL57
+						--call this origL8
+./TMSCAG_components_L8/sat/z30/TM.z30.LIB.sli   --same as origL57
+./TMSCAG_components_L8/full/z30/TM.z30.LIB.sli  --differ from origL57
+						--same as origL8
+
+Same pattern in z45 and z60, except that
+
+./TMSCAG_components_L8/full/z60/TM.z60.LIB.sli is missing
+entirely.  the .hdr file is there.
+
+./L57_sli/					sli files only, no hdrs
+./TMSCAG_components/sat/z30/TM.z30.LIB.hdr      hdr same
+./TMSCAG_components/full/z30/TM.z30.LIB.hdr     hdr same
+./L8_sli/					sli files only, no hdrs
+./TMSCAG_components_L8/sat/z30/TM.z30.LIB.hdr   hdr same
+./TMSCAG_components_L8/full/z30/TM.z30.LIB.hdr  hdr same
+
+All hdrs are identical (where they exist...)
+
+*******
+
+Problem: tile22 from my new processing does not match (at
+histogram levels) what I think is the tile22 section of fsca_raw
+that Karl has given to Will to process.
+
+What are possible differences:
+
+1) I had to rebuild binaries for tmscag, tmscagSAT and tmsort.
+
+??
+
+2) We may have used different spectral libraries.
+
+--looked at TMSCAG_components--should I try processing with L8
+  libraries?
+--how to tell which are the "correct" ones??  
+
+3) is fsca_raw really what I should compare to?
+
+??only Karl can answer that.
+
+4) there is some question about the tiling, Karl gave me a
+routine that indicates it should be offset from UL but images
+don't look that way.
+
+5) How to know we are using the same input Rs data??
+
+Is there any way for me to find Karl's files from the last
+processing he did?
+
+2019-10-22
+
+Run the p042r034, 20100426, 22 tile on tong.  Do this for tmscag
+only.  A full tmscag "run" is multiple calls.  Pick only 1.
+
+Reproduce this output on summit.
+
+Do same for tmscagSAT.
+
+Do same for tmsort?
+
+This will be a complete regression test.  Any way to make it
+shorter so it runs fast?  Middle 10 rows and middle 10 cols?
+
+2010-10-24
+
+Talking to KR about /home/tm/fsca/TMSCAG_components vs. TMSCAG_components_L8:
+
+Karl says that when he was setting up to run L8, he copied
+TMSCAG_compoenents to TMSCAG_compoenents_L8 and then "copied in
+the new spectral libraries"  but that he's not really sure that
+the L8 processing is using the correct libraries.
+
+This is consistent with what I found when I compared all the sli
+files, above (2019-05-03)
+
+Also, there is /home/tm/fsca/L57_sli/ and /home/tm/fsca/L8_sli/.
+He confirms that the slis are band-specific and since band-passes
+for TM and OLI are different, it will be important  to use the
+correct ones.
+
+Re: L8 doesn't need saturation processing.  He said that
+saturation processing was always controlled with the contents of
+the saturation masks, so for L8 he created "empty" saturation
+masks in order that this would be skipped.
+
+TODO: Can I get sli .hdr files for the L8 sli files?
+TODO: Delete the sat parts of the L8 components
+TODO: make our scripts for L8 only do full processing, period
+
+*******
+
+Doing regressions on Summit vs. UCSB outputs, all individual
+full/sat1/sat13 .pic files are identical, except *shade.pic
+files.
+
+In the full images, the files from UCSB have extremely large
+values in them, and Summit files are zeroes.  This makes me think
+that compilation on ucsb may not have had static memory allocated
+initialized to zero.
+
+
+*******
+
+Copying /home/tm/fsca/mjb_xtmscag to
+~/scag_ucsb/scripts/run_tmscag.sh, to be the first version of the
+script to call tmscag for 1 image.
+
+2019-11-07
+
+Reviewed IDL code that Tom/Karl used to merge the full/sat1/sat13
+images into one image for the given scene.
+
+Basic idea is that it needs the sat1/sat13/sat123 masks, and it
+needs snow/veg/rock output pic images for full and sat13 and sat1
+runs.
+
+Then:
+
+It starts with the scag output for the full run, but adds new
+locations with fractional value to 1.0 for:
+
+1) any place the sat123 mask is set (it just assumes it's 100%)
+2) any place where sat13 is 1, it uses the output fraction from
+the sat13 .pic image
+3) any place where sat1 is 1, it uses the output fraction from
+the sat1 .pic image
+
+Finally, if any outputs are > 1.0 it sets them to 1.0
+"super-unity"
+and it prints a message that no data (-9999) and any noise (-9999
+to 0) "remain for NaN and zero assignment in MATLAB"
+
+Each snow/rock/veg has a corresponding .bat file that sets the
+inputs via environment variables.
+
+TODO:  Move this set of IDL programs to Summit, test output.
+
+then, for first regression change just replace them with python?
+
+N.B. Nothing in these merge routines is using fshade files...
+
+2019-11-11
+
+Make a small subset 200x200 of tile22 image and sat masks, to use
+in regression tests.
+
+Set up the regression to use this.
+
+2019-11-18
+
+I now have a 200x300 subset of the tile22 data.  Using this to
+define a regression test.
+
+regression test to-do:
+
+-) add call to diff for exact regression
+-) make MAXLINES and MAXSAMPLES depend on inputs
+
+is this enough to get it to run fast?
+
+-) set root directory for scratch depending on blanca or summit
+ node
+-) put it in a cron job to run on blanca at midnight 
+
+-) change interface to take imagename and outdir
+   put outputs in outdir, with 'sat1', 'sat13' or no label
+   output...
+
+-) can we use tmscagSAT with optional sat mask?
+   - see if giving tmscagSAT a satmask with all zeroes produces
+     same output as full processing with tmscag?
+
+
+2019-12-01
+
+Making python env called esp for doing preprocessing.
+
+conda create -n esp python=3 rasterio numpy jupyter seaborn
+matplotlib
+
+Worry about making a package later...
+
+2019-12-11
+
+Trying to figure out questions about the OLI sli files we have.
+
+Got "original" ones from Karl.  He says that THP made these for
+him in 2016.
+
+Original ones, with filenames L8_OLI_SCAG_6band_z??.sli have no
+headers.
+
+Headers that we have from UCSB--which are presumably only for the
+TM sli files--have ambiguous byte orders:
+
+z30, z60 say byte order = 1
+and z45 says byte order = 0
+
+This is true for all the hdr files we pulled from UCSB.  It may
+not be an issue for tmscag.c since I don't think it uses the .hdr
+information.  But it will be problem if anything else does (like
+ENVI)
+
+Opened z30 and z45 in ENVI, the z30 spectra don't make any sense,
+values are very large negatives.
+
+The z45 spectra look more physical.  Confirmed in
+
+https://www.harrisgeospatial.com/docs/ENVIHeaderFiles.html
+
+that byte order 0 is LSB and byte order 1 is MSB.
+
+I'm going to set all byte orders to 0, and rename the OLI sli
+files back to the filenames THP gave them..
+
+2019-12-12
+
+Fixed tmsort MAXSAMPLES and MAXLINES problem, so output full
+images now contain data, but the data don't make sense.
+
+Add rgb to output browsePic to see what to expect...
+
+Is it the z45 slis?
+
+Try (just for a test) with z30 slis?
+??
+
+Try going back to the TM57 data in full view?
+
+2019-12-20
+
+Setting up automated regression test for TM57 image we have from
+ucsb
+
+2021-01-28
+
+How does regression test work?
+
+2021-02-03
+
+Test data from KR:
+
+[kari0458@login12 20130518]$ pwd
+/pl/active/rittger_esp/Landsat/Landsat8/p149r035/20130518
+[kari0458@login12 20130518]$ ls */*
+ucsb_outputs/20130518p149r035sub22.fROCK.img  ucsb_Rs/20130518p149r035sub22.idl
+ucsb_outputs/20130518p149r035sub22.fSCA.img   ucsb_Rs/20130518p149r035sub22.sat1
+ucsb_outputs/20130518p149r035sub22.fVEG.img   ucsb_Rs/20130518p149r035sub22.sat123
+ucsb_outputs/x2220130518p149r035.e1042        ucsb_Rs/20130518p149r035sub22.sat13
+ucsb_outputs/x2220130518p149r035.o1042        ucsb_Rs/20130518_SolarAzimuth.txt
+ 
+ucsb_outputs/full:
+20130518p149r035sub22.grnsz.pic  20130518p149r035sub22.rms.pic    20130518p149r035sub22.snow.pic
+20130518p149r035sub22.mask.pic   20130518p149r035sub22.rock.pic   20130518p149r035sub22.veg.pic
+20130518p149r035sub22.other.pic  20130518p149r035sub22.shade.pic
+ 
+Objective #1:
+
+Run oliscag on this tile22 from ucsb.  Compare to outputs from
+ucsb.
+
+How does this system work?
+
+cron job:
+
+# Quick TMSCAG regression can be run anytime                                   
+05 00 * * * source
+/projects/brodzik/TMSCAG_regression/set_scag_environment.sh;
+source $SCAG_TOPDIR/summit_batchfiles/local_git_pull.sh; source
+$SCAG_TOPDIR/summit_batchfiles/remote_build_scag_ucsb.sh; cd
+$SCAG_TOPDIR/summit_batchfiles; source
+$SCAG_TOPDIR/summit_batchfiles/remote_run_regression.sh quick;
+
+1) set_scag_environment.sh: on a login node, sets:
+SCAG_COMPILER=icc (unless user enters gcc)
+
+SCAG_TOPDIR=location of the set_ script.
+
+# environment variables for running the system can be set here
+export SCAG_SCRIPTS=$SCAG_TOPDIR/scripts
+export IDL_STARTUP=${SCAG_TOPDIR}/idl/idl_startup.pro
+
+2) local_git_pull.sh - fetches any unpulled changes from the
+origin to local repo
+
+3) remote_build_scag_ucsb.sh - ssh's to a compile node and
+rebuilds the system there.  This makes new builds of
+bin/tmscag
+bin/tmscagSAT
+bin/tmsort
+
+4) cd to $SCAG_TOPDIR/summit_batchfiles and runs
+remote_run_regression.sh in quick mode (a small subset)
+
+2020-03-09
+
+Examining interactions of various negative values in
+tmscag and calcfractions.
+
+in calcfractions, looking at cumulative sum of ldata[j]*p[i][j],
+running for TM.3em.gr.loose.control:
+
+ldata values don't go negative, but p values do.  Sometimes this
+just lowers the fraction, and stays positive, but sometimes it
+lowers it to negative range.
+
+Negative ranges are not small--some of them get as low as -0.5
+
+*****
+
+Output:
+
+Fix the save on the shade value for snfraction, so now it really
+saves the shade value that was used.
+
+test
+
+2020-03-10
+
+First full scene processed with no_negs option:
+
+sbatch ./sbatch_run_tmscag.sh ${SCAG_TOPDIR}
+/pl/active/rittger_esp/Landsat/Landsat8/p149r035/20130518/ucb_Rs/Landsat8_p149r035_20130518.bip
+30 7391 7591
+
+Finished, 09:07:47 --just over 9 hours.
+
+2020-03-15
+
+Reviewed all tile22 and full images with KR.  Looks like setting
+EM fractions to zero for non-shade EMs fixes some issues but not
+all.  Doing this before calculating shade decreases shade
+fraction, because
+
+sum(non_shade) is higher, so
+
+shade = (1 - sum(non_shade)) is smaller
+
+so value of shdnorm denominator is smaller, and eventual nonshade
+fractions output is larger.
+
+He wants to change calcfractions to calculate the shade fraction
+
+and then to reset the neg nonshade fractions to zero.
+
+Doing this as a test, in calcfractions, and running the full
+scene.
+
+Turned on code optimizations to default (which is ostensibly
+-O2).
+
+Running as batch job 7066823.  Started at 10:15.  No queue wait
+time, should finish in < 9 hours.
+
+
+2021-03-17
+
+4 batches:
+
+nohrsc Rs01 7084059
+nohrsc Rs   7084064
+origShade Rs01 7085067
+origShade Rs   7085072
+
+Compared output with Karl.  He likes Rs inputs (so reflectances
+are not truncates to interval [0.0, 1.0] but allowed to be more
+than 1.0 (which can happen in places with bright snow and
+backscatter),
+with origShadeNoNegEMs: so orig EMs are allowed to be negative in
+order to calculate shade, but then any (shade- or non-shade) EM
+that is negative is reset to zero before continuing.
+
+We plan to proceed with this combination from now on.
+
+Rebuilt binaries, running a new version 4 in a test location to
+confirm I'm doing the same thing and to get some control file
+timings.
+
+jobID: 7114170
+
+
+2021-03-24
+
+Optimistically, tried to make some other code changes to clean up
+scag source without checking in the changes I'd set up for the 4
+options we reviewed. And I screwed something up.  non-shade EMs
+are identical but new shade is all very tiny numbers.
+
+Found the problem--I had switched the saved shade value after it
+was shade-normalized...gr.
+
+Running new small test:
+
+jobID: 7117678--> shade looks better, but the other fractions
+changed...
+
+set tmscag.c back to use original fractions for shade only
+
+jobID: 7117766--> shade looks better, but other fractions changed
+again.
+
+jobID: 7117784--> was using 20 hour time, pending
+
+try again
+
+jobID: 7117808--> still screwed up, going back to what I ran last
+night.
+
+****
+
+This should produce same f(nonshade) with bad shade:
+
+jobID: 7117825
+
+Then just setting the saved shade to the input shade.  Small
+output looks good.
+
+2020-03-25
+
+Serial run with working code on p149r035_20130518.
+
+Control	   		     	Time started			Time elapsed
+TM.2em.control: 		Wed Mar 24 11:26:34 MDT 2021	 5m	
+TM.2em.loose.control: 		Wed Mar 24 11:31:57 MDT 2021	 6m
+TM.3em.gr.control: 		Wed Mar 24 11:37:27 MDT 2021	30m
+TM.3em.gr.loose.control: 	Wed Mar 24 12:07:52 MDT 2021	31m
+TM.3em.met.control: 		Wed Mar 24 12:38:38 MDT 2021	13m
+TM.3em.met.loose.control: 	Wed Mar 24 12:59:02 MDT 2021	20m
+TM.3em.till.control: 		Wed Mar 24 13:19:25 MDT 2021	 9m
+TM.3em.till.loose.control: 	Wed Mar 24 13:28:36 MDT 2021	10m
+TM.3em.lkice.control: 		Wed Mar 24 13:38:10 MDT 2021	15m
+TM.3em.lkice.loose.control: 	Wed Mar 24 13:53:16 MDT 2021	14m
+TM.3em.vlc1.control: 		Wed Mar 24 14:07:51 MDT 2021	30m
+TM.3em.vlc1.loose.control: 	Wed Mar 24 14:37:59 MDT 2021	30m
+TM.3em.vlc2.control: 		Wed Mar 24 15:07:51 MDT 2021	30m
+TM.3em.vlc2.loose.control: 	Wed Mar 24 15:37:28 MDT 2021	30m
+TM.3em.vlc3.control: 		Wed Mar 24 16:07:38 MDT 2021	14m
+TM.3em.vlc3.loose.control: 	Wed Mar 24 16:21:56 MDT 2021	15m
+TM.3em.veg1.control: 		Wed Mar 24 16:36:54 MDT 2021	15m
+TM.3em.veg1.loose.control: 	Wed Mar 24 17:07:38 MDT 2021	31m
+TM.3em.veg2.control: 		Wed Mar 24 17:38:19 MDT 2021	30m
+TM.3em.veg2.loose.control: 	Wed Mar 24 18:08:57 MDT 2021	30m
+TM.3em.veg3.control: 		Wed Mar 24 18:39:44 MDT 2021	31m
+TM.3em.veg3.loose.control: 	Wed Mar 24 19:10:20 MDT 2021	30m
+TM.3em.veg4.control: 		Wed Mar 24 19:40:43 MDT 2021	30m
+TM.3em.veg4.loose.control: 	Wed Mar 24 19:50:25 MDT 2021	 9m
+TM.3em.grveg.control: 		Wed Mar 24 19:59:41 MDT 2021	 5m
+TM.3em.grveg.loose.control: 	Wed Mar 24 20:04:51 MDT 2021	 5m
+TM.3em.metveg.control: 		Wed Mar 24 20:09:49 MDT 2021	 4m
+TM.3em.metveg.loose.control: 	Wed Mar 24 20:13:04 MDT 2021	 3m
+TM.3em.vlcveg.control: 		Wed Mar 24 20:16:25 MDT 2021	 5m
+TM.3em.vlcveg.loose.control: 	Wed Mar 24 20:21:20 MDT 2021	 5m
+End of control loop:		Wed Mar 24 20:26:26 MDT 2021
+
+--> for this scene no single job took more than 31 minutes, so I
+    think I'm good with job array for 1 hour.
+
+Redo sample scene 1 more time:
+Step0: 7131064:
+Step1: 7131065_0 to _29:
+
+Doing it in job array finished in 50 minutes, with identical output.
+
+First 5 scenes:
+
+5pm 2021-03-25:
+
+20130322 Submitted batch job 7131606
+20130418 Submitted batch job 7131607
+20130520 Submitted batch job 7131608
+20130605 Submitted batch job 7131609
+20130621 Submitted batch job 7131610
+
+2021-04-07
+
+browse images look reasonable.
+
+next steps:
+
+- tmsort: do super-unity setting
+- tmsort: save output as ints not floats
+- write wrapper to read dims from .txt file
+- schedule all images
+- write geotiffer
+- set up small regression test for midnight
+- rip all
+
+
+2021-04-20
+
+Working on spectral libraries for Karl's SnowPEX presentation
+tomorrow.
+
+Questions to answer:
+1) what is correct byte order value?
+   correct value is byte order = 0 (LSB)
+2) do we have them in all the correct locations for TM and OLI?
+   yes, I think so, I have renamed the OLI sli files
+3) TMfull vs. OLI: are they exactly the same?  or do we need to
+   adjust the band center wavelengths?
+   they are not exactly the same, and the differences are
+   consistent with what we know about the TM vs. OLI
+   spectral response functions.  I adjusted the
+   wavelengths in the hdr files to reflect this.
+4) TMfull vs. TMsat: are they copies? or was something done to,
+   for example, duplicate band2 spectra in sat1 files?
+   - talked with THP yesterday, he says they should be the
+   identical sli files used for sat processing, the saturation
+   is controlled with the channels that are listed in the
+   "TM.bands" file
+   
+Notes:
+
+ENVI sli format:
+https://www.l3harrisgeospatial.com/docs/enviheaderfiles.html
+
+byte order: 0=LSB, 1=MSB
+-->Our files should all be 0=LSB
+
+From web posting on reading .sli files:
+
+To read .sli file in IDL, an .sli file is just a binary array
+with spectra saved in rows (so it's the same format as a BIP
+tile).  To read it, you'll need to know the number of spectra
+(nspec), number of pts per spectrum (npts), the datatype (dt),
+and whether or not there's an offset.  Assuming there's offset=0,
+and the path to your library file is stored in the variable
+sli_file, then this should work: sli = make_array(npts, nspec,
+type=dt) openr, lun, sli_file, /get_lun readu, lun, sli free_lun,
+lun If there's an offset, handle that with a point_lun in between
+openr and readu.
+
+To read/display an .sli file in ENVI:
+- open ENVI new version
+- File->Open (open the .sli file)
+  - this will open the "Spectral Library Viewer" 
+- To select all spectra for display on same plot:
+  Import->Spectral Library...
+  Choose the sli file to view  
+  Select all items
+  OK
+  - expand arrow to right side
+    - set title and yaxis title
+
+I wrote a read_sli.pro file in scag_ucsb/idl/
+
+relative band passes for oli vs. TM are here:
+
+https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites?qt-news_science_products=0#qt-news_science_products
+
+2021-04-21
+
+Merged corrected OLI sli files and latest tmsort that writes
+integers instead of floats.  Testing on first 5 Landsat images.
+
+20130322:
+Submitted batch job 7265982
+Step1: 7265992 (various, x30)
+Step2: 7266335
+
+
+
+
+Submitted batch job 7265983
+Submitted batch job 7265984
+Submitted batch job 7265985
+Submitted batch job 7265986
+
+  
+2021-04-27
+
+How to convert flat binary uint8 or uint16 array to geotiff?
+
+Building conda env on summit for scag:
+
+conda create -n scag gdal
+
+it got gdal v
+
+(latest version on web page is 3.2.2)
+
+1) To convert flat binary image file to non-georef'd tiff:
+
+convert -size 7591x7551 -depth 8 -define quantum:format=unsigned
+gray:LC08_L2SP_042034_20130322_20200913_02_T1.snow.bin test.tif
+
+2) Make it a geotiff:
+
+proj4 string for UTM zone 11:
+a_srs="+proj=utm +zone=11 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
+
+ul/lr projected coordinates of the image (corners of corner
+cells, in meters), guess: "ulx uly lrx lry"
+from:
+SENSOR_PLATFORM,LINES,SAMPLES,SUN_ZENITH,MAP_PROJECTION,ZONE_NUMBER,ELLIPSOID,DATUM,GRID_CELL_SIZE_REFLECTIVE,CORNER_UL_PROJECTION_X_PRODUCT,CORNER_UL_PROJECTION_Y_PRODUCT,CORNER_LR_PROJECTION_X_PRODUCT,CORNER_LR_PROJECTION_Y_PRODUCT
+"OLI,8",7551,7591,41.80901353,UTM,11,WGS84,WGS84,30,150300,4263600,378000,4037100
+
+a_ullr=150300. 4263600. 378000. 4037100.  <--no quotes
+a_nodata=255 (for uints)
+
+gdal_translate -a_srs $a_srs -a_ullr $a_ullr -a_nodata 255 test.tif geotiff.tif
+
+2021-04-29
+
+I want to add the convert build to the scag conda env.
+
+conda remove -n scag --all
+
+conda create -n scag gdal imagemagick
+
+On scompile node, this currently installed:
+GDAL:
+GDAL 3.2.2, released 2021/03/05
+Imagemagick:
+Version: ImageMagick 7.0.11-9 Q16 x86_64 2021-04-17 https://imagemagick.org
+Copyright: (C) 1999-2021 ImageMagick Studio LLC
+
+Then add the name of the conda env to the sbatch scripts.
+
+Finish the makegeotiff script to delete the tmp file.
+Let the caller delete the original file
+
+2021-05-11
+
+To compare data only in 2 tif files, dump each to ENVI flat
+binary, and do diff on the result:
+
+gdal_translate -of ENVI file1.tif file1.bin
+gdal_translate -of ENVI file2.tif file2.bin
+
+(will produce file*.bin and file*.hdr)
+
+then
+
+diff -s file1.bin file2.bin
+
+2021-05-11
+
+Started processing on staging:
+
+Date	 0JobID	  StartedStep0      FinishedStep2
+20130520 7362080  2021-05-11 15:20  2021-05-11 16:11
+20130605 7362081  2021-05-11 15:20  2021-05-11 16:04
+20130621 7362082  2021-05-11 15:20  2021-05-11 16:08
+20130707 7362083  2021-05-11 15:20  2021-05-11 16:04
+20130808 7362084  2021-05-11 15:20  2021-05-11 16:07
+20130824 7362085  2021-05-11 15:20  2021-05-11 16:18
+20130909 7362086  2021-05-11 15:20  2021-05-11 16:16
+20130925 7362087  2021-05-11 15:20  2021-05-11 16:21
+20131011 7362129  2021-05-11 15:20  2021-05-11 16:30
+20131027 7362130  2021-05-11 15:20  2021-05-11 16:25
+20131214 7362131  2021-05-11 15:20  2021-05-11 16:28
+20131230 7362132  2021-05-11 15:20  2021-05-11 16:33
+
+Year 	 NumFiles    JobIDs           StartedStep0
+2013     14
+2014	 10	     7362741-7362750  2021-05-11 16:53	
+2015	 12          7362773-7362784  2021-05-11 16:54
+2016     15	     7362808-7362822  2021-05-11 16:55
+2017     12 	     7362834-7362845  2021-05-11 16:56
+2018 	 12	     7362870-7362881  2021-05-11 16:58
+2019	 11	     7362890-7362900  2021-05-11 16:59
+2020     13	     7362907-7262919  2021-05-11 17:00
+2021	  1 	     7362925	      2021-05-11 17:00
+
+2021-05-12
+
+Status on scag jobs from yesterday, only 53 .snow.tif files
+produced.
+
+What went wrong, and where?
+
+Check for 8 .tif files per directory:
+
+2013 14 ok
+2014 10 ok
+2015 12 ok
+2016 15 13 ok
+none for: 20161019
+     	  20161104
+2017 12 1 ok (worked for 20170312)
+2018 12 1 ok (worked for 20180619)
+2019 11 1 ok (worked for 20191012)
+2020 13 1 ok (worked for 20200912)
+2021 1  0 ok
+
+things to check:
+
+1) any disks filled up?  $PB, $SSB both OK
+
+Output from failed job for 20161019 Step0:
+
+<snip>
+slurm_script: Full spectrum directory is prepped at /scratch/summit/brodzik/tmscag_working/tmscag.OLI8.z45.LC08_L2SP_042034_20161019_20200905_02_T1/full...
+slurm_script: Scheduling Step1...
+sbatch: error: QOSMaxSubmitJobPerUserLimit
+sbatch: error: Batch job submission failed: Job violates accounting/QOS policy (job submit limit, user's size and/or time limits)
+slurm_script:  Tue May 11 17:26:38 MDT 2021
+slurm_script: Done.
+
+So maybe I just had too many jobs running?
+yes: RC confirms that QOSMaxSubmitJobPerUserLimit for normal
+queues is 1000 jobs, here is the command to figure it out:
+
+$ sacctmgr list qos normal
+ ...and
+ $ sacctmgr list qos long
+ ...the results will show a max submit jobs per user value of 1000 (normal)
+and 200 (long)
+
+
+Have restarted:
+20161019: 7370068
+20161104: 7370072
+
+both worked successfully.  So 1000/32=31.25 is maximum number of
+Landsat scenes to run simultaneously, but that's when I don't
+have any SnowToday/IndusToday processing going!
+
+restarted:
+2017     12 7370324-7370335  2021-05-12 11:07 finished noon
+2018 	 12 7370356-7570367  2021-05-12 11:07 all finished by 1
+2019	 11 7371326-7371336  2021-05-12 13:33
+2020     13 7371342-7371354  2021-05-12 13:33
+2021	  1 7371355	     2021-05-12 13:34
+
+
+Created tag="v1.0" for this release on master.
+
+2021-06-16
+
+Added moveFinishedScag.sh step to move completed job out of
+staging area.  Testing job.  Had to reset target dir to ../../../
+Worked.
+
+Then I can run the sbatch script that does 28 scenes at a time:
+
+Jobs
+
+pr	 imgdate  Step0	  Step1	  Step2
+p012r024 20190417 7611948 7611981 7612156
+
+to
+7611975
+
+started 2021-06-16 20:28:
+
+2021-06-017
+
+2 problems:
+
+1) IMGDIRs weren't writable Step2 failed when making
+$IMGDIR/full.
+
+Had Karl change permissions.  Added a check at beginning of Step0
+to verify writability before proceeding with prep work on
+scratch.
+
+2) Some image dimensions were larger than hardcoded 8000x8500
+(lines x samples).  So this failed at beginning of step 1 jobs.
+
+Reset scag.c  (and scagSAT.c) MAXLINES and MAXSAMPLES to
+8500x9000.
+
+11:13am: Restarting sbatchForOLI.sh...
+
+28 jobs:
+7616451
+to
+7616478
+
+Found yet another job with LINES > 8500 (sigh).
+LC08_L2SP_028010_20160611_20200906_02_T1/LC08_L2SP_028010_20160611_20200906_02_T1.bip
+dims are linesXsamps = 8811x8771
+
+So this image will fail to process and nothing will be moved and
+When these jobs are finished running, increase limits to
+9000x9000 and recompile.
+
+7616484:
+LC08_L2SP_013027_20150413_20200909_02_T1.bip : jobID some step1 jobs
+timed out (due to problems with filesystem??)
+
+7616485:
+cp: can't open
+/pl/active/rittger_esp/Landsat/Landsat8/staging/p033r025/LC08_L2SP_033025_20180401_20200901_02_T1/LC08_L2SP_033025_20180401_20200901_02_T1.bip
+also got timeouts here...
+
+7616495:
+image size is 8801x8771  gack
+
+7616539:
+image size is 8591x8541  gack
+
+2021-07-14
+
+Batch of 5 submitted 16:08 2021-07-14:
+success
+all 5 finished by    16:34 2021-07-14
+
+Submitted batch job 7903295
+LC08_L2SP_012024_20190417_20200829_02_T1.bip
+Submitted batch job 7903296
+LC08_L2SP_012024_20200130_20200823_02_T1.bip
+Submitted batch job 7903297
+LC08_L2SP_013027_20150413_20200909_02_T1.bip
+Submitted batch job 7903298
+LC08_L2SP_015032_20171228_20200902_02_T1.bip
+Submitted batch job 7903299
+LC08_L2SP_018034_20180102_20200902_02_T1.bip
+
+
+
+Next 25-image Job started 2021-07-14 17:00 :
+jobIDs: 7904268 - 7904292
+
+3 errors in Step1 (dims are even larger than current settings of
+8500 lines X 9000 samples):
+
+1)
+slurm_script: IMGFILE=/pl/active/rittger_esp/Landsat/Landsat8/staging/p040r014/LC08_L2SP_040014_20170517_20200904_02_T1/LC08_L2SP_040014_20170517_20200904_02_T1.bip
+slurm_script: IMGBANDS=6
+slurm_script: IMGSAMPLES=8541
+slurm_script: IMGLINES=8591
+
+2)
+slurm_script: IMGFILE=/pl/active/rittger_esp/Landsat/Landsat8/staging/p028r010/LC08_L2SP_028010_20160323_20200907_02_T1/LC08_L2SP_028010_20160323_20200907_02_T1.bip
+slurm_script: IMGBANDS=6
+slurm_script: IMGSAMPLES=8771
+slurm_script: IMGLINES=8801
+
+3)
+slurm_script: IMGFILE=/pl/active/rittger_esp/Landsat/Landsat8/staging/p028r010/LC08_L2SP_028010_20160611_20200906_02_T1/LC08_L2SP_028010_20160611_20200906_02_T1.bip
+slurm_script: IMGBANDS=6
+slurm_script: IMGSAMPLES=8771
+slurm_script: IMGLINES=8811
+
+Need to increase the bounds and re-run
+
+2 errors in Step2 (old version of the directories had been
+processed before):
+LC08_L2SP_042034_20130322_20200913_02_T1
+LC08_L2SP_042034_20130418_20200913_02_T1
+
+Moved the original ones to "test" subdir.
+
+Starting reprocessing on all 5 of these days (2021-07-15)
+
+All 25 finished by: 2021-07-14 18:
+
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p018r034/LC08_L2SP_018034_20180118_20200902_02_T1/LC08_L2SP_018034_20180118_20200902_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p020r025/LC08_L2SP_020025_20180422_20201015_02_T2/LC08_L2SP_020025_20180422_20201015_02_T2.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p020r025/LC08_L2SP_020025_20200513_20200820_02_T1/LC08_L2SP_020025_20200513_20200820_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p028r010/LC08_L2SP_028010_20160323_20200907_02_T1/LC08_L2SP_028010_20160323_20200907_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p028r010/LC08_L2SP_028010_20160611_20200906_02_T1/LC08_L2SP_028010_20160611_20200906_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p031r028/LC08_L2SP_031028_20160328_20200907_02_T1/LC08_L2SP_031028_20160328_20200907_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p031r028/LC08_L2SP_031028_20180214_20200902_02_T1/LC08_L2SP_031028_20180214_20200902_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p031r028/LC08_L2SP_031028_20190321_20200829_02_T1/LC08_L2SP_031028_20190321_20200829_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p032r028/LC08_L2SP_032028_20180410_20200901_02_T1/LC08_L2SP_032028_20180410_20200901_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p032r028/LC08_L2SP_032028_20190208_20200829_02_T1/LC08_L2SP_032028_20190208_20200829_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p032r028/LC08_L2SP_032028_20190531_20200828_02_T1/LC08_L2SP_032028_20190531_20200828_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p033r025/LC08_L2SP_033025_20161105_20200905_02_T1/LC08_L2SP_033025_20161105_20200905_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p033r025/LC08_L2SP_033025_20170209_20200905_02_T1/LC08_L2SP_033025_20170209_20200905_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p033r025/LC08_L2SP_033025_20180401_20200901_02_T1/LC08_L2SP_033025_20180401_20200901_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p036r023/LC08_L2SP_036023_20190527_20200828_02_T1/LC08_L2SP_036023_20190527_20200828_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p036r023/LC08_L2SP_036023_20200310_20200822_02_T1/LC08_L2SP_036023_20200310_20200822_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p037r033/LC08_L2SP_037033_20151201_20200908_02_T1/LC08_L2SP_037033_20151201_20200908_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p037r033/LC08_L2SP_037033_20161219_20200905_02_T1/LC08_L2SP_037033_20161219_20200905_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p037r033/LC08_L2SP_037033_20170309_20200904_02_T1/LC08_L2SP_037033_20170309_20200904_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p037r033/LC08_L2SP_037033_20170410_20200904_02_T1/LC08_L2SP_037033_20170410_20200904_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p040r014/LC08_L2SP_040014_20170517_20200904_02_T1/LC08_L2SP_040014_20170517_20200904_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p041r014/LC08_L2SP_041014_20200329_20200822_02_T2/LC08_L2SP_041014_20200329_20200822_02_T2.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p041r014/LC08_L2SP_041014_20200617_20200824_02_T1/LC08_L2SP_041014_20200617_20200824_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p042r034/LC08_L2SP_042034_20130322_20200913_02_T1/LC08_L2SP_042034_20130322_20200913_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+sbatch /projects/brodzik/scag_ucsb_ops/scripts/runScagStep0.sh /projects/brodzik/scag_ucsb_ops /pl/active/rittger_esp/Landsat/Landsat8/staging/p042r034/LC08_L2SP_042034_20130418_20200913_02_T1/LC08_L2SP_042034_20130418_20200913_02_T1.bip /pl/active/rittger_esp/Landsat/Landsat8
+
+2020-07-15
+
+Increased image size to 9500x9500.
+Moved old data directories out of the way.
+
+10:46: Redoing 5 images that failed yesterday as sbatchForOLI_2a.sh
+
+Jobs 7915884 - 7915888.
+
+Starting a new batch of 20 more images as sbatchForOLI_3.sh.
+
+Jobs 7915924 - 7915943.
+
+
+Need to reprocess from scratch with new .bip/.txt:
+LC08_L2SP_028010_20160323_20200907_02_T1
+Started with job 7919759
+
+Need to remove from output directory once Karl as reset
+permissions:
+/pl/active/rittger_esp/Landsat/Landsat8/p149r035/LC08_L2SP_149035_20130518_20200913_02_T1
+
+Started a new batch of 25 more images/
+
+5 failed as timeouts on Step2.  Increased time to 1 h and
+restarted as batch 4a
+
+
+2021-09-27
+
+Timings for allocation request:
+
+From sbatchForOLI_9.sh done in July.
+
+Image: LC08_L2SP_220014_20160425_20200907_02_T1
+Step0:
+
+2023-02-22
+
+Building new system from Mankoff on alpine.
+
+*****
+make build
+
+works like a charm, binaries are:
+
+scag
+scag_sort
+tmscagSAT
+
+scag and tmscagSAT have --help messages that work.
+scag_sort seg faults :-(
+
+BUT there's a build-alpine target, I had to change the module from icc to intel
+and be on a compile node:
+
+acompile
+make build-alpine
+
+Now all three programs are returning help messages.
+
+*****
+Making new conda env.
+
+(base) [brodzik@login13 scag]$ conda env list
+# conda environments:
+#
+base                  *  /projects/brodzik/miniconda3
+cetb                     /projects/brodzik/miniconda3/envs/cetb
+cetbNewpynco             /projects/brodzik/miniconda3/envs/cetbNewpynco
+pmesdr                   /projects/brodzik/miniconda3/envs/pmesdr
+pmesdr_test              /projects/brodzik/miniconda3/envs/pmesdr_test
+scag                     /projects/brodzik/miniconda3/envs/scag
+
+Updating my base conda
+
+(base) [brodzik@login13 scag]$ conda --version
+conda 4.14.0
+(base) [brodzik@login13 scag]$ conda update -n base -c defaults conda 
+Collecting package metadata (current_repodata.json): done
+Solving environment: done
+
+
+==> WARNING: A newer version of conda exists. <==
+  current version: 4.14.0
+  latest version: 22.11.1
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+...
+
+Hmm.
+
+Lots of package changes.  Most from defaults channel
+
+(base) [brodzik@login13 scag]$ conda --version
+conda 23.1.0
+
+Trying again with -c conda-forge, now base conda list is all from conda-forge
+
+and
+
+(base) [brodzik@login13 scag]$ conda --version
+conda 23.1.0
+
+I already had an env named 'scag', removing it:
+
+conda env remove -n scag
+
+*****
+Now using Ken's make target:
+
+make env-create
+
+This has made a new scag env with a bunch of conda-forge packages.
+
+*****
+Now fetching first MODIS tile:
+
+./scripts/fetch_modis.py -hn 23 -vn 5 -d 2013-05-14 -o $SAB/MODIS/2013-05-14/
+
+Now doing a bunch of fetches in parallel:
+
+Made tiles.csv with 23/5
+Made tiles.txt with 5 dates
+
+on compile node:
+
+ml gnu_parallel
+workon scag
+parallel -j1 --dry-run "/projects/brodzik/scag/scripts/fetch_modis.py -hn {1//} -vn {1/} -d {2} -o MODIS/{2}/ " ::: $(cat tiles.csv) ::: $(cat dates.txt)
+
+awesome!
+
+(Need to ask Ken about the bash looping magic here)
+
+****
+
+make test (forgot to set ulimit...)
+
+****
+2023-02-23
+
+set ulimit and reran make test, it worked.
+
+****
+Doing bipify on 5 MODIS files:
+
+(scag) [brodzik@login12 MODIS]$ for f in $(ls */*.hdf); do new=${f%.hdf}.bip; echo "old=$f"; echo "new=$new"; $PB/scag/scripts/BIPifier.py -i $f -o $new; done
+old=2013-05-14/MOD09GA.A2013134.h23v05.061.2021230061311.hdf
+new=2013-05-14/MOD09GA.A2013134.h23v05.061.2021230061311.bip
+/projects/brodzik/scag/scripts/BIPifier.py:375: RuntimeWarning: invalid value encountered in cast
+  self._BIPdata = tmp.astype(np.uint16)
+old=2013-05-30/MOD09GA.A2013150.h23v05.061.2021230233039.hdf
+new=2013-05-30/MOD09GA.A2013150.h23v05.061.2021230233039.bip
+/projects/brodzik/scag/scripts/BIPifier.py:375: RuntimeWarning: invalid value encountered in cast
+  self._BIPdata = tmp.astype(np.uint16)
+old=2013-09-19/MOD09GA.A2013262.h23v05.061.2021239105247.hdf
+new=2013-09-19/MOD09GA.A2013262.h23v05.061.2021239105247.bip
+/projects/brodzik/scag/scripts/BIPifier.py:375: RuntimeWarning: invalid value encountered in cast
+  self._BIPdata = tmp.astype(np.uint16)
+old=2013-10-05/MOD09GA.A2013278.h23v05.061.2021240100010.hdf
+new=2013-10-05/MOD09GA.A2013278.h23v05.061.2021240100010.bip
+/projects/brodzik/scag/scripts/BIPifier.py:375: RuntimeWarning: invalid value encountered in cast
+  self._BIPdata = tmp.astype(np.uint16)
+old=2013-10-21/MOD09GA.A2013294.h23v05.061.2021241075452.hdf
+new=2013-10-21/MOD09GA.A2013294.h23v05.061.2021241075452.bip
+/projects/brodzik/scag/scripts/BIPifier.py:375: RuntimeWarning: invalid value encountered in cast
+  self._BIPdata = tmp.astype(np.uint16)
+(scag) [brodzik@login12 MODIS]$ 
+
+It looks like the RuntimeWarning was introduced in numpy-1.24.x  I have confirmed
+that it does not get produced for numpy-1.23.x.  I believe there's a numpy BUG
+dated 12/20/2022 with a fix that's in the works and that it's OK to ignore it
+for now:
+
+https://github.com/numpy/numpy/issues/22843
+
+This produced .bip/.bip.meta pairs, with data like this in .meta:
+
+(scag) [brodzik@login12 MODIS]$ more 2013-05-14/MOD09GA.A2013134.h23v05.061.2021230061311.bip.meta
+SOURCE_FILE=/scratch/alpine/brodzik/MODIS/2013-05-14/MOD09GA.A2013134.h23v05.061.2021230061311.hdf
+SENSOR=MODIS
+NLINES=2400
+NSAMPLES=2400
+NBANDS=7
+SUN_ZENITH=0.16959999084472657
+PROJ_STRING="+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+ZONE_NUMBER=h23v05
+ELLIPSOID=6371007.181
+DATUM=WGS84
+GRID_CELL_SIZE_REFLECTIVE=463.312716527778
+CORNER_UL_PROJECTION_X_PRODUCT=5559752.598333
+CORNER_UL_PROJECTION_Y_PRODUCT=4447802.078667
+CORNER_LR_PROJECTION_X_PRODUCT=6671703.118
+CORNER_LR_PROJECTION_Y_PRODUCT=3335851.559
+
+So I'm a little worred about the DATUM=WGS84 line.  Holding that thought.
+
+Doing first scag run:
+
+sbatch $PB/scag/scag.sh -i 2013-05-14/MOD09GA.A2013134.h23v05.061.2021230061311.bip -w 2013-05-14/work -o 2013-05-14/scag
+
+Submitted batch job 852563
+
+2023-03-03
+
+Met with Mankoff about the issues I've had:
+
+1) He says DATUM=WGS84 is leftover from OLI meta file, noted this in a JIRA
+issue
+
+2) He says he just put the ulimit in his .bashrc (like I have done), but that
+it may be possible to move it to top of scag.sh
+
+3) We figured out 2 problems with running on alpine.  Made some changes to run
+properly interactively (on a compute node) vs. as sbatch.  Got first MODIS day
+to process.
+
+Doing remainder of the MODIS images with:
+
+for d in 2013-05-30; do echo $d; for f in $(ls $d/*.bip); do echo "Next bip: $f"; sbatch $PB/scag/scag.sh -i $f -w $d/work -o $d/scag; done; done
+2013-05-30
+Next bip: 2013-05-30/MOD09GA.A2013150.h23v05.061.2021230233039.bip
+Submitted batch job 896107 OK, ~12 minutes
+
+and
+
+(scag) [brodzik@login12 MODIS]$ for d in 2013-09-19 2013-10-05 2013-10-21; do echo $d; for f in $(ls $d/*.bip); do echo "Next bip: $f"; sbatch --job-name=modscag-$d --time=00:20:00 $PB/scag/scag.sh -i $f -w $d/work -o $d/scag; done; done
+2013-09-19
+Next bip: 2013-09-19/MOD09GA.A2013262.h23v05.061.2021239105247.bip
+Submitted batch job 896132
+2013-10-05
+Next bip: 2013-10-05/MOD09GA.A2013278.h23v05.061.2021240100010.bip
+Submitted batch job 896133
+2013-10-21
+Next bip: 2013-10-21/MOD09GA.A2013294.h23v05.061.2021241075452.bip
+Submitted batch job 896134
+
+2023-03-04
+
+Fetched h23v05 VIIRS VNP09GA files for 5 dates, to my scratch.
+
+Doing bipify on these:
+
+From compute node in conda scag env:
+
+(scag) [brodzik@c3cpu-a5-u17-3 VIIRS]$ for f in $(ls */*.h5); do new=${f%.h5}.bip; echo "orig=$f"; echo "bip =$new"; $PB/scag/scripts/BIPifier.py -i $f -o $new; done
+orig=2013-05-14/VNP09GA.A2013134.h23v05.001.2016350160845.h5
+bip =2013-05-14/VNP09GA.A2013134.h23v05.001.2016350160845.bip
+orig=2013-05-30/VNP09GA.A2013150.h23v05.001.2016351221631.h5
+bip =2013-05-30/VNP09GA.A2013150.h23v05.001.2016351221631.bip
+orig=2013-09-19/VNP09GA.A2013262.h23v05.001.2016364121936.h5
+bip =2013-09-19/VNP09GA.A2013262.h23v05.001.2016364121936.bip
+orig=2013-10-05/VNP09GA.A2013278.h23v05.001.2016366085131.h5
+bip =2013-10-05/VNP09GA.A2013278.h23v05.001.2016366085131.bip
+orig=2013-10-21/VNP09GA.A2013294.h23v05.001.2017002044050.h5
+bip =2013-10-21/VNP09GA.A2013294.h23v05.001.2017002044050.bip
+
+Doing scag on these VIIRS images: (note this time I'm using default work
+directory, which is value of -o plus /tmp/)
+
+(scag) [brodzik@c3cpu-a5-u17-3 VIIRS]$ for d in $(ls -d *); do echo $d; for f in $(ls $d/*.bip); do echo "next bip: $f"; sbatch $PB/scag/scag.sh -i $f -o $d/scag; done; done
+2013-05-14
+next bip: 2013-05-14/VNP09GA.A2013134.h23v05.001.2016350160845.bip
+Submitted batch job 899954
+2013-05-30
+next bip: 2013-05-30/VNP09GA.A2013150.h23v05.001.2016351221631.bip
+Submitted batch job 899955
+2013-09-19
+next bip: 2013-09-19/VNP09GA.A2013262.h23v05.001.2016364121936.bip
+Submitted batch job 899956
+2013-10-05
+next bip: 2013-10-05/VNP09GA.A2013278.h23v05.001.2016366085131.bip
+Submitted batch job 899957
+2013-10-21
+next bip: 2013-10-21/VNP09GA.A2013294.h23v05.001.2017002044050.bip
+Submitted batch job 899958
+
+All successful, run time < 3 min.
+
+On ArcMap, look at:
+
+- all .tif outputs for May 14
+- all 5 dates of snow_fraction
+
+Made a new USGS EROS Registration login (my old one wasn't recognized)
+
+Now pulling OLI scenes:
+
+export LANDSATXPLORE_USERNAME='...'  (single quotes are important)
+export LANDSATXPLORE_PASSWORD='...'
+
+(scag) [brodzik@c3cpu-a5-u19-1 OLI]$ for d in 2013-05-30 2013-09-19 2013-10-05 2013-10-21; do echo $d; base=$($PB/scag/scripts/fetch_oli.sh -vv search -PR 153 33 -d $d); $PB/scag/scripts/fetch_oli.sh -vv download -o ./$d/ $base; done
+2013-05-30
+[2023-03-04T14:19:36-07:00] [DEBUG] [fetch_oli.sh] THIS_HOME: /projects/brodzik/scag/scripts
+[2023-03-04T14:19:36-07:00] [DEBUG] [fetch_oli.sh] EXTRA args: 
+[2023-03-04T14:19:36-07:00] [DEBUG] [fetch_oli.sh] Checking arguments...
+[2023-03-04T14:19:36-07:00] [INFO] [fetch_oli.sh] Search mode
+[2023-03-04T14:19:36-07:00] [INFO] [fetch_oli.sh] Searching...
+[2023-03-04T14:19:38-07:00] [DEBUG] [fetch_oli.sh] THIS_HOME: /projects/brodzik/scag/scripts
+[2023-03-04T14:19:38-07:00] [DEBUG] [fetch_oli.sh] EXTRA args: LC08_L2SP_153033_20130530_20200912_02_T1
+[2023-03-04T14:19:38-07:00] [DEBUG] [fetch_oli.sh] Checking arguments...
+[2023-03-04T14:19:38-07:00] [INFO] [fetch_oli.sh] Download mode
+[2023-03-04T14:19:38-07:00] [INFO] [fetch_oli.sh] Downloading...
+[2023-03-04T14:19:38-07:00] [INFO] [fetch_oli.sh] Downloading to ./2013-05-30/
+100%|█████████████████████████████████████████████████████████████████████████████████████████| 983M/983M [00:16<00:00, 64.3MB/s]
+2013-09-19
+[2023-03-04T14:20:45-07:00] [DEBUG] [fetch_oli.sh] THIS_HOME: /projects/brodzik/scag/scripts
+[2023-03-04T14:20:45-07:00] [DEBUG] [fetch_oli.sh] EXTRA args: 
+[2023-03-04T14:20:45-07:00] [DEBUG] [fetch_oli.sh] Checking arguments...
+[2023-03-04T14:20:45-07:00] [INFO] [fetch_oli.sh] Search mode
+[2023-03-04T14:20:45-07:00] [INFO] [fetch_oli.sh] Searching...
+[2023-03-04T14:20:47-07:00] [DEBUG] [fetch_oli.sh] THIS_HOME: /projects/brodzik/scag/scripts
+[2023-03-04T14:20:47-07:00] [DEBUG] [fetch_oli.sh] EXTRA args: LC08_L2SP_153033_20130919_20200913_02_T1
+[2023-03-04T14:20:47-07:00] [DEBUG] [fetch_oli.sh] Checking arguments...
+[2023-03-04T14:20:47-07:00] [INFO] [fetch_oli.sh] Download mode
+[2023-03-04T14:20:47-07:00] [INFO] [fetch_oli.sh] Downloading...
+[2023-03-04T14:20:47-07:00] [INFO] [fetch_oli.sh] Downloading to ./2013-09-19/
+0.99GB [00:12, 85.1MB/s]
+...
+
+untar each of the OLI tarballs into a subdirectory named after the tarball basename :
+
+for d in $(ls -d *); do echo $d; cd $d; tar -xv --one-top-level -f *.tar; cd ../; done
+
+Do bipify:
+
+On compute node in scag conda env:
+
+for f in $(ls */*.tar); do new=${f%.tar}.bip; orig=${f%.tar}; echo "orig=$orig";
+echo "new =$new"; $PB/scag/scripts/BIPifier.py -i $orig -o $new; done
+
+And now do oli scag:
+
+(scag) [brodzik@c3cpu-c11-u1-3 OLI]$ for d in $(ls -d *); do echo $d; for f in $(ls $d/*.bip); do echo "next bip: $f"; sbatch --time=01:30:00 --job-name=oliscag-$d $PB/scag/scag.sh -v -i $f -o $d/scag; done; done
+2013-05-14
+next bip: 2013-05-14/LC08_L2SP_153033_20130514_20200912_02_T1.bip
+Submitted batch job 900927
+2013-05-30
+next bip: 2013-05-30/LC08_L2SP_153033_20130530_20200912_02_T1.bip
+Submitted batch job 900928
+2013-09-19
+next bip: 2013-09-19/LC08_L2SP_153033_20130919_20200913_02_T1.bip
+Submitted batch job 900929
+2013-10-05
+next bip: 2013-10-05/LC08_L2SP_153033_20131005_20200913_02_T1.bip
+Submitted batch job 900930
+2013-10-21
+next bip: 2013-10-21/LC08_L2SP_153033_20131021_20200912_02_T1.bip
+Submitted batch job 900931
+
+Doing rgbs:
+
+(base) [brodzik@c3cpu-c11-u11-1 OLI]$ workon scag
+(scag) [brodzik@c3cpu-c11-u11-1 OLI]$ for f in $(ls */*.bip.meta); do echo "next meta: $f"; out=${f%.bip.meta}_rgb.tif; echo "next out=$out"; $PB/scag/scripts/rgb.sh -m $f -o $out; done
+next meta: 2013-05-14/LC08_L2SP_153033_20130514_20200912_02_T1.bip.meta
+next out=2013-05-14/LC08_L2SP_153033_20130514_20200912_02_T1_rgb.tif
+
+Processing file     1 of     3,  0.000% completed in 0 minutes.
+Filename: /gpfs/alpine1/scratch/brodzik/OLI/2013-05-14/LC08_L2SP_153033_20130514_20200912_02_T1/LC08_L2SP_153033_20130514_20200912_02_T1_SR_B4.TIF
+File Size: 7591x7371x1
+Pixel Size: 30.000000 x -30.000000
+UL:(463785.000000,4416615.000000)   LR:(691515.000000,4195485.000000)
+Copy 0,0,7591,7371 to 0,0,7591,7371.
+
+Processing file     2 of     3, 33.333% completed in 0 minutes.
+Filename: /gpfs/alpine1/scratch/brodzik/OLI/2013-05-14/LC08_L2SP_153033_20130514_20200912_02_T1/LC08_L2SP_153033_20130514_20200912_02_T1_SR_B3.TIF
+File Size: 7591x7371x1
+Pixel Size: 30.000000 x -30.000000
+UL:(463785.000000,4416615.000000)   LR:(691515.000000,4195485.000000)
+Copy 0,0,7591,7371 to 0,0,7591,7371.
+
+Processing file     3 of     3, 66.667% completed in 0 minutes.
+Filename: /gpfs/alpine1/scratch/brodzik/OLI/2013-05-14/LC08_L2SP_153033_20130514_20200912_02_T1/LC08_L2SP_153033_20130514_20200912_02_T1_SR_B2.TIF
+File Size: 7591x7371x1
+Pixel Size: 30.000000 x -30.000000
+UL:(463785.000000,4416615.000000)   LR:(691515.000000,4195485.000000)
+Copy 0,0,7591,7371 to 0,0,7591,7371.
+
+...
+
+2023-05-08
+Working to get SCAG running as moha2290 on Alpine
+Python environment created, but error message trying to download
+data
+
+(scag) [moha2290@c3cpu-c11-u11-2 scag]$ ./scripts/fetch_modis.py -hn 23 -vn 5 -d 2013-05-14 -o /scratch/alpine/moha2290/MODIS/2013-05-14/
+You're now authenticated with NASA Earthdata Login
+Using token with expiration date: 07/07/2023
+Traceback (most recent call last):
+  File "/projects/moha2290/scag/./scripts/fetch_modis.py", line 81, in <module>
+    search(args)
+  File "/projects/moha2290/scag/./scripts/fetch_modis.py", line 26, in search
+    granules = GranuleQuery.get(1000)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/earthdata/search.py", line 456, in get
+    latest = list(
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/earthdata/search.py", line 457, in <genexpr>
+    DataGranule(granule, cloud_hosted=cloud)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/earthdata/results.py", line 208, in __init__
+    super().__init__(collection)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/earthdata/results.py", line 20, in __init__
+    super().__init__(collection)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/dicts/__init__.py", line 54, in __init__
+    super().__init__(*args, **kwargs)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/dicts/keyattr/keyattr_dict.py", line 11, in __init__
+    super().__init__(*args, **kwargs)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/dicts/keypath/keypath_dict.py", line 13, in __init__
+    keypath_util.check_keys(self, self._keypath_separator)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/dicts/keypath/keypath_util.py", line 22, in check_keys
+    traverse(d, check_key)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/core/traverse.py", line 29, in traverse
+    _traverse_collection(d, callback)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/core/traverse.py", line 6, in _traverse_collection
+    _traverse_dict(d, callback)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/core/traverse.py", line 14, in _traverse_dict
+    value = d.get(key, None)
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/dicts/__init__.py", line 158, in get
+    return self._cast(super().get(key, default))
+  File "/projects/moha2290/miniconda3/envs/scag/lib/python3.10/site-packages/benedict/dicts/__init__.py", line 80, in _cast
+    return obj_type(
+TypeError: DataGranule.__init__() got an unexpected keyword argument 'keyattr_enabled'
+
+Turns out that Python-benedict must be at version 0.26.0 - when
+this was downgraded to this verion from 0.30.0 the downloads
+happened without incident - even though the .netrc file appears
+to have invalid info

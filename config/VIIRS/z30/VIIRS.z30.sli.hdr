@@ -1,0 +1,52 @@
+ENVI
+description = {
+  Resampled Spectral Library [Wed Feb 26 13:44:55 2014]}
+samples = 7
+lines   = 165
+bands   = 1
+header offset = 0
+file type = ENVI Spectral Library
+data type = 4
+interleave = bsq
+sensor type = Unknown
+byte order = 0
+wavelength units = Nanometers
+band names = {
+ Resampled (Band 1:AVI2MODIS.z30.sli)}
+spectra names = {
+ spectrum #1, spectrum #2, spectrum #3, spectrum #4, spectrum #5, 
+ spectrum #6, spectrum #7, spectrum #8, spectrum #9, spectrum #10, 
+ spectrum #11, spectrum #12, spectrum #13, spectrum #14, spectrum #15, 
+ spectrum #16, spectrum #17, spectrum #18, spectrum #19, spectrum #20, 
+ spectrum #21, spectrum #22, spectrum #23, spectrum #24, spectrum #25, 
+ spectrum #26, spectrum #27, spectrum #28, spectrum #29, spectrum #30, 
+ spectrum #31, spectrum #32, spectrum #33, spectrum #34, spectrum #35, 
+ spectrum #36, spectrum #37, spectrum #38, spectrum #39, spectrum #40, 
+ spectrum #41, spectrum #42, spectrum #43, spectrum #44, spectrum #45, 
+ spectrum #46, spectrum #47, spectrum #48, spectrum #49, spectrum #50, 
+ spectrum #51, spectrum #52, spectrum #53, spectrum #54, spectrum #55, 
+ spectrum #56, spectrum #57, spectrum #58, spectrum #59, spectrum #60, 
+ spectrum #61, spectrum #62, spectrum #63, spectrum #64, spectrum #65, 
+ spectrum #66, spectrum #67, spectrum #68, spectrum #69, spectrum #70, 
+ spectrum #71, spectrum #72, spectrum #73, spectrum #74, spectrum #75, 
+ spectrum #76, spectrum #77, spectrum #78, spectrum #79, spectrum #80, 
+ spectrum #81, spectrum #82, spectrum #83, spectrum #84, spectrum #85, 
+ spectrum #86, spectrum #87, spectrum #88, spectrum #89, spectrum #90, 
+ spectrum #91, spectrum #92, spectrum #93, spectrum #94, spectrum #95, 
+ spectrum #96, spectrum #97, spectrum #98, spectrum #99, spectrum #100, 
+ spectrum #101, spectrum #102, spectrum #103, spectrum #104, spectrum #105, 
+ spectrum #106, spectrum #107, spectrum #108, spectrum #109, spectrum #110, 
+ spectrum #111, spectrum #112, spectrum #113, spectrum #114, spectrum #115, 
+ spectrum #116, spectrum #117, spectrum #118, spectrum #119, spectrum #120, 
+ spectrum #121, spectrum #122, spectrum #123, spectrum #124, spectrum #125, 
+ spectrum #126, spectrum #127, spectrum #128, spectrum #129, spectrum #130, 
+ spectrum #131, spectrum #132, spectrum #133, spectrum #134, spectrum #135, 
+ spectrum #136, spectrum #137, spectrum #138, spectrum #139, spectrum #140, 
+ spectrum #141, spectrum #142, spectrum #143, spectrum #144, spectrum #145, 
+ spectrum #146, spectrum #147, spectrum #148, spectrum #149, spectrum #150, 
+ spectrum #151, spectrum #152, spectrum #153, spectrum #154, spectrum #155, 
+ spectrum #156, spectrum #157, spectrum #158, spectrum #159, spectrum #160, 
+ spectrum #161, spectrum #162, spectrum #163, spectrum #164, spectrum #165}
+wavelength = {
+  481.000000,  556.000000,  675.000000,  850.000000, 1230.000000, 1620.000000,
+ 2260.000000}

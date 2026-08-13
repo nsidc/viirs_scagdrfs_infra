@@ -1,0 +1,480 @@
+* Table of contents      :toc_4:
+- [[#snow-covered-area-and-grain-size-scag][Snow covered area and grain size (SCAG)]]
+- [[#install][Install]]
+  - [[#compile][Compile]]
+  - [[#set-up-python-environment][Set up Python environment]]
+  - [[#test][Test]]
+- [[#run][Run]]
+  - [[#workflow][Workflow]]
+  - [[#fetch-remote-sensing-imagery-inputs][Fetch remote sensing imagery inputs]]
+    - [[#modis][MODIS]]
+      - [[#bulk-download][Bulk download]]
+    - [[#viirs][VIIRS]]
+    - [[#oli][OLI]]
+    - [[#hls][HLS]]
+  - [[#preprocess][Preprocess]]
+    - [[#bip-files][BIP files]]
+    - [[#metadata-format][Metadata format]]
+  - [[#scag][SCAG]]
+    - [[#local-laptop][Local laptop]]
+    - [[#alpine][Alpine]]
+      - [[#test-1][Test]]
+      - [[#fetch-some-data][Fetch some data]]
+      - [[#run-1][Run]]
+  - [[#concrete-example][Concrete example]]
+    - [[#fetch-scenes][Fetch scenes]]
+      - [[#fetch-oli-scene][Fetch OLI scene]]
+      - [[#fetch-viirs-scene][Fetch VIIRS scene]]
+      - [[#fetch-modis-scene][Fetch MODIS scene]]
+      - [[#hls-l30-and-s30-scenes][HLS L30 and S30 scenes]]
+    - [[#preprocess-1][Preprocess]]
+      - [[#rgb][RGB]]
+    - [[#run-2][Run]]
+- [[#other-utilities][Other utilities]]
+  - [[#rgb-view-of-scenes][RGB view of scenes]]
+- [[#requirements][Requirements]]
+  - [[#software][Software]]
+  - [[#time][Time]]
+
+* Snow covered area and grain size (SCAG)
+
+This README introduces the Snow-Covered Area and Grain Size (SCAG) processing and data.
+
+* Install
+
+The scag system includes C programs, static configuration files, Python pre-processors, and bash/sbatch glue scripts.
+
+** Compile
+
+#+BEGIN_SRC bash :exports code
+make build
+#+END_SRC
+
+On CU Research Computing clusters, you must be on a compile node, compilers are
+not loadable from login nodes, and require that specific compilers be loaded:
+
+#+BEGIN_SRC bash :exports code
+make build-alpine
+#+END_SRC
+
+** Set up Python environment
+
+#+BEGIN_SRC bash :exports code
+make env-create
+#+END_SRC
+
+** Test
+
+#+BEGIN_SRC bash
+make test
+#+END_SRC
+
+* Run
+** Workflow
+
+The workflow is...
++ Fetch remote sensing imagery inputs
++ Preprocess
++ Run SCAG
+  + Copy all of the input and control files to a =WORKIDIR= directory folder.
+  + GNU parallel command spawns 30 =srun= jobs, each running a single scag control file configuration.
+  + =sort= combines the 30 sets of output from the previous step
+  + post-processing converts output to geotiffs.
+
+** Fetch remote sensing imagery inputs
+
+The SCAG software needs MODIS, VIIRS, OLI, HLS S30, or HLS L30 remote sensing imagery.
+
+*** MODIS
+
+We provide a script to download any single MOD09GA.061 scene.
+
+#+BEGIN_SRC bash :results verbatim :exports both
+./scripts/fetch_modis.py --help
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+usage: fetch_modis.py [-h] -hn HORIZONTAL -vn VERTICAL -d DATE [-o OUTPUT]
+                      [-v]
+
+MOD09GA fetcher
+
+options:
+  -h, --help            show this help message and exit
+  -hn HORIZONTAL, --horizontal HORIZONTAL
+                        Horizontal tile #
+  -vn VERTICAL, --vertical VERTICAL
+                        Vertical tile #
+  -d DATE, --date DATE  Date [yyyy-mm-dd]
+  -o OUTPUT, --output OUTPUT
+                        Output destination folder
+  -v, --verbose         Be verbose
+#+end_example
+
+**** Bulk download
+
+To bulk-download multiple scenes for a range of tiles and dates, do the following.
+
+Create a file with the =horizontal/vertical= scenes, for example:
+
+#+BEGIN_EXAMPLE
+9/04
+09/5
+#+END_EXAMPLE
+
+Create a file with the =YYYY-MM-DD= dates to fetch, or a function that prints dates given a range using your favorite language. The following example demonstrates a bash function, and then uses the function to produce the file. It demonstrates changing months and years.
+
+#+BEGIN_SRC bash :exports both
+function daterange() {
+  d=$1
+  while [[ "$d" != $2 ]]; do
+    echo "$d"
+    d=$(date -I -d "$d + 1 day") # GNU date. May need to use gdate on OSX?
+  done
+}
+
+daterange 2019-12-30 2020-01-03 # print to stdout
+daterange 2019-12-30 2020-01-03 > dates.txt # redirect stdout to file
+#+END_SRC
+
+#+RESULTS:
+| 2019-12-30 |
+| 2019-12-31 |
+| 2020-01-01 |
+| 2020-01-02 |
+
+Finally, the =parallel= tool can be used to download scenes for all tiles and all dates. We use the =-j 1= flag to =parallel= to use only one core, and *not* run in parallel, because here we are bandwidth-limited, not CPU-limited. The =daterange= function in your preferred language can be used in place of the file (=$(cat dates.txt)=).
+
+#+BEGIN_SRC bash :results verbatim :exports both
+# removed "--dry-run" when executing
+parallel -j1 --dry-run "./scripts/fetch_modis.py -hn {1//} -vn {1/} -d {2} -o MODIS/{2}/ " ::: $(cat tiles.csv) ::: $(cat dates.txt)
+#+END_SRC
+
+#+RESULTS:
+: ./scripts/fetch_modis.py -hn 9 -vn 04 -d 2019-12-30 -o MODIS/2019-12-30/ 
+: ./scripts/fetch_modis.py -hn 9 -vn 04 -d 2019-12-31 -o MODIS/2019-12-31/ 
+: ./scripts/fetch_modis.py -hn 9 -vn 04 -d 2020-01-01 -o MODIS/2020-01-01/ 
+: ./scripts/fetch_modis.py -hn 9 -vn 04 -d 2020-01-02 -o MODIS/2020-01-02/ 
+: ./scripts/fetch_modis.py -hn 09 -vn 5 -d 2019-12-30 -o MODIS/2019-12-30/ 
+: ./scripts/fetch_modis.py -hn 09 -vn 5 -d 2019-12-31 -o MODIS/2019-12-31/ 
+: ./scripts/fetch_modis.py -hn 09 -vn 5 -d 2020-01-01 -o MODIS/2020-01-01/ 
+: ./scripts/fetch_modis.py -hn 09 -vn 5 -d 2020-01-02 -o MODIS/2020-01-02/ 
+
+
+*** VIIRS
+
+We do not provide a script to download VIIRS data, scenes of VNP09GA v001 can be
+fetched from https://e4ftl01.cr.usgs.gov/VIIRS/VNP09GA.001.  This requires a
+NASA URS login.
+
+*** OLI
+
+We provide a script to download any single OLI scene. For bulk downloading, the
+same steps as the MODIS bulk download can be used.
+
+#+BEGIN_SRC bash :results verbatim :exports both
+./scripts/fetch_oli.sh -h
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+fetch.sh (search SEARCHOPTS| download DOWNLOADOPTS) --user U --password P [-h|--help] [--debug] [-v[v[v]]]
+  search
+    -PR|--pathrow: path row (no comma) point to search
+    -d|--date:     YYYY-MM-DD
+  download
+    -o|--output:   Destination folder for downloads
+
+  -u|--user:        Username or LANDSATXPLORE_USERNAME [USGS Earth Explorer or NASA EarthData]
+  -p|--password:    Password or LANDSATXPLORE_PASSWORD [USGS Earth Explorer or NASA EarthData]
+  -h|--help:        Print this help
+  -v[v[v]]:         Print debugging messages with increasing verobsity
+#+end_example
+
+
+    
+*** HLS
+
+We do not provide a script to download HLS data.
+
+** Preprocess
+
++ Inputs: Remote sensing imagery (see above)
++ Outputs:
+  + A BIP file
+  + A BIP metadata file
+
+*** BIP files
+
+SCAG expects band interleaved by pixel (BIP) formatted multi-spectral data, and a TXT file with some metadata.
+
++ BIP imagery can be built using the [[https://github.com/nsidc/BIPifier/][BIPifier]] tool.
++ BIPifier also writes out the required metadata file - same name but with =.meta= extension.
+
+#+BEGIN_SRC bash :results verbatim :exports both
+./scripts/BIPifier.py --help
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+usage: BIPifier.py [-h] -i INFILE -o OUTFILE
+
+BIPifier
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFILE, --infile INFILE
+                        Name of input file
+  -o OUTFILE, --outfile OUTFILE
+                        Name of output file.
+#+end_example
+
+*** Metadata format
+
+The metadata format follows. The values on the right of the equal signs can change, but the strings on the left are required by the SCAG software.
+
+#+BEGIN_SRC bash :exports results :results verbatim
+curl https://raw.githubusercontent.com/nsidc/scag_test_data/main/2_scag_bip/MOD09GA.A2022224.h09v04.061.2022226033159.bip.meta | sed 's/^SOURCE_FILE.*/SOURCE_FILE=\/path\/to\/MOD09GA.hdf/'
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+SOURCE_FILE=/path/to/MOD09GA.hdf
+SENSOR=MODIS
+NLINES=100
+NSAMPLES=150
+NBANDS=7
+SUN_ZENITH=0.3270000076293945
+PROJ_STRING="+proj=sinu +R=6371007.181 +nadgrids=@null +wktext"
+ZONE_NUMBER=h09v04
+ELLIPSOID=6371007.181
+DATUM=WGS84
+GRID_CELL_SIZE_REFLECTIVE=463.312716527778
+CORNER_UL_PROJECTION_X_PRODUCT=-10007554.677
+CORNER_UL_PROJECTION_Y_PRODUCT=5559752.598333
+CORNER_LR_PROJECTION_X_PRODUCT=-8895604.157333
+CORNER_LR_PROJECTION_Y_PRODUCT=4447802.078667
+#+end_example
+
+** SCAG
+
+*** Stack Size
+
+The scag software allocates significant memory statically, which we have found requires
+increasing the default size of the stack. The ulimit command can be used to do this.
+
+#+BEGIN_SRC bash :exports both :results verbatim :cmdline -i
+ulimit -s 65532
+#+END_SRC
+
+Note that ~ulimit -a~ will display all current resource limits for the current
+user.
+
+*** Local laptop
+
+The software has been developed and tested on a laptop running Kubuntu 22.04
+with =gcc=, =parallels=, and =miniconda3=. Setup also requires =ulimit -s
+65532=.
+
+Running ~make test~ should confirm if the entire system is properly configured.
+
+The top-level [[./scag.sh]] is used to run the code.
+
+#+BEGIN_SRC bash :exports both :results verbatim :cmdline -i
+./scag.sh --help
+#+END_SRC
+
+#+RESULTS:
+: Not running in SLURM
+: scag.sh -i infile -o outdir [-w workdir] [-h|--help] [--debug] [-v[v[v]]]
+:   -i|--infile:      Input file (BIP format; Requires <file>.txt)
+:   -o|--outdir:      Directory to store OUTPUT files
+:   -w|--workdir:     Directory for temporary files. DEFAULT: OUTPUT/tmp
+:   -h|--help:        Print this help
+:   -v[v[v]]:         Print debugging messages with increasing verobsity
+
+For example, using =scag_test_data= at https://github.com/nsidc/scag_test_data derived from source files at https://osf.io/4cp58/
+
+#+BEGIN_SRC bash :exports code
+./scag.sh -vv -i path/to/scag_test_data/2_subset/LC08_L2SP_046027_20200316_20200822_02_T1.bip -o ./OUTPUT
+#+END_SRC
+
+*** Alpine
+
+**** Test
+#+BEGIN_SRC bash
+module load slurm/alpine
+ulimit -s 65532
+make test # Warning - running on login node
+#+END_SRC
+
+**** Fetch some data
+
+#+BEGIN_SRC bash
+cd /scratch/alpine/${USER}/
+
+mkdir data
+cd data
+curl https://files.osf.io/v1/resources/4cp58/providers/osfstorage/?zip= --output SCAG_test_data.zip
+UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE unzip SCAG_test_data.zip # ?
+cd ..
+#+END_SRC
+
+**** Run
+
+#+BEGIN_SRC bash :exports code
+conda activate scag
+~/projects/scag/scripts/BIPifier.py -i ./data/MOD09GA.A2022224.h09v04.061.2022226033159.hdf -o ./MOD09.bip
+sbatch ~/projects/scag/scag.sh -i ./INPUT/MOD09.bip -o ./OUT
+#+END_SRC
+
+If running OLI or HLS, scenes have more pixels, processing takes longer, and the default =15:00= request is not sufficient. Override the default on the command line: =sbatch --time=00:30:00 ~/projects/scag/scag.sh -i ./path/to/OLI..=. See the TIMING section of this document for estimated processing times for different data products.
+
+Results:
+
+#+BEGIN_SRC bash :results verbatim :exports both
+ls -l OUT
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+total 16M
+-rw-r--r--. 1 kema9253 2.0M Nov 18 12:49 MOD09.grnsz.tif
+-rw-r--r--. 1 kema9253  81K Nov 18 12:49 MOD09.other.tif
+-rw-r--r--. 1 kema9253 4.5M Nov 18 12:49 MOD09.rms.tif
+-rw-r--r--. 1 kema9253 2.9M Nov 18 12:49 MOD09.rock.tif
+-rw-r--r--. 1 kema9253 2.3M Nov 18 12:49 MOD09.shade.tif
+-rw-r--r--. 1 kema9253 2.0M Nov 18 12:49 MOD09.snow.tif
+-rw-r--r--. 1 kema9253 1.2M Nov 18 12:49 MOD09.veg.tif
+drwxr-sr-x. 2 kema9253  16K Nov 18 12:49 tmp/
+#+end_example
+
+
+** Concrete example
+
++ Recreate row 2 of Figure 4 of Rittger /et al./ 2021 doi:10.3389/frsen.2021.647154
+
+Assumed to run in =/scratch/alpine/${USER}/=.
+
+*** Fetch scenes
+
+**** Fetch OLI scene
+#+BEGIN_SRC bash :exports code
+  cd /scratch/alpine/${USER}/
+  export LANDSATXPLORE_USERNAME=... (enclose username in single quotes)
+  export LANDSATXPLORE_PASSWORD=... (enclose password in single quotes)
+  ./scag/scripts/fetch_oli.sh -vv search -PR 153 33 -d 2013-05-30
+  ./scag/scripts/fetch_oli.sh -vv download -o ./SZA_test/INPUT/ LC08_L2SP_153033_20130530_20200912_02_T1
+
+  Extract OLI scene to folder
+
+  mkdir ./SZA_test/INPUT/LC08_L2SP_153033_20130530_20200912_02_T1
+  tar xvf ./SZA_test/INPUT/LC08_L2SP_153033_20130530_20200912_02_T1.tar -C ./SZA_test/INPUT/LC08_L2SP_153033_20130530_20200912_02_T1
+
+  Alternatively:
+  tar -xv --one-top-level -f ./SZA_test/INPUT/LC08_L2SP_153033_20130530_20200912_02_T1.tar
+#+END_SRC
+#+RESULTS:
+
+**** Fetch VIIRS scene
+
+No fetching script exists at the moment, but VIIRS scenes can easily be downloaded manually or with simple =wget= command from https://e4ftl01.cr.usgs.gov/VIIRS/VNP09GA.001/
+I think it helps to have tried to download via a browser so your IP is authenticated before using =wget=?
+
+#+BEGIN_SRC bash :exports code
+wget https://e4ftl01.cr.usgs.gov/VIIRS/VNP09GA.001/2013.05.30/VNP09GA.A2013150.h23v05.001.2016351221631.h5
+mv VNP09GA.A2013150.h23v05.001.2016351221631.h5 ./SZA_test/INPUT/
+#+END_SRC
+
+**** Fetch MODIS scene
+
+Assuming this is the same h/v as VIIRS (confirmed by opening in QGIS)
+
+#+BEGIN_SRC bash :exports code
+./scag/scripts/fetch_modis.py -hn 23 -vn 5 -d 2013-05-30 -o ./SZA_test/INPUT/
+#+END_SRC
+
+**** HLS L30 and S30 scenes
+
++ Not available in 2013 but you can fetch from https://search.earthdata.nasa.gov/search?q=HLS
+
+*** Preprocess
+
++ Preprocessing means running the BIPifier and generating an RGB
++ In the future it may include generating and/or applying mask products
+
+#+BEGIN_SRC bash :exports code
+~/projects/scag/scripts/BIPifier.py -i ./SZA_test/INPUT/LC08_L2SP_153033_20130530_20200912_02_T1 -o ./SZA_test/INPUT/OLI.bip
+~/projects/scag/scripts/BIPifier.py -i ./SZA_test/INPUT/VNP09GA.A2013150.h23v05.001.2016351221631.h5  -o ./SZA_test/INPUT/VIIRS.bip
+~/projects/scag/scripts/BIPifier.py -i ./SZA_test/INPUT/MOD09GA.A2013150.h23v05.061.2021230233039.hdf -o ./SZA_test/INPUT/MODIS.bip
+#+END_SRC
+
+**** RGB
+
+#+BEGIN_SRC bash :exports code
+~/projects/scag/scripts/rgb.sh -m ./SZA_test/INPUT/OLI.bip.meta -o ./SZA_test/OUTPUT/OLI_rgb.tif
+~/projects/scag/scripts/rgb.sh -m ./SZA_test/INPUT/VIIRS.bip.meta -o ./SZA_test/OUTPUT/VIIRS_rgb.tif
+~/projects/scag/scripts/rgb.sh -m ./SZA_test/INPUT/MODIS.bip.meta -o ./SZA_test/OUTPUT/MODIS_rgb.tif
+#+END_SRC
+
+*** Run
+
+#+BEGIN_SRC bash :exports code
+sbatch --time=00:75:00 --mail-type=ALL ~/projects/scag/scag.sh -v -i ./SZA_test/INPUT/OLI.bip -o ./SZA_test/OUTPUT/OLI
+sbatch --time=00:10:00 --mail-type=ALL ~/projects/scag/scag.sh -v -i ./SZA_test/INPUT/VIIRS.bip -o ./SZA_test/OUTPUT/VIIRS
+sbatch --time=00:20:00 --mail-type=ALL ~/projects/scag/scag.sh -v -i ./SZA_test/INPUT/MODIS.bip -o ./SZA_test/OUTPUT/MODIS
+#+END_SRC
+
+* Other utilities
+** RGB view of scenes
+
+#+BEGIN_SRC bash :results verbatim :cmdline -i :exports both
+./scripts/rgb.sh --help
+#+END_SRC
+
+#+RESULTS:
+: rgb.sh -m metadatafile -o outfile [-w workdir] [-h|--help] [--debug] [-v[v[v]]]
+:   -m|--metadata:    Metadata file from scag/scripts/BIPifier.py
+:   -o|--outfile:     /path/to/outfile.tif
+:   -w|--workdir:     Directory for temporary files. DEFAULT: OUTPUT/tmp
+:   -h|--help:        Print this help
+:   -v[v[v]]:         Print debugging messages with increasing verobsity
+
+
+* Requirements
+** Software
+
++ gcc
++ GNU parallel
++ miniconda
+
+** Time
+
+The time for a run dictates the compute resources, and the =SBATCH= header lines in [[./scag.sh]]. The table below is based on runs on the =alpine= system with the CPU number set in the =--ntasks= =SBATCH= option.
+
+Alpine (no masking):
+| Sensor | Parallel | Pixels      | Time [minutes] |
+|--------+----------+-------------+----------------|
+| OLI    |       32 | 7771 x 7881 |             60 |
+| HLS    |       32 | 3660 x 3660 |             24 |
+| MODIS  |       32 | 2400 x 2400 |             12 |
+| VIIRS  |       32 | 1200 x 1200 |              6 |
+
+Thinkpad laptop with 32 GB RAM, Intel i7-8650U @ 1.90GHz (no masking)
+| Sensor | Parallel | Pixels      | Time [minutes] |
+|--------+----------+-------------+----------------|
+| OLI    |        8 | 7771 x 7881 |          crash |
+| HLS    |        8 | 3660 x 3660 |            140 |
+| MODIS  |        8 | 2400 x 2400 |             60 |
+| VIIRS  |        8 | 1200 x 1200 |             15 |
+
+
+From the above, 100 MODIS tiles/day at 12 minutes/tile is 1200 minutes. There are 1440 minutes in most days, so processing 1 day of data takes about 1 real day, and processing 10 years of daily data takes 10 years.
+
+If we use 1000 processors at a time instead of 32, then we can process ~30 scenes in parallel, and 10 years of daily data would take ~4 months.
+
+VIIRS processing is ~2x as fast.
+
+
+

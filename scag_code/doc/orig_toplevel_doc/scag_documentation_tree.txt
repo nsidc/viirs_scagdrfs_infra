@@ -1,0 +1,16 @@
+scag/
+├── 00notes.txt
+├── Makefile
+├── README.org
+├── config
+│   ├── AVI2MODIS
+│   │   ├── 00notes.txt
+│   ├── README.org
+│   ├── VIIRS
+│   │   ├── viirs_7_band_rsr_eq_1.txt
+│   │   ├── viirs_vs_modis_bandwidths_plot.pdf
+├── doc
+│   ├── FSCA_documentation.doc
+│   ├── README.org
+│   ├── RUNTIME.md
+│   └── SCAG_software_heritage.png
