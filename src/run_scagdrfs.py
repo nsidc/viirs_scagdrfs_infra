@@ -38,8 +38,8 @@ def setup_scagdrfs_cluster(n_workers):
         # takes one tile, and run_scag's thread pool gets all 5 cores.
         cores=1,
         processes=1,
-        memory="10GB",
-        job_cpu=5,
+        memory="20GB",
+        job_cpu=15,
         job_mem="10GB",
         walltime="03:00:00",
         death_timeout="1200",
