@@ -95,11 +95,11 @@ VJ109GA:
     Radiative Forcing in Snow (VIIRS DRFS) data sets, adapted from the MODIS equivalents originally
     produced by the NASA Jet Propulsion Laboratory (JPL).
   citation: >
-    Rittger, K., J.S. Stewart, R. Marowitz, D.J.Scott, T. Painter, A. Burgess (2026). Near Real-Time VIIRS L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
+    Rittger, K., J.S. Stewart, R. Marowitz, D.J.Scott, T.H. Painter, A.B. Burgess (2026). Near Real-Time VIIRS L3 Global Daily 500m SIN Grid Snow Cover, Grain Size, and Dust Radiative Forcing, Version 1 [Data Set]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/1M2W6PZRN4VD. [Data Accessed].
   contributor_name: >-
     Karl Rittger, J. Scott Stewart, Robyn Marowitz, Donna J. Scott, Jessica Calme, Hannah Wilcox
   contributor_role: >-
-    principal_investigator,science_programmer,software_developer,project_lead,data_manager,software_developer
+    scientist,science_programmer,software_developer,project_lead,data_manager,software_developer
   doi: "10.5067/1M2W6PZRN4VD"
   product_version: "v1.0"
   source_id: "VJ109GANRT02"
