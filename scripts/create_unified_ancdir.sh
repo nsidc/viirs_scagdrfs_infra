@@ -42,12 +42,12 @@ watdir_orig=/pl/active/daac-production/post_process_watermasks
 for fn in ${srcorig}/dem_30ARC_E60N90_RIGOROUS_*.bsq; do
   bfn=$(basename $fn)
   tileID=${bfn:26:6}
+  echo "30ARC: ${tileID}"
 
   # Note: verstr already has leading underscore (if defined)
   bfn_new="elevation_${tileID}${verstr}.dat"
   ffn_new=${eledir}/${bfn_new}
   if [ ! -f $ffn_new ]; then
-    echo "30ARC: ${tileID}"
     cp -av $fn ${ffn_new}
   fi
 
@@ -107,6 +107,7 @@ for fn in ${srcorig}/dem_GTOPO30_NN_*.bsq; do
 
 done
 
+echo
 # dem_gmted_med075_*.bsq
 for fn in ${srcorig}/dem_gmted_med075*.bsq; do
   bfn=$(basename $fn)
