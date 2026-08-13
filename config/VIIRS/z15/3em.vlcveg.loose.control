@@ -1,0 +1,28 @@
+- Input - Spectral library file
+VIIRS.z15.sli
+- Input - Spectral library number of spectra
+165
+- Input - Spectral library number of bands
+7
+- Input - Spectral library gain
+10.0
+- Input - Endmember type file (0=snow, 1=veg, 2=rock, 3=other, shade last endmember)
+LIB.EMTYPE
+- Input - SMA models control file
+3em.vlcveg.models
+- Input - Grain size lookup table for each endmember in spectral library
+LIBRARY.GRLUT
+- Input - SMA constraint file
+const.3em.loose
+- Input - band list
+bands
+- Output - MESMA fraction images (shade-normalized) prefix
+vlcveg.loose
+- Output - MESMA grain size image
+vlcveg.loosegrnsz.pic
+- Output - MESMA minimum RMSE image
+vlcveg.looserms.pic
+- Output - MESMA mask image (1 = modeled, 0 = not modeled)
+vlcveg.loosemask.pic
+- Output - MESMA model occurences list
+vlcveg.loose.list

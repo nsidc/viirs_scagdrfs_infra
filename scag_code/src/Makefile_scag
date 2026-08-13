@@ -1,0 +1,12 @@
+CC=gcc
+CFLAGS=-Wall -Wshadow -Wpointer-arith -ansi -pedantic -D_REENTRANT -O3 -m32
+LDFLAGS=-lm -lpthread
+OBJECTS=scag.o
+
+default : scag
+
+scag : $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
+
+clean :
+	rm -f *.o scag

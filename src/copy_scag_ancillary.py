@@ -45,8 +45,8 @@ def get_zenith_degree(bip_meta_file, sun_zenith):
 
 def copy_spectral_library(sensor, working_dir, zenith_degree):
     # copy files
-    scag_config_dir = TOPDIR / "scag" / "config"
-    model_path = scag_config_dir / "models"
+    scag_config_dir = TOPDIR / "config"
+    model_path = scag_config_dir / "scag_models"
     zenith_dir = "z" + str(zenith_degree)
     zenith_path = scag_config_dir / sensor / zenith_dir
     for zenith_file in Path(zenith_path).iterdir():

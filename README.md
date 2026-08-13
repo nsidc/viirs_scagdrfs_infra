@@ -48,10 +48,10 @@ mamba env create -f environment.yml
 ./scripts/activate-viirs-conda.sh
 ```
 
-### 4. Clone and buid scag C code
+### 4. Build scag C code
 
 ```bash
-./scripts/clone_and_build.sh
+./scripts/build_scag.sh
 ```
 
 ### 5. Configure Earthdata credentials
