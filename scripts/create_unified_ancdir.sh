@@ -23,26 +23,52 @@ done
 ######################
 
 # Copy the original files for: elevation
-ancdir=${ancroot}/elevation/
+eledir=${ancroot}/elevation/
+mkdir -p ${eledir}
+
+slpdir=${ancroot}/slope/
+mkdir -p ${slpdir}
+
+aspdir=${ancroot}/aspect/
+mkdir -p ${aspdir}
+
+watdir=${ancroot}/waterpercentage/
+mkdir -p ${watdir}
+
 srcorig=/pl/active/daac-production/jpl_DRFS_Components/DEM
+watdir_orig=/pl/active/daac-production/post_process_watermasks
 
 # dem_30ARC_E60N90_RIGOROUS
 for fn in ${srcorig}/dem_30ARC_E60N90_RIGOROUS_*.bsq; do
   bfn=$(basename $fn)
   tileID=${bfn:26:6}
-  echo "30ARC: ${tileID}"
 
   # Note: verstr already has leading underscore (if defined)
   bfn_new="elevation_${tileID}${verstr}.dat"
-  ffn_new=${ancdir}/${bfn_new}
-  # cp -av $fn ${ffn_new}
-  #
+  ffn_new=${eledir}/${bfn_new}
+  if [ ! -f $ffn_new ]; then
+    echo "30ARC: ${tileID}"
+    cp -av $fn ${ffn_new}
+  fi
+
   # Split the slope and aspect files
   fn_slpasp=${fn/dem/terrain}
+  fn_slp=${slpdir}/slope_${tileID}${verstr}.dat
+  fn_asp=${aspdir}/aspect_${tileID}${verstr}.dat
 
-  echo "slpasp: $fn_slpasp"
-  exit
-
+  if [ ! -f $fn_slp ]; then
+    if [ ! -f $fn_asp ]; then
+      echo "  python separate_slope_aspect.py $fn_slpasp $fn_slp $fn_asp"
+      python separate_slope_aspect.py $fn_slpasp $fn_slp $fn_asp
+    fi
+  fi
+  
+  # copy the water-percentage file
+  fn_wat_old=$(ls ${watdir_orig}/MOD44W.A2000055.${tileID}.006.*.water_pcent.bin)
+  fn_wat_new=${watdir}/waterpercentage_${tileID}${verstr}.dat
+  if [ ! -f $fn_wat_new ]; then
+    cp -av $fn_wat_old $fn_wat_new
+  fi
 
 done
 
@@ -55,8 +81,30 @@ for fn in ${srcorig}/dem_GTOPO30_NN_*.bsq; do
   echo "GTOPO30: ${tileID}"
 
   bfn_new="elevation_${tileID}${verstr}.dat"
-  ffn_new=${ancdir}/${bfn_new}
-  # cp -av $fn ${ffn_new}
+  ffn_new=${eledir}/${bfn_new}
+  if [ ! -f $ffn_new ]; then
+    cp -av $fn ${ffn_new}
+  fi
+  
+  # Split the slope and aspect files
+  fn_slpasp=${fn/dem/terrain}
+  fn_slp=${slpdir}/slope_${tileID}${verstr}.dat
+  fn_asp=${aspdir}/aspect_${tileID}${verstr}.dat
+
+  if [ ! -f $fn_slp ]; then
+    if [ ! -f $fn_asp ]; then
+      echo "  python separate_slope_aspect.py $fn_slpasp $fn_slp $fn_asp"
+      python separate_slope_aspect.py $fn_slpasp $fn_slp $fn_asp
+    fi
+  fi
+  
+  # copy the water-percentage file
+  fn_wat_old=$(ls ${watdir_orig}/MOD44W.A2000055.${tileID}.006.*.water_pcent.bin)
+  fn_wat_new=${watdir}/waterpercentage_${tileID}${verstr}.dat
+  if [ ! -f $fn_wat_new ]; then
+    cp -av $fn_wat_old $fn_wat_new
+  fi
+
 done
 
 # dem_gmted_med075_*.bsq
@@ -66,13 +114,30 @@ for fn in ${srcorig}/dem_gmted_med075*.bsq; do
   echo "gmted: ${tileID}"
 
   bfn_new="elevation_${tileID}${verstr}.dat"
-  ffn_new=${ancdir}/${bfn_new}
-  # cp -av $fn ${ffn_new}
+  ffn_new=${eledir}/${bfn_new}
+  if [ ! -f $ffn_new ]; then
+    cp -av $fn ${ffn_new}
+  fi
+
+  # Split the slope and aspect files
+  fn_slpasp=${fn/dem/terrain}
+  fn_slp=${slpdir}/slope_${tileID}${verstr}.dat
+  fn_asp=${aspdir}/aspect_${tileID}${verstr}.dat
+
+  if [ ! -f $fn_slp ]; then
+    if [ ! -f $fn_asp ]; then
+      echo "  python separate_slope_aspect.py $fn_slpasp $fn_slp $fn_asp"
+      python separate_slope_aspect.py $fn_slpasp $fn_slp $fn_asp
+    fi
+  fi
+  
+  # copy the water-percentage file
+  fn_wat_old=$(ls ${watdir_orig}/MOD44W.A2000055.${tileID}.006.*.water_pcent.bin)
+  fn_wat_new=${watdir}/waterpercentage_${tileID}${verstr}.dat
+  if [ ! -f $fn_wat_new ]; then
+    cp -av $fn_wat_old $fn_wat_new
+  fi
+
 done
 
-echo "Copied/renamed elevation files to:"
-echo "  ${ancdir}"
-
-######################
-
-echo "Finished creating files in:  $ancroot"
+echo "Finished copy/renaming files to:  $ancroot"
