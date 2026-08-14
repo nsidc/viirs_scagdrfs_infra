@@ -29,10 +29,11 @@ MAX_CONCURRENT_TILES = 100
 
 
 def setup_scagdrfs_cluster(n_workers):
-    # NOTE: account "ucb544_peak2" is set to expire Aug 7, 2026
+    # NOTE: account "ucb544_peak2" stopped working midday on Aug 14, 2026
+    # NOTE: Changed to account "ucb544_peak2" on Aug 14, 2026
     cluster = SLURMCluster(
         shebang="#!/usr/bin/bash",
-        account="ucb544_peak2",
+        account="ucb544_asc1",
         # cores/memory are dask's own accounting; job_cpu/job_mem are what
         # actually land in the #SBATCH directives. One dask worker per job
         # takes one tile, and run_scag's thread pool gets all 5 cores.
