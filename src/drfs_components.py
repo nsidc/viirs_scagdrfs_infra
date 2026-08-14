@@ -18,10 +18,10 @@ def load_irradiance_arrays(
 
     Returns (dir_arr, dif_arr) each shape (216, 14, 19)
     """
-    fn_direct = comps_dir / "CRB/direct.bin"
+    fn_direct = comps_dir / "irradiance_arrays" / "direct_irradiance.bin"
     direct = np.fromfile(fn_direct, dtype=np.float32)
 
-    fn_total = comps_dir / "CRB/total.bin"
+    fn_total = comps_dir / "irradiance_arrays" / "total_irradiance.bin"
     total = np.fromfile(fn_total, dtype=np.float32)
 
     # IDL reform() uses column-major order, numpy needs order='F' to match
@@ -55,7 +55,7 @@ def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
 
 def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
     """Load NDGSI lookup table for a given SZA. Shape: (2, 110)"""
-    fn_ndgsi_lut = comps_dir / f"MODIS.z{sza}.ndgsi"
+    fn_ndgsi_lut = comps_dir / "ndgsi_LUTs" / f"MODIS.z{sza}.ndgsi"
     ndgsi_lut = np.loadtxt(fn_ndgsi_lut).T
 
     logger.debug(f"Loaded ndgsi lut for {sza} from: {fn_ndgsi_lut}")
@@ -65,7 +65,7 @@ def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
 
 def load_sli(comps_dir: Path, sza: int) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
-    fn_sli = comps_dir / f"MODIS.z{sza}.sli"
+    fn_sli = comps_dir / "spectral_libraries" / f"MODIS.z{sza}.sli"
 
     data_raw = np.fromfile(fn_sli, dtype=np.float32)
     data_first_7x110 = data_raw[: 7 * 110]
@@ -97,18 +97,30 @@ def load_terrain(
 
     Returns (slope, aspect) each shape (2400, 2400)
     """
-    terrain_files = list((comps_dir / "DEM").glob(f"terrain_*_h{h}v{v}.bsq"))
-    if len(terrain_files) != 1:
+    # The '*' in '...*.dat' is for a version string in the file name:
+    #   eg: slope_h07v03_v0.dat
+    slope_files = list((comps_dir / "slope").glob(f'slope_h{h}v{v}*.dat'))
+    if len(slope_files) != 1:
         raise RuntimeError(
-            f"Expected 1 terrain file for h{h}v{v}, found {len(terrain_files)}: {terrain_files}"
+            f"Expected 1 slope file for h{h}v{v}, found {len(slope_files)}: {slope_files}"
         )
-    # fn_dem = terrain_files[0]
-    data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2, 2400, 2400)
-    slope = data[0, :, :]
-    aspect = data[1, :, :]
-
+    slope_file = slope_files[0]
+    slope = np.fromfile(slope_file, dtype=np.float32).reshape(2400, 2400)
     logger.debug(
-        f"Loaded terrain slope and aspect for h{h}v{v} from: {terrain_files[0]}"
+        f"Loaded slope for h{h}v{v} from: {slope_file}"
+    )
+
+    # The '*' in '...*.dat' is for a version string in the file name:
+    #   eg: aspect_h07v03_v0.dat
+    aspect_files = list((comps_dir / "aspect").glob(f'aspect_h{h}v{v}*.dat'))
+    if len(aspect_files) != 1:
+        raise RuntimeError(
+            f"Expected 1 aspect file for h{h}v{v}, found {len(aspect_files)}: {aspect_files}"
+        )
+    aspect_file = aspect_files[0]
+    aspect = np.fromfile(aspect_file, dtype=np.float32).reshape(2400, 2400)
+    logger.debug(
+        f"Loaded aspect for h{h}v{v} from: {aspect_file}"
     )
 
     return slope, aspect
@@ -116,17 +128,20 @@ def load_terrain(
 
 def load_dem(comps_dir: Path, h: str, v: str) -> np.ndarray:
     """Load DEM elevation in meters. Shape: (2400, 2400)"""
-    dem_files = list((comps_dir / "DEM").glob(f"dem_*_h{h}v{v}.bsq"))
-    if len(dem_files) != 1:
+    # The '*' in '...*.dat' is for a version string in the file name:
+    #   eg: elevation_h07v03_v0.dat
+    elevation_files = list((comps_dir / "elevation").glob(f'elevation_h{h}v{v}*.dat'))
+    if len(elevation_files) != 1:
         raise RuntimeError(
-            f"Expected 1 DEM file for h{h}v{v}, found {len(dem_files)}: {dem_files}"
+            f"Expected 1 elevation file for h{h}v{v}, found {len(elevation_files)}: {elevation_files}"
         )
-    dem_file = dem_files[0]
-    dem_data = np.fromfile(dem_file, dtype=np.int16).reshape(2400, 2400)
+    elevation_file = elevation_files[0]
+    elevation = np.fromfile(elevation_file, dtype=np.int16).reshape(2400, 2400)
+    logger.debug(
+        f"Loaded elevation for h{h}v{v} from: {elevation_file}"
+    )
 
-    logger.debug(f"Loaded DEM data for h{h}v{v} from: {dem_file}")
-
-    return dem_data
+    return elevation
 
 
 def parse_tile_id(tile: str) -> tuple[str, str]:

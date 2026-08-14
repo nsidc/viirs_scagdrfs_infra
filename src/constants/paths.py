@@ -7,16 +7,15 @@ import os
 # src/constants/paths.py → src/constants → src → <topdir>
 TOPDIR = Path(__file__).resolve().parent.parent.parent
 
-# ── PetaLibrary ────────────────────────────────────────────────────────────────
+# ── Data directories ─────────────────────────────────────────────────────────-─
 PETALIB_DIR = Path("/pl/active/daac-production")
 PETALIB_STAGING_DIR = Path(f"{PETALIB_DIR}/scagdrfs/staging")
-WATER_MASK_DIR = PETALIB_DIR / "post_process_watermasks"
-DRFS_COMPONENT_DIR = PETALIB_DIR / "jpl_DRFS_Components"
-
+DRFS_COMPONENT_DIR = PETALIB_DIR / "viirsscgdrf_ancillary_v0"
+WATER_MASK_DIR = DRFS_COMPONENT_DIR / "waterpercentage"
 V0_DIR = Path("/disks/sidads_ftp/pub/DATASETS/MODSCGDRF_NRT_v1.1")
 
 
-# ── Product dirs ───────────────────────────────────────────────────────────
+# ── Product dirs ──────────────────────────────────────────────────────────----─
 def get_nrt_dir(product: str) -> Path:
     """Return the NRT input directory for *product*.
 

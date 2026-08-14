@@ -1,19 +1,21 @@
 import configparser
 import datetime as dt
-import glob
+# import glob
 import os
 from pathlib import Path
+import logging
 
 import numpy as np
 
 from src.masking import cw_mask
 from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
-from src.constants.paths import WATER_MASK_DIR
+# from src.constants.paths import WATER_MASK_DIR
+from src.constants.paths import DRFS_COMPONENT_DIR
 from src.constants.products import PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
 
+logger = logging.getLogger(__name__)
 
 def get_data(filename, data_type, error_value):
-    # TODO: verify with Karl that infinities should map to zeros
     with filename.open("rb") as data_file:
         data = np.fromfile(data_file, dtype=np.float32)
     data = data.reshape(2400, 2400)
@@ -66,17 +68,22 @@ def get_file_info_config():
 
 
 def get_water_mask(file_info, tile):
-    # TODO: water_mask_data has errors along -180/180 longitude
-    water_mask_path = os.path.join(
-        WATER_MASK_DIR,
-        (file_info.get("FILE_INFO", "WATER_MASK_REGEX", raw=True) % tile),
+    """Return water mask where tile is 100% covered by water"""
+
+    # The '*' in '...*.dat' is for a version string in the file name:
+    #   eg: waterpercentage_h07v03_v0.dat
+    waterpercentage_files = list((DRFS_COMPONENT_DIR / "waterpercentage").glob(f'waterpercentage_{tile}*.dat'))
+    if len(waterpercentage_files) != 1:
+        raise RuntimeError(
+            f"Expected 1 waterpercentage file for {tile}, found {len(waterpercentage_files)}:"
+            f"{waterpercentage_files}"
+        )
+    waterpercentage_file = waterpercentage_files[0]
+    waterpercentage = np.fromfile(waterpercentage_file, dtype=np.uint8).reshape(2400, 2400)
+    logger.debug(
+        f"Loaded waterpercentage for {tile} from: {waterpercentage_file}"
     )
-    water_mask_files = glob.glob(water_mask_path)
-    with open(water_mask_files[0], "rb") as water_mask_file:
-        water_mask_data = np.fromfile(water_mask_file, dtype=np.uint8)
-    water_mask_data = water_mask_data.reshape(2400, 2400)
-    print(f"Read water_mask_data from: {water_mask_path=}")
-    return water_mask_data
+    return waterpercentage
 
 
 def write_outfile(outfile, data_cw):
