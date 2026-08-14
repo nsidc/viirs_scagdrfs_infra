@@ -1,0 +1,44 @@
+/pl/active/daac-production/viirsscgdrf_ancillary_v0/
+├── MODIS.wvl
+├── aspect
+│   ├── aspect_h07v03_v0.dat
+│   ├── aspect_h08v03_v0.dat
+│   ├── aspect_h08v04_v0.dat
+│   ├── ...
+│   └── aspect_h32v12_v0.dat
+├── elevation
+│   ├── elevation_h07v03_v0.dat
+│   ├── elevation_h08v03_v0.dat
+│   ├── elevation_h08v04_v0.dat
+│   ├── ...
+│   └── elevation_h32v12_v0.dat
+├── irrad10nm.wvl
+├── irradiance_arrays
+│   ├── direct_irradiance.bin
+│   └── total_irradiance.bin
+├── ndgsi_LUTs
+│   ├── MODIS.z15.ndgsi
+│   ├── MODIS.z20.ndgsi
+│   ├── MODIS.z25.ndgsi
+│   ├── ...
+│   └── MODIS.z75.ndgsi
+├── slope
+│   ├── slope_h07v03_v0.dat
+│   ├── slope_h08v03_v0.dat
+│   ├── slope_h08v04_v0.dat
+│   ├── ...
+│   └── slope_h32v12_v0.dat
+├── spectral_libraries
+│   ├── MODIS.z15.sli
+│   ├── MODIS.z20.sli
+│   ├── MODIS.z25.sli
+│   ├── ...
+│   └── MODIS.z75.sli
+└── waterpercentage
+    ├── waterpercentage_h07v03_v0.dat
+    ├── waterpercentage_h08v03_v0.dat
+    ├── waterpercentage_h08v04_v0.dat
+    ├── ...
+    └── waterpercentage_h32v12_v0.dat
+
+8 directories, 306 files
