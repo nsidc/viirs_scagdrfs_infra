@@ -20,6 +20,8 @@ MODSINU_WKT_STRING = 'PROJCS[' \
 
 GEOTIFF_OPTIONS = ["COMPRESS=DEFLATE"]
 
+MODSINU_500M_LENGTH = 463.31271656938424
+
 
 def write_geotiff_via_gdal(
     fp_geotiff,
@@ -55,6 +57,7 @@ def write_geotiff_via_gdal(
 
     if geotransform is None:
         if grid_corners is not None:
+            # Determine geotransform from grid_corners
             x_ul = grid_corners['x_ul']
             y_ul = grid_corners['y_ul']
             x_lr = grid_corners['x_lr']
@@ -71,6 +74,12 @@ def write_geotiff_via_gdal(
                 x_ul, dx, 0.0,
                 y_ul, 0.0, dy,
             )
+        elif modsinu_tile is not None:
+            # Determine geotransform from tile definition
+            dx = MODSINU_500M_LENGTH
+            dy = MODSINU_500M_LENGTH
+            geotransform = get_tile_geotransform(tileID)
+
     srs = osr.SpatialReference()
     srs.SetFromUserInput(MODSINU_WKT_STRING)
 
@@ -100,7 +109,7 @@ def write_geotiff_via_gdal(
     ds = None  # closes and finalizes the file
 
     write_geotiff_report = \
-        'Wrote GEOTiff for {str(fp_geotiff)} using {geotransform}'
+        f'Wrote GEOTiff for {str(fp_geotiff)} using {geotransform}'
 
     return write_geotiff_report
 
@@ -143,3 +152,79 @@ def make_tif(meta_file: Path, input_file: Path, depth: str, output_file: Path):
     )
 
     return output_string
+
+
+def get_tile_geotransform(tileID):
+    """Return the GeoTransform string for this tileID"""
+    # tileID is string of form: hHHvVV
+    dx = MODSINU_500M_LENGTH
+    dy = -MODSINU_500M_LENGTH
+
+    h = int(tileID[1:3])
+    v = int(tileID[4:6])
+
+    x0 = (h - 18) * 2400 * 463.31271656938424
+    y0 = (9 - v) * 2400 * 463.31271656938424
+
+    geotransform = (x0, dx, 0.0, y0, 0.0, dy)
+
+    return geotransform
+
+
+def geotiff_from_tile_binary(ifn, ofn, tileID, xdim, ydim, dtype, nodata_val):
+    """Create a geotifff from a raw binary MODIS sinusoidal grid tile"""
+    data = np.fromfile(ifn, dtype=dtype).reshape(ydim, xdim)
+    output_string = write_geotiff_via_gdal(
+        ofn, data, modsinu_tile=tileID, nodata_value=nodata_val,
+    )
+
+    return output_string
+
+
+if __name__ == '__main__':
+    # Run this code at the command line from the topdir of the repo:
+    #   python -m src.make_tif <input_file> <output_file> <tileID>
+    #      ... <xdim> <ydim> <dtype> <nodata_val>
+    #  eg
+    #   python -m src.make_tif data.dat data.tif h09v05 2400 2400 uint8 255
+    import sys
+
+    try:
+        ifn = sys.argv[1]
+        ofn = sys.argv[2]
+        tileID = sys.argv[3]
+        xdim = int(sys.argv[4])
+        ydim = int(sys.argv[5])
+        dtype_str = sys.argv[6]
+        nodata_val_str = sys.argv[7]
+        if dtype_str in ('uint8', 'ubyte'):
+            dtype = np.uint8
+        elif dtype_str in ('uint16', 'UInt16', 'ushort'):
+            dtype = np.uint16
+        elif dtype_str in ('float32', 'Float32'):
+            dtype = np.float32
+        else:
+            raise RuntimeError(f'dtype not recognized: {dtype_str}')
+        try:
+            nodata_val = int(nodata_val_str)
+        except ValueError:
+            nodata_val = float(nodata_val_str)
+    except IndexError:
+        print('Failed to execute make_tif() from cmdline:')
+        print(f'  {sys.argv}')
+        exit(1)
+
+    print('Running make_tif() at command line:')
+    print(f'  input file name: {ifn}')
+    print(f' output file name: {ofn}')
+    print(f'     MODIS tileID: {tileID}')
+    print(f'             xdim: {xdim}')
+    print(f'             ydim: {ydim}')
+    print(f'            dtype: {dtype}')
+    print(f'       nodata val: {nodata_val}')
+
+    output_string = geotiff_from_tile_binary(
+        ifn, ofn, tileID, xdim, ydim, dtype, nodata_val,
+    )
+
+    print(f'Finished:\n{output_string}')
