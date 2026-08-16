@@ -34,6 +34,8 @@ def write_geotiff_via_gdal(
     color_table=None,
 ):
     """Use GDAL to write a geotiff"""
+    gdal.UseExceptions()
+
     dtype = data.dtype
     gdal_dtype = None
     nodata_default = None
@@ -109,7 +111,8 @@ def write_geotiff_via_gdal(
     ds = None  # closes and finalizes the file
 
     write_geotiff_report = \
-        f'Wrote GEOTiff for {str(fp_geotiff)} using {geotransform}'
+        f'Wrote GEOTiff for {str(fp_geotiff)}\n' \
+        f'  with GeoTransform: {geotransform}'
 
     return write_geotiff_report
 

@@ -9,9 +9,9 @@ import numpy as np
 
 from src.masking import cw_mask
 from src.constants.field_info import DTYPE_FOR_BITDEPTH, FIELD_BITDEPTHS
-# from src.constants.paths import WATER_MASK_DIR
 from src.constants.paths import DRFS_COMPONENT_DIR
 from src.constants.products import PRODUCT_OUTPUT_PREFIX, PRODUCT_SOURCE_ID
+from src.drfs_components import read_geotiff
 
 logger = logging.getLogger(__name__)
 
@@ -70,16 +70,17 @@ def get_file_info_config():
 def get_water_mask(file_info, tile):
     """Return water mask where tile is 100% covered by water"""
 
-    # The '*' in '...*.dat' is for a version string in the file name:
-    #   eg: waterpercentage_h07v03_v0.dat
-    waterpercentage_files = list((DRFS_COMPONENT_DIR / "waterpercentage").glob(f'waterpercentage_{tile}*.dat'))
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: waterpercentage_h07v03_v0.tif
+    waterpercentage_files = \
+        list((DRFS_COMPONENT_DIR / "waterpercentage").glob(f'waterpercentage_{tile}*.tif'))
     if len(waterpercentage_files) != 1:
         raise RuntimeError(
             f"Expected 1 waterpercentage file for {tile}, found {len(waterpercentage_files)}:"
             f"{waterpercentage_files}"
         )
     waterpercentage_file = waterpercentage_files[0]
-    waterpercentage = np.fromfile(waterpercentage_file, dtype=np.uint8).reshape(2400, 2400)
+    waterpercentage = read_geotiff(waterpercentage_file)
     logger.debug(
         f"Loaded waterpercentage for {tile} from: {waterpercentage_file}"
     )

@@ -5,10 +5,21 @@ from pathlib import Path
 
 import numpy as np
 import logging
+from osgeo import gdal
 
 logger = logging.getLogger(__name__)
 
 ZENITH_VALUES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
+
+
+def read_geotiff(gtiff_fn):
+    """Return the data field in a geotiff"""
+    gdal.UseExceptions()
+    ds_gtiff = gdal.Open(str(gtiff_fn), gdal.GA_ReadOnly)
+    gtiff_band = ds_gtiff.GetRasterBand(1)
+    gtiff_field = gtiff_band.ReadAsArray()
+
+    return gtiff_field
 
 
 def load_irradiance_arrays(
@@ -97,28 +108,28 @@ def load_terrain(
 
     Returns (slope, aspect) each shape (2400, 2400)
     """
-    # The '*' in '...*.dat' is for a version string in the file name:
-    #   eg: slope_h07v03_v0.dat
-    slope_files = list((comps_dir / "slope").glob(f'slope_h{h}v{v}*.dat'))
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: slope_h07v03_v0.tif
+    slope_files = list((comps_dir / "slope").glob(f'slope_h{h}v{v}*.tif'))
     if len(slope_files) != 1:
         raise RuntimeError(
             f"Expected 1 slope file for h{h}v{v}, found {len(slope_files)}: {slope_files}"
         )
     slope_file = slope_files[0]
-    slope = np.fromfile(slope_file, dtype=np.float32).reshape(2400, 2400)
+    slope = read_geotiff(slope_file)
     logger.debug(
         f"Loaded slope for h{h}v{v} from: {slope_file}"
     )
 
-    # The '*' in '...*.dat' is for a version string in the file name:
-    #   eg: aspect_h07v03_v0.dat
-    aspect_files = list((comps_dir / "aspect").glob(f'aspect_h{h}v{v}*.dat'))
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: aspect_h07v03_v0.tif
+    aspect_files = list((comps_dir / "aspect").glob(f'aspect_h{h}v{v}*.tif'))
     if len(aspect_files) != 1:
         raise RuntimeError(
             f"Expected 1 aspect file for h{h}v{v}, found {len(aspect_files)}: {aspect_files}"
         )
     aspect_file = aspect_files[0]
-    aspect = np.fromfile(aspect_file, dtype=np.float32).reshape(2400, 2400)
+    aspect = read_geotiff(aspect_file)
     logger.debug(
         f"Loaded aspect for h{h}v{v} from: {aspect_file}"
     )
@@ -128,15 +139,15 @@ def load_terrain(
 
 def load_dem(comps_dir: Path, h: str, v: str) -> np.ndarray:
     """Load DEM elevation in meters. Shape: (2400, 2400)"""
-    # The '*' in '...*.dat' is for a version string in the file name:
-    #   eg: elevation_h07v03_v0.dat
-    elevation_files = list((comps_dir / "elevation").glob(f'elevation_h{h}v{v}*.dat'))
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: elevation_h07v03_v0.tif
+    elevation_files = list((comps_dir / "elevation").glob(f'elevation_h{h}v{v}*.tif'))
     if len(elevation_files) != 1:
         raise RuntimeError(
             f"Expected 1 elevation file for h{h}v{v}, found {len(elevation_files)}: {elevation_files}"
         )
     elevation_file = elevation_files[0]
-    elevation = np.fromfile(elevation_file, dtype=np.int16).reshape(2400, 2400)
+    elevation = read_geotiff(elevation_file)
     logger.debug(
         f"Loaded elevation for h{h}v{v} from: {elevation_file}"
     )
@@ -150,3 +161,17 @@ def parse_tile_id(tile: str) -> tuple[str, str]:
     if not match:
         raise ValueError(f"Cannot parse tile ID: {tile}")
     return match.group(1), match.group(2)
+
+
+if __name__ == '__main__':
+    import sys
+    ifn = sys.argv[1]
+    print(f'ifn: {ifn}')
+    breakpoint()
+
+    ofn = ifn.replace('.tif', '.dat')
+    assert ifn != ofn
+
+    field = read_geotiff(ifn)
+    field.tofile(ofn)
+    print(f'Wrote: {ofn}')
