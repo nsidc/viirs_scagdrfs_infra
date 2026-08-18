@@ -80,7 +80,7 @@ def write_geotiff_via_gdal(
             # Determine geotransform from tile definition
             dx = MODSINU_500M_LENGTH
             dy = MODSINU_500M_LENGTH
-            geotransform = get_tile_geotransform(tileID)
+            geotransform = get_tile_geotransform(modsinu_tile)
 
     srs = osr.SpatialReference()
     srs.SetFromUserInput(MODSINU_WKT_STRING)
