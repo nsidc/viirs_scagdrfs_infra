@@ -55,6 +55,15 @@ def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
     return modis_wavelengths
 
 
+def load_viirs_wavelengths(comps_dir: Path) -> np.ndarray:
+    """Load 7 VIIRS band wavelengths. Shape: (7,)"""
+    fn_viirs_wavelengths = comps_dir / "VIIRS.wvl"
+    viirs_wavelengths = np.loadtxt(fn_viirs_wavelengths)
+    logger.debug(f"Loaded viirs_wavelengths from: {fn_viirs_wavelengths}")
+
+    return viirs_wavelengths
+
+
 def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load AVIRIS wavelengths. Shape: (2, 216)"""
     fn_aviris_wavelengths = comps_dir / "irrad10nm.wvl"

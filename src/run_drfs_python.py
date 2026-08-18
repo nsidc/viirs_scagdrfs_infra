@@ -12,7 +12,8 @@ import numpy as np
 
 from src.drfs_components import (
     load_irradiance_arrays,
-    load_modis_wavelengths,
+    # load_modis_wavelengths,
+    load_viirs_wavelengths,
     load_aviris_wavelengths,
     load_all_luts,
     load_terrain,
@@ -38,13 +39,18 @@ from src.log_config import setup_logging
 logger = logging.getLogger(__name__)
 
 
-def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> str:
+def run_drfs_python(
+    src_file: Path,
+    component_dir: Path,
+    working_dir: Path,
+) -> str:
     """Run DRFS processing using Python/numpy instead of IDL.
 
     Args:
         src_file: Path to the MODIS HDF source file
         component_dir: Path to DRFS component files (jpl_DRFS_Components)
-        working_dir: Path to working directory containing BIP and solar geometry files
+        working_dir: Path to working directory containing BIP and solar
+          geometry files
 
     Returns:
         Status string for logging
@@ -61,7 +67,8 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     # --- Load component files ---
     logger.info("loading component files...")
     dir_arr, dif_arr = load_irradiance_arrays(component_dir)
-    modis_wvl = load_modis_wavelengths(component_dir)
+    # modis_wvl = load_modis_wavelengths(component_dir)
+    viirs_wvl = load_viirs_wavelengths(component_dir)
     aviris_wvl = load_aviris_wavelengths(component_dir)
     luts = load_all_luts(component_dir)
     slope, aspect = load_terrain(component_dir, h, v)
@@ -77,7 +84,8 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     extract_hdf_solar_fields(src_file)
 
     # Write a python version of:
-    #    create_bip = extract_modis_reflectance(file, bip) ; HDF file needs full path.  Inserted by AB, 9/3/13
+    #    create_bip = extract_modis_reflectance(file, bip) ;
+    #      HDF file needs full path.  Inserted by AB, 9/3/13
     #    (in mod_drfs_v1_2.pro)
     # TODO: This file name should not be hardcoded like this.
     #       (Similarly for files below...!)
@@ -115,11 +123,12 @@ def run_drfs_python(src_file: Path, component_dir: Path, working_dir: Path) -> s
     # --- Compute DRFS ---
     results = compute_drfs(
         rfl=rfl,  # (7, 2400, 2400)
-        solarzenith_deg=geom["solarzenith_deg"],  # (2400, 2400)
-        solarzenith_int=geom["solarzenith_int"],  # (2400, 2400)
-        cosine_illumination_angle=geom["cosine_illumination_angle"],  # (2400, 2400)
+        solarzenith_deg=geom["solarzenith_deg"],
+        solarzenith_int=geom["solarzenith_int"],
+        cosine_illumination_angle=geom["cosine_illumination_angle"],
         elev_km=geom["elev_km"],  # (2400, 2400)
-        modis_wvl=modis_wvl,  # (7,)
+        # modis_wvl=modis_wvl,  # (7,)
+        modis_wvl=viirs_wvl,  # (7,)
         aviris_wvl=aviris_wvl,  # (2, 216)
         luts=luts,  # keys: 15-75 by 5
         dir_arr=dir_arr,  # (216, 14, 19)
@@ -152,7 +161,7 @@ def create_drfs_geotiffs(
     staging_dir,
     component_dir,
 ):
-    """This  routine runs the DRFS algorithm, cleanses the resulting .dat files,
+    """This  routine runs the DRFS algorithm, cleanses the resulting .dat files
     masks the data fields, and creates geotiffs of both the masked and unmasked
     fields
     """
@@ -193,7 +202,11 @@ def create_drfs_geotiffs(
         output_tif = os.path.join(
             staging_dir, unmask_file.replace("bin.Unmask", "Unmask.tif")
         )
-        geotiff_creation_string = f"Generating tif for:\n  unmask_file: {unmask_file}\n  field_name: {field_name}\n  bit_depth: {bit_depth}\n  output_tif: {output_tif}"
+        geotiff_creation_string = "Generating tif for:\n" \
+            "unmask_file: {unmask_file}\n" \
+            "field_name: {field_name}\n" \
+            "bit_depth: {bit_depth}\n" \
+            "output_tif: {output_tif}"
         result_make_tif = make_tif(
             meta_file=bip_meta_file,
             input_file=unmask_file,
@@ -208,8 +221,13 @@ def create_drfs_geotiffs(
     for mask_file in glob.glob(os.path.join(working_dir, "*.mask")):
         field_name = get_field_name(mask_file)
         bit_depth = get_bitdepth_for_field_name(field_name)
-        output_tif = os.path.join(staging_dir, mask_file.replace("bin.mask", "tif"))
-        geotiff_creation_string = f"Generating tif for:\n  mask_file: {mask_file}\n  field_name: {field_name}\n  bit_depth: {bit_depth}\n  output_tif: {output_tif}"
+        output_tif = os.path.join(
+            staging_dir, mask_file.replace("bin.mask", "tif"))
+        geotiff_creation_string = f"Generating tif for:\n" \
+            f"mask_file: {mask_file}\n" \
+            f"field_name: {field_name}\n" \
+            f"bit_depth: {bit_depth}\n" \
+            f"output_tif: {output_tif}"
         result_make_tif = make_tif(
             meta_file=bip_meta_file,
             input_file=mask_file,
@@ -235,8 +253,10 @@ if __name__ == "__main__":
 
     @click.command()
     @click.option("--src-file", required=True, type=click.Path(path_type=Path))
-    @click.option("--component-dir", required=True, type=click.Path(path_type=Path))
-    @click.option("--working-dir", required=True, type=click.Path(path_type=Path))
+    @click.option(
+        "--component-dir", required=True, type=click.Path(path_type=Path))
+    @click.option(
+        "--working-dir", required=True, type=click.Path(path_type=Path))
     def main(src_file, component_dir, working_dir):
         setup_logging(level=logging.DEBUG)
         print("Running from run_drfs_python() __main__")
