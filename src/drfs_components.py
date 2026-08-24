@@ -5,10 +5,21 @@ from pathlib import Path
 
 import numpy as np
 import logging
+from osgeo import gdal
 
 logger = logging.getLogger(__name__)
 
 ZENITH_VALUES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
+
+
+def read_geotiff(gtiff_fn):
+    """Return the data field in a geotiff"""
+    gdal.UseExceptions()
+    ds_gtiff = gdal.Open(str(gtiff_fn), gdal.GA_ReadOnly)
+    gtiff_band = ds_gtiff.GetRasterBand(1)
+    gtiff_field = gtiff_band.ReadAsArray()
+
+    return gtiff_field
 
 
 def load_irradiance_arrays(
@@ -18,10 +29,10 @@ def load_irradiance_arrays(
 
     Returns (dir_arr, dif_arr) each shape (216, 14, 19)
     """
-    fn_direct = comps_dir / "CRB/direct.bin"
+    fn_direct = comps_dir / "irradiance_arrays" / "direct_irradiance.bin"
     direct = np.fromfile(fn_direct, dtype=np.float32)
 
-    fn_total = comps_dir / "CRB/total.bin"
+    fn_total = comps_dir / "irradiance_arrays" / "total_irradiance.bin"
     total = np.fromfile(fn_total, dtype=np.float32)
 
     # IDL reform() uses column-major order, numpy needs order='F' to match
@@ -44,6 +55,15 @@ def load_modis_wavelengths(comps_dir: Path) -> np.ndarray:
     return modis_wavelengths
 
 
+def load_viirs_wavelengths(comps_dir: Path) -> np.ndarray:
+    """Load 7 VIIRS band wavelengths. Shape: (7,)"""
+    fn_viirs_wavelengths = comps_dir / "VIIRS.wvl"
+    viirs_wavelengths = np.loadtxt(fn_viirs_wavelengths)
+    logger.debug(f"Loaded viirs_wavelengths from: {fn_viirs_wavelengths}")
+
+    return viirs_wavelengths
+
+
 def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
     """Load AVIRIS wavelengths. Shape: (2, 216)"""
     fn_aviris_wavelengths = comps_dir / "irrad10nm.wvl"
@@ -55,7 +75,7 @@ def load_aviris_wavelengths(comps_dir: Path) -> np.ndarray:
 
 def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
     """Load NDGSI lookup table for a given SZA. Shape: (2, 110)"""
-    fn_ndgsi_lut = comps_dir / f"MODIS.z{sza}.ndgsi"
+    fn_ndgsi_lut = comps_dir / "ndgsi_LUTs" / f"MODIS.z{sza}.ndgsi"
     ndgsi_lut = np.loadtxt(fn_ndgsi_lut).T
 
     logger.debug(f"Loaded ndgsi lut for {sza} from: {fn_ndgsi_lut}")
@@ -65,7 +85,7 @@ def load_ndgsi_lut(comps_dir: Path, sza: int) -> np.ndarray:
 
 def load_sli(comps_dir: Path, sza: int) -> np.ndarray:
     """Load clean snow SLI spectra for a given SZA. Shape: (7, 110)"""
-    fn_sli = comps_dir / f"MODIS.z{sza}.sli"
+    fn_sli = comps_dir / "spectral_libraries" / f"MODIS.z{sza}.sli"
 
     data_raw = np.fromfile(fn_sli, dtype=np.float32)
     data_first_7x110 = data_raw[: 7 * 110]
@@ -97,18 +117,30 @@ def load_terrain(
 
     Returns (slope, aspect) each shape (2400, 2400)
     """
-    terrain_files = list((comps_dir / "DEM").glob(f"terrain_*_h{h}v{v}.bsq"))
-    if len(terrain_files) != 1:
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: slope_h07v03_v0.tif
+    slope_files = list((comps_dir / "slope").glob(f'slope_h{h}v{v}*.tif'))
+    if len(slope_files) != 1:
         raise RuntimeError(
-            f"Expected 1 terrain file for h{h}v{v}, found {len(terrain_files)}: {terrain_files}"
+            f"Expected 1 slope file for h{h}v{v}, found {len(slope_files)}: {slope_files}"
         )
-    # fn_dem = terrain_files[0]
-    data = np.fromfile(terrain_files[0], dtype=np.float32).reshape(2, 2400, 2400)
-    slope = data[0, :, :]
-    aspect = data[1, :, :]
-
+    slope_file = slope_files[0]
+    slope = read_geotiff(slope_file)
     logger.debug(
-        f"Loaded terrain slope and aspect for h{h}v{v} from: {terrain_files[0]}"
+        f"Loaded slope for h{h}v{v} from: {slope_file}"
+    )
+
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: aspect_h07v03_v0.tif
+    aspect_files = list((comps_dir / "aspect").glob(f'aspect_h{h}v{v}*.tif'))
+    if len(aspect_files) != 1:
+        raise RuntimeError(
+            f"Expected 1 aspect file for h{h}v{v}, found {len(aspect_files)}: {aspect_files}"
+        )
+    aspect_file = aspect_files[0]
+    aspect = read_geotiff(aspect_file)
+    logger.debug(
+        f"Loaded aspect for h{h}v{v} from: {aspect_file}"
     )
 
     return slope, aspect
@@ -116,17 +148,20 @@ def load_terrain(
 
 def load_dem(comps_dir: Path, h: str, v: str) -> np.ndarray:
     """Load DEM elevation in meters. Shape: (2400, 2400)"""
-    dem_files = list((comps_dir / "DEM").glob(f"dem_*_h{h}v{v}.bsq"))
-    if len(dem_files) != 1:
+    # The '*' in '...*.tif' is for a version string in the file name:
+    #   eg: elevation_h07v03_v0.tif
+    elevation_files = list((comps_dir / "elevation").glob(f'elevation_h{h}v{v}*.tif'))
+    if len(elevation_files) != 1:
         raise RuntimeError(
-            f"Expected 1 DEM file for h{h}v{v}, found {len(dem_files)}: {dem_files}"
+            f"Expected 1 elevation file for h{h}v{v}, found {len(elevation_files)}: {elevation_files}"
         )
-    dem_file = dem_files[0]
-    dem_data = np.fromfile(dem_file, dtype=np.int16).reshape(2400, 2400)
+    elevation_file = elevation_files[0]
+    elevation = read_geotiff(elevation_file)
+    logger.debug(
+        f"Loaded elevation for h{h}v{v} from: {elevation_file}"
+    )
 
-    logger.debug(f"Loaded DEM data for h{h}v{v} from: {dem_file}")
-
-    return dem_data
+    return elevation
 
 
 def parse_tile_id(tile: str) -> tuple[str, str]:
@@ -135,3 +170,17 @@ def parse_tile_id(tile: str) -> tuple[str, str]:
     if not match:
         raise ValueError(f"Cannot parse tile ID: {tile}")
     return match.group(1), match.group(2)
+
+
+if __name__ == '__main__':
+    import sys
+    ifn = sys.argv[1]
+    print(f'ifn: {ifn}')
+    breakpoint()
+
+    ofn = ifn.replace('.tif', '.dat')
+    assert ifn != ofn
+
+    field = read_geotiff(ifn)
+    field.tofile(ofn)
+    print(f'Wrote: {ofn}')
