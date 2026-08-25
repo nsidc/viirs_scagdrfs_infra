@@ -17,5 +17,5 @@ outlog.txt
 out*
 
 # scag xecutables
-scag
-scag_sort
+#scag
+#scag_sort
