@@ -8,10 +8,11 @@ import shutil
 from ast import literal_eval
 from pathlib import Path
 
-from scagdrfs_infra.util import date_range, get_region_tile_ids
+from src.util import date_range, get_region_tile_ids
+from src.constants.paths import CONSTANTS_DIR
 
 config = configparser.ConfigParser()
-config.read(f"{os.environ.get('SCAGDRFS_CONSTANTS_DIR')}/parameters.ini")
+config.read(f"{CONSTANTS_DIR}/parameters.ini")
 params = literal_eval(config["PARAMETERS"]["params"])
 
 
@@ -40,11 +41,11 @@ def copy_output_to_peta(
 
         for tile in tile_ids:
             date_folder = date.strftime("%Y.%m.%d")
-            base_path = os.path.join(input_dir, date_folder, tile)
+            base_path = os.path.join(input_dir, date_folder, product, tile)
             nc_pattern = os.path.join(base_path, "*.nc")
             hdf_file = glob.glob(os.path.join(base_path, "*.hdf"))
 
-            output_path = os.path.join(output_dir, date_folder, tile)
+            output_path = os.path.join(output_dir, date_folder, product, tile)
             os.makedirs(output_path, exist_ok=True)
 
             # if no HDF file exists move empty netcdf
@@ -60,28 +61,6 @@ def copy_output_to_peta(
                     )
             else:
                 for param in params:
-                    # Define paths and patterns
-
-                    tif_pattern = f"MODSCGDRF_NRT_{param}_{tile}_MOD09GANRT061_{date_str}_V01.*.tif"
-
-                    # Process TIF files (masked and unmasked)
-                    full_pattern = os.path.join(base_path, tif_pattern)
-                    matching_files = glob.glob(full_pattern)
-
-                    for filepath in matching_files:
-                        shutil.copy2(
-                            filepath,
-                            os.path.join(output_path, os.path.basename(filepath)),
-                        )
-
-                    if not matching_files:
-                        missing_filepath = os.path.join(
-                            input_dir, date_folder, "missing_files.txt"
-                        )
-                        os.makedirs(os.path.dirname(missing_filepath), exist_ok=True)
-                        with open(missing_filepath, "a+") as file:
-                            file.write(f"Missing file for pattern: {full_pattern}. \n")
-
                     # Process NC files
                     nc_files = glob.glob(nc_pattern)
 
