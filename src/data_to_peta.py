@@ -1,19 +1,13 @@
 #!/usr/bin/env python
 
-import configparser
 import datetime as dt
 import glob
 import os
 import shutil
-from ast import literal_eval
 from pathlib import Path
 
-from src.util import date_range, get_region_tile_ids
-from src.constants.paths import CONSTANTS_DIR
-
-config = configparser.ConfigParser()
-config.read(f"{CONSTANTS_DIR}/parameters.ini")
-params = literal_eval(config["PARAMETERS"]["params"])
+from src.util import date_range
+from src.constants.paths import WORK_DIR
 
 
 # Note regions may be list here
@@ -22,61 +16,23 @@ def copy_output_to_peta(
     end_date: dt.date,
     input_dir: Path,
     output_dir: Path,
-    regions: str,
-    product: str,
 ):
     """
-    Copies scag and drfs output files to the PETA library.
+    Copies scag and drfs output files to daac data transfer area
     """
     for date in date_range(start_date=start_date, end_date=end_date):
-        date_str = date.strftime("%Y%m%d")
-        tile_ids = get_region_tile_ids(regions)
+        date_folder = date.strftime("%Y.%m.%d")
+        base_path = os.path.join(transfer_dir, date_folder)
 
-        missing_filepath = os.path.join(
-            output_dir, date.strftime("%Y.%m.%d"), "missing_files.txt"
-        )
-        if os.path.exists(missing_filepath):
-            os.remove(missing_filepath)
-            print(f"Removed existing file: {missing_filepath}")
+        output_dir = "/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data"  # output dir for flattened files
 
-        for tile in tile_ids:
-            date_folder = date.strftime("%Y.%m.%d")
-            base_path = os.path.join(input_dir, date_folder, product, tile)
-            nc_pattern = os.path.join(base_path, "*.nc")
-            hdf_file = glob.glob(os.path.join(base_path, "*.hdf"))
+        # Find and copy only .nc files (removes tile structure)
+        for root, _, files in os.walk(base_path):
+            for file in files:
+                if file.endswith(".nc"):
+                    source_file = os.path.join(root, file)
+                    destination_file = os.path.join(output_dir, file)  # Flatten files
+                    print(f"{file} being copied to {destination_file}")
+                    shutil.copy2(source_file, destination_file)  # Preserve metadata
 
-            output_path = os.path.join(output_dir, date_folder, product, tile)
-            os.makedirs(output_path, exist_ok=True)
-
-            # if no HDF file exists move empty netcdf
-            if not hdf_file:
-                print(f"There is no hdf file in {base_path}")
-                # Process NC files
-                nc_files = glob.glob(nc_pattern)
-
-                for nc_filepath in nc_files:
-                    shutil.copy2(
-                        nc_filepath,
-                        os.path.join(output_path, os.path.basename(nc_filepath)),
-                    )
-            else:
-                for param in params:
-                    # Process NC files
-                    nc_files = glob.glob(nc_pattern)
-
-                    for nc_filepath in nc_files:
-                        shutil.copy2(
-                            nc_filepath,
-                            os.path.join(output_path, os.path.basename(nc_filepath)),
-                        )
-
-                    if not nc_files:
-                        missing_filepath = os.path.join(
-                            input_dir, date_folder, "missing_files.txt"
-                        )
-                        os.makedirs(os.path.dirname(missing_filepath), exist_ok=True)
-                        with open(missing_filepath, "a+") as file:
-                            file.write(
-                                f"Missing NetCDF file for {tile} on {date_str}.\n"
-                            )
         return None
