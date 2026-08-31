@@ -7,9 +7,7 @@ import click
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-# from scagdrfs_infra.error import ScagDrfsDateRangeError
-# from scagdrfs_infra.output_to_peta import copy_output_to_peta
-# from scagdrfs_infra.output_to_v0 import copy_output_to_v0
+from src.output_to_peta import copy_output_to_peta
 from src.constants.paths import WORK_DIR, TOPDIR
 from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_a_day import run_a_day
@@ -220,30 +218,19 @@ def run_scagdrfs(
         scagdrfs_client.close()
         scagdrfs_cluster.close()
 
-    # # move DRFS and SCAG output to petalibrary
-    # if not no_publish:
-    #     print(
-    #         f"Copying output to peta for {start_date} to {end_date} from {working_dir} to {transfer_dir} for {regions}"
-    #     )
-    #     copy_output_to_peta(
-    #         start_date=start_date,
-    #         end_date=end_date,
-    #         input_dir=working_dir,
-    #         output_dir=transfer_dir,
-    #         regions=regions,
-    #     )
-    #     # move DRFS and SCAG output to v0
-    #     v0_staging_dir = os.environ.get("V0_DIR")
-    #     print(
-    #         f"Copying output to V0 for {start_date} to {end_date} from {transfer_dir} to {v0_staging_dir} for {regions}"
-    #     )
-    #     copy_output_to_v0(
-    #         start_date=start_date,
-    #         end_date=end_date,
-    #         transfer_dir=transfer_dir,
-    #         output_dir=v0_staging_dir,
-    #         tiles=tile_ids,
-    #     )
+    # move DRFS and SCAG output to petalibrary
+    if not no_publish:
+        print(
+            f"Copying output to peta for {start_date} to {end_date} from {working_dir} to {transfer_dir} for {regions}"
+        )
+        copy_output_to_peta(
+            start_date=start_date,
+            end_date=end_date,
+            input_dir=working_dir,
+            output_dir=transfer_dir,
+            regions=regions,
+            product=product,
+        )
 
     logger.info(f"Finished run_scagdrfs() at {dt.datetime.now()}")
 
