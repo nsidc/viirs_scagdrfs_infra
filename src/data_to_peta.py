@@ -15,14 +15,13 @@ def copy_output_to_peta(
     start_date: dt.date,
     end_date: dt.date,
     input_dir: Path,
-    output_dir: Path,
 ):
     """
     Copies scag and drfs output files to daac data transfer area
     """
     for date in date_range(start_date=start_date, end_date=end_date):
         date_folder = date.strftime("%Y.%m.%d")
-        base_path = os.path.join(transfer_dir, date_folder)
+        base_path = os.path.join(input_dir, date_folder)
 
         output_dir = "/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data"  # output dir for flattened files
 

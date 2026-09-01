@@ -107,21 +107,20 @@ def setup_scagdrfs_cluster(n_workers):
     "--product",
     "-P",
     type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
-    default="VNP09GA",
+    default="VJ109GA",
     show_default=True,
     help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
-    "-t",
-    "--transfer-dir",
+    "-w",
+    "--work-dir",
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
     # NOTE: this will change
     default=lambda: WORK_DIR,
     show_default=True,
-    help="Path to data transfer directory where output files are stored before "
-    "being transferred to the final V0 directory."
+    help="Path to working directory where output files are stored before transfer directory"
     "Date and tile ID subdirectories will be "
     "added (e.g. 2023.10.03/h08v04).",
 )
@@ -139,7 +138,7 @@ def run_scagdrfs(
     regions,
     skip,
     no_queue,
-    transfer_dir,
+    work_dir,
     no_publish,
     product,
 ):
@@ -149,7 +148,7 @@ def run_scagdrfs(
     # Set to true since we are in development stage
 
     product = product.upper()
-    orig_transfer_dir = transfer_dir
+    orig_transfer_dir = work_dir
     tile_ids = get_region_tile_ids(regions)
     n_days = len(list(date_range(start_date=start_date, end_date=end_date)))
     n_tasks = len(tile_ids) * n_days
@@ -186,7 +185,7 @@ def run_scagdrfs(
                 )
             else:
                 # print("    NOT in no_queue...")
-                cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {transfer_dir} -t {tile} -P {product}"
+                cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {work_dir} -t {tile} -P {product}"
 
                 if skip:
                     cmd += " -k"
@@ -221,15 +220,12 @@ def run_scagdrfs(
     # move DRFS and SCAG output to petalibrary
     if not no_publish:
         print(
-            f"Copying output to peta for {start_date} to {end_date} from {working_dir} to {transfer_dir} for {regions}"
+            f"Copying output to peta for {start_date} to {end_date} from {work_dir} to '/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data'"
         )
         copy_output_to_peta(
             start_date=start_date,
             end_date=end_date,
-            input_dir=working_dir,
-            output_dir=transfer_dir,
-            regions=regions,
-            product=product,
+            input_dir=work_dir,
         )
 
     logger.info(f"Finished run_scagdrfs() at {dt.datetime.now()}")
