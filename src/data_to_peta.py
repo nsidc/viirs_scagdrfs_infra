@@ -14,16 +14,18 @@ from src.constants.paths import WORK_DIR
 def copy_output_to_peta(
     start_date: dt.date,
     end_date: dt.date,
+    product: str,
     input_dir: Path,
+    output_dir: Path = Path("/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data"),
 ):
     """
     Copies scag and drfs output files to daac data transfer area
     """
     for date in date_range(start_date=start_date, end_date=end_date):
         date_folder = date.strftime("%Y.%m.%d")
-        base_path = os.path.join(input_dir, date_folder)
-
-        output_dir = "/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data"  # output dir for flattened files
+        base_path = os.path.join(input_dir, product, date_folder)
+        if not os.path.isdir(base_path):
+            raise FileNotFoundError(f"No such input directory: {base_path}")
 
         # Find and copy only .nc files (removes tile structure)
         for root, _, files in os.walk(base_path):
@@ -34,4 +36,4 @@ def copy_output_to_peta(
                     print(f"{file} being copied to {destination_file}")
                     shutil.copy2(source_file, destination_file)  # Preserve metadata
 
-        return None
+    return None
