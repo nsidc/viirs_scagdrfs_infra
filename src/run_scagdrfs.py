@@ -7,7 +7,7 @@ import click
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-from src.data_to_peta import copy_output_to_peta
+from src.data_to_staging import copy_output_to_peta
 from src.constants.paths import WORK_DIR, TOPDIR
 from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_a_day import run_a_day
