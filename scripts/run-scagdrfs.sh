@@ -3,8 +3,15 @@
 # Record the start time
 start_time=$(date +%s)
 
-source ${PWD}/config/env.sh
-source ${PWD}/scripts/activate-viirs-conda.sh
+# Get project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+
+# Load environment and activate conda
+set +u
+source ${PROJECT_ROOT}/scripts/activate-viirs-conda.sh
+set +u
+
 python -m src.run_scagdrfs "$@"
 
 # Record the end time

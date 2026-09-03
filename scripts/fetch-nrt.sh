@@ -8,7 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 
 # Load environment and activate conda
-source "${PROJECT_ROOT}/config/env.sh"
+set +u
+source ${PROJECT_ROOT}/scripts/activate-viirs-conda.sh
+set +u
 
 # Run the fetch module
 python3 -m src.fetch_nrt "$@"

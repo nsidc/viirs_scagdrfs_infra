@@ -3,6 +3,7 @@
 from .paths import (
     TOPDIR,
     PETALIB_DIR,
+    TRANSFER_DIR,
     PETALIB_STAGING_DIR,
     WORK_DIR,
     WATER_MASK_DIR,

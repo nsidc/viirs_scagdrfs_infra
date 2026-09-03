@@ -7,10 +7,8 @@ import click
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
-# from scagdrfs_infra.error import ScagDrfsDateRangeError
-# from scagdrfs_infra.output_to_peta import copy_output_to_peta
-# from scagdrfs_infra.output_to_v0 import copy_output_to_v0
-from src.constants.paths import WORK_DIR, TOPDIR
+from src.data_to_staging import copy_output_to_peta
+from src.constants.paths import WORK_DIR, TOPDIR, TRANSFER_DIR
 from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_a_day import run_a_day
 from src.util import (
@@ -109,21 +107,20 @@ def setup_scagdrfs_cluster(n_workers):
     "--product",
     "-P",
     type=click.Choice(SUPPORTED_PRODUCTS, case_sensitive=False),
-    default="VNP09GA",
+    default="VJ109GA",
     show_default=True,
     help="Input product to process (MOD09GA, VNP09GA, VJ109GA).",
 )
 @click.option(
-    "-t",
-    "--transfer-dir",
+    "-w",
+    "--work-dir",
     type=click.Path(
         file_okay=False, dir_okay=True, writable=True, exists=False, path_type=Path
     ),
     # NOTE: this will change
     default=lambda: WORK_DIR,
     show_default=True,
-    help="Path to data transfer directory where output files are stored before "
-    "being transferred to the final V0 directory."
+    help="Path to working directory where output files are stored before transfer directory"
     "Date and tile ID subdirectories will be "
     "added (e.g. 2023.10.03/h08v04).",
 )
@@ -131,7 +128,7 @@ def setup_scagdrfs_cluster(n_workers):
     "--no-publish",
     "-p",
     is_flag=True,
-    help="Skip copying output to PetaLibrary and V0." "Default is to publish.",
+    help="Skip copying output to transfer directory." "Default is to publish.",
 )
 @click.pass_context
 def run_scagdrfs(
@@ -141,7 +138,7 @@ def run_scagdrfs(
     regions,
     skip,
     no_queue,
-    transfer_dir,
+    work_dir,
     no_publish,
     product,
 ):
@@ -151,7 +148,7 @@ def run_scagdrfs(
     # Set to true since we are in development stage
 
     product = product.upper()
-    orig_transfer_dir = transfer_dir
+    orig_transfer_dir = work_dir
     tile_ids = get_region_tile_ids(regions)
     n_days = len(list(date_range(start_date=start_date, end_date=end_date)))
     n_tasks = len(tile_ids) * n_days
@@ -188,7 +185,7 @@ def run_scagdrfs(
                 )
             else:
                 # print("    NOT in no_queue...")
-                cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {transfer_dir} -t {tile} -P {product}"
+                cmd = f". {TOPDIR}/scripts/run-a-day.sh -d {day} -s {work_dir} -t {tile} -P {product}"
 
                 if skip:
                     cmd += " -k"
@@ -220,30 +217,18 @@ def run_scagdrfs(
         scagdrfs_client.close()
         scagdrfs_cluster.close()
 
-    # # move DRFS and SCAG output to petalibrary
-    # if not no_publish:
-    #     print(
-    #         f"Copying output to peta for {start_date} to {end_date} from {working_dir} to {transfer_dir} for {regions}"
-    #     )
-    #     copy_output_to_peta(
-    #         start_date=start_date,
-    #         end_date=end_date,
-    #         input_dir=working_dir,
-    #         output_dir=transfer_dir,
-    #         regions=regions,
-    #     )
-    #     # move DRFS and SCAG output to v0
-    #     v0_staging_dir = os.environ.get("V0_DIR")
-    #     print(
-    #         f"Copying output to V0 for {start_date} to {end_date} from {transfer_dir} to {v0_staging_dir} for {regions}"
-    #     )
-    #     copy_output_to_v0(
-    #         start_date=start_date,
-    #         end_date=end_date,
-    #         transfer_dir=transfer_dir,
-    #         output_dir=v0_staging_dir,
-    #         tiles=tile_ids,
-    #     )
+    # move DRFS and SCAG output to petalibrary
+    if not no_publish:
+        print(
+            f"Copying output for {start_date} to {end_date} from {work_dir} to {TRANSFER_DIR}"
+        )
+        copy_output_to_peta(
+            start_date=start_date,
+            end_date=end_date,
+            product=product,
+            output_dir=TRANSFER_DIR,
+            input_dir=work_dir,
+        )
 
     logger.info(f"Finished run_scagdrfs() at {dt.datetime.now()}")
 
