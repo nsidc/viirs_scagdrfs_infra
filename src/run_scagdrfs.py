@@ -225,6 +225,7 @@ def run_scagdrfs(
         copy_output_to_peta(
             start_date=start_date,
             end_date=end_date,
+            product=product,
             input_dir=work_dir,
         )
 
