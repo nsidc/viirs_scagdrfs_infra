@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 from src.util import date_range
-from src.constants.paths import WORK_DIR
+from src.constants.paths import WORK_DIR, TRANSFER_DIR
 
 
 # Note regions may be list here
@@ -16,7 +16,7 @@ def copy_output_to_peta(
     end_date: dt.date,
     product: str,
     input_dir: Path,
-    output_dir: Path = Path("/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data"),
+    output_dir: Path,
 ):
     """
     Copies scag and drfs output files to daac data transfer area

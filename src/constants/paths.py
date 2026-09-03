@@ -13,7 +13,7 @@ PETALIB_STAGING_DIR = Path(f"{PETALIB_DIR}/scagdrfs/staging")
 # DRFS_COMPONENT_DIR = PETALIB_DIR / "viirsscgdrf_ancillary_v0"
 DRFS_COMPONENT_DIR = PETALIB_DIR / "viirsscgdrf_ancillary_v1"
 WATER_MASK_DIR = DRFS_COMPONENT_DIR / "waterpercentage"
-V0_DIR = Path("/disks/sidads_ftp/pub/DATASETS/MODSCGDRF_NRT_v1.1")
+TRANSFER_DIR = Path("/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data")
 
 
 # ── Product dirs ────────────────────────────────────────────────────────----─
@@ -63,5 +63,4 @@ for _dir in (WORK_DIR, PETALIB_STAGING_DIR):
 
 # SSH/Transfer configuration
 V0_USERNAME = os.getenv("V0_USERNAME", os.getenv("USER"))
-V0_SSH_KEY = Path(
-    os.getenv("V0_SSH_KEY", f"/home/{os.getenv('USER')}/.ssh/id_ecdsa"))
+V0_SSH_KEY = Path(os.getenv("V0_SSH_KEY", f"/home/{os.getenv('USER')}/.ssh/id_ecdsa"))

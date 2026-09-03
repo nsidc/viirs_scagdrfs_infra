@@ -8,7 +8,7 @@ from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
 from src.data_to_staging import copy_output_to_peta
-from src.constants.paths import WORK_DIR, TOPDIR
+from src.constants.paths import WORK_DIR, TOPDIR, TRANSFER_DIR
 from src.constants.products import SUPPORTED_PRODUCTS
 from src.run_a_day import run_a_day
 from src.util import (
@@ -128,7 +128,7 @@ def setup_scagdrfs_cluster(n_workers):
     "--no-publish",
     "-p",
     is_flag=True,
-    help="Skip copying output to PetaLibrary and V0." "Default is to publish.",
+    help="Skip copying output to transfer directory." "Default is to publish.",
 )
 @click.pass_context
 def run_scagdrfs(
@@ -220,12 +220,13 @@ def run_scagdrfs(
     # move DRFS and SCAG output to petalibrary
     if not no_publish:
         print(
-            f"Copying output to peta for {start_date} to {end_date} from {work_dir} to '/pl/active/DAAC-data-transfer/metgenc/vj1scgdrf_nrt/data'"
+            f"Copying output for {start_date} to {end_date} from {work_dir} to {TRANSFER_DIR}"
         )
         copy_output_to_peta(
             start_date=start_date,
             end_date=end_date,
             product=product,
+            output_dir=TRANSFER_DIR,
             input_dir=work_dir,
         )
 
