@@ -10,7 +10,7 @@ PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 # Load environment and activate conda
 set +u
 source ${PROJECT_ROOT}/scripts/activate-viirs-conda.sh
-set +u
+set -u
 
 python -m src.run_scagdrfs "$@"
 
