@@ -10,7 +10,7 @@ else
     echo "Creating viirs conda environment."
     conda create -y -n viirs
     conda env update -f ${TOPDIR}/environment.yml
-    echo "Activating scag conda environment."
-    conda activate viirs
+    echo "Activating viirs conda environment."
+    source activate viirs
 fi
 echo "Finished with activate-viirs-conda.sh at $(date)"
